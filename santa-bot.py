@@ -1,7 +1,6 @@
 import discord
 import logging
 import asyncio
-import datetime
 import os.path
 import configparser
 
@@ -46,7 +45,8 @@ async def on_message(message):
         print(participants)
         await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa lottery!')
     
-    #if message.content.startswith('$$start'):
+    #command for admin to begin the secret santa
+    if message.content.startswith('$$start') and message.author.:
 
 #print message when client is connected
 @client.event
@@ -57,4 +57,4 @@ async def on_ready():
     print('------')
 
 #event loop and discord connection abstraction
-client.run('MjMzMjYyNzY4NjUwODQ2MjA4.CusdJQ.7l4wOKT-mtSVDu8JUUXKeHJr_F8')
+client.run('token')
