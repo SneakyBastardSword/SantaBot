@@ -14,24 +14,26 @@ debug.addHandler(handler)
 
 #initialize config file
 config = configparser.ConfigParser()
+config
+
 #create null key if participants have not been initalized
 if 'PARTICIPANTS' not in config:
     config['PARTICIPANTS'] = {}
 
 #initialize list of participants from config file
 participants = [] 
-for member in config[PARITCIPANTS]:
-    participants.append(member)
+#for member in config['PARITCIPANTS']:  commented out for now to focus on getting async functions working
+#    participants.append(member)
 
 #initialize instance of client class
-client = discord.client
+client = discord.Client()
 
 #handler for all on_message events
 @client.event
 async def on_message(message):
     #write all messages to a chatlog
     with open('chat.log','a+') as chatlog:
-        await chatlog.write('[' + message.author.name + ' in ' + message.channel + ' at ' + message.timestamp + ']' + message.content)
+        chatlog.write('[' + message.author.name + ' in ' + message.channel.name + ' at ' + str(message.timestamp) + ']' + message.content + '\n')
     
     #ignore messages from the bot
     if message.author == client.user:
@@ -39,11 +41,13 @@ async def on_message(message):
     
     #event for a user joining the secret santa
     if message.content.startswith('$$join'):
-        config['PARTICIPANTS'][message.author.name] = ''
-        await participants.append(message.author)
-        await client.send_message(message.channel, '{0.author.mention} Has been added to the OfficialFam Secret Santa lottery!')
+        #config['PARTICIPANTS'][message.author.name] = ''
+        participants.append(message.author.name)
+        print(participants)
+        await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa lottery!')
     
-    if message.content.startswith('$$start')
+    #if message.content.startswith('$$start'):
+
 #print message when client is connected
 @client.event
 async def on_ready():
