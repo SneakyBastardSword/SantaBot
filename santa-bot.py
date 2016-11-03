@@ -13,7 +13,7 @@ debug.addHandler(handler)
 
 #initialize config file
 config = configparser.ConfigParser()
-config
+config.read('participants.cfg')
 
 #create null key if participants have not been initalized
 if 'PARTICIPANTS' not in config:
@@ -21,8 +21,8 @@ if 'PARTICIPANTS' not in config:
 
 #initialize list of participants from config file
 participants = [] 
-#for member in config['PARITCIPANTS']:  commented out for now to focus on getting async functions working
-#    participants.append(member)
+for member in config['PARITCIPANTS']:
+    participants.append(member)
 
 #initialize instance of client class
 client = discord.Client()
@@ -42,11 +42,14 @@ async def on_message(message):
     if message.content.startswith('$$join'):
         #config['PARTICIPANTS'][message.author.name] = ''
         participants.append(message.author.name)
+        config['PARTICIPANTS'][message.author.name] = None
+        with open('participants.cfg') as configfile:
+            config.write(configfile)
         print(participants)
         await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa lottery!')
     
     #command for admin to begin the secret santa
-    if message.content.startswith('$$start') and message.author.:
+    #if message.content.startswith('$$start') and message.author.:  commented out until Physics-official's permissions are known
 
 #print message when client is connected
 @client.event
