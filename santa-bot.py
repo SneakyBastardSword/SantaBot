@@ -3,6 +3,7 @@ import logging
 import asyncio
 import os.path
 import configparser
+import random
 
 #set up debug log
 debug = logging.getLogger('discord')
@@ -12,16 +13,19 @@ handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(me
 debug.addHandler(handler)
 
 #initialize config file
+if os.path.isfile('participants.cfg') != True:
+    with open('participants.cfg', 'x') as cfg:
+        pass
 config = configparser.ConfigParser()
 config.read('participants.cfg')
 
 #create null key if participants have not been initalized
-if 'PARTICIPANTS' not in config:
-    config['PARTICIPANTS'] = {}
+if 'members' not in config.sections():
+    config['members'] = {}
 
 #initialize list of participants from config file
 participants = [] 
-for member in config['PARITCIPANTS']:
+for member in config['members']:
     participants.append(member)
 
 #initialize instance of client class
@@ -46,10 +50,19 @@ async def on_message(message):
         with open('participants.cfg') as configfile:
             config.write(configfile)
         print(participants)
-        await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa lottery!')
+        await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa exchange!')
     
     #command for admin to begin the secret santa
-    #if message.content.startswith('$$start') and message.author.:  commented out until Physics-official's permissions are known
+    #TODO: allow only ppl with admin permissions to run
+    if message.content.startswith('$$start'):
+        #for name in config['members']:
+            #foo
+    
+    #allows a way to exit the bot
+    #TODO: allow only ppl with admin permissions to run
+    if message.content.startswith('$$shutdown'):
+        await client.send_message(message.channel, 'Curse your sudden but inevitable betrayal!')
+        raise KeyboardInterrupt
 
 #print message when client is connected
 @client.event
