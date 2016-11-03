@@ -15,20 +15,23 @@ client_log.addHandler(client_handler)
 #initialize config file
 if os.path.isfile('participants.cfg') != True:
     with open('participants.cfg', 'x') as cfg:
-        pass
+        pass    #just need to create the file, no writing to be done yet
 config = configparser.ConfigParser()
 config.read('participants.cfg')
 
 #create null key if [members] has not been initalized
 if 'members' not in config.sections():
     config['members'] = {}
+    #save to participants.cfg
+    with open('participants.cfg', 'a+') as cfg:
+        config.write(cfg)
 
 #initialize list of participants from config file
 participants = [] 
 for member in config['members']:
     participants.append(member)
 
-#initialize instance of client class
+#initialize client class
 client = discord.Client()
 
 #handler for all on_message events
@@ -45,9 +48,11 @@ async def on_message(message):
     #event for a user joining the secret santa
     #TODO: ask for and store mailing address and gift preferences for each participant
     elif message.content.startswith('$$join'):
+        #append to list of participants
         participants.append(message.author)
+        #add to config and save to config file
         config['members'][message.author] = ''
-        with open('participants.cfg') as configfile:
+        with open('participants.cfg', 'a+') as configfile:
             config.write(configfile)
         await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa exchange!')
     
@@ -55,13 +60,20 @@ async def on_message(message):
     #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
     #TODO: tell each participant the address and gift prefences of their partner
     elif message.content.startswith('$$start'):
-        available = participants
+        partners = participants
+        #select a random partner for each participant
         for user in config['members']:
-            candidates = available
+            candidates = partners
             candidates.remove(user)
             partner = candidates[random.randint(0, available.len())]
-            available.remove(partner)
+            #remove user's partner from list of partners
+            partners.remove(partner)
+            #save partner in config file
             config['members'][user] = available[partner]
+            with open('participants.cfg', 'a+') as configfile:
+                config.write(configfile)
+            
+            #tell participants who their partner is
             await client.send_message(user, partner.name + 'Is your secret santa partner! Now find a gift and send it to them!')
     
     #allows a way to exit the bot
