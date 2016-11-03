@@ -5,12 +5,12 @@ import os.path
 import configparser
 import random
 
-#set up debug log
-debug = logging.getLogger('discord')
-debug.setLevel(logging.DEBUG)
-handler = logging.FileHandler(filename='debug.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-debug.addHandler(handler)
+#set up discord connection debug logging
+client_log = logging.getLogger('discord')
+client_log.setLevel(logging.DEBUG)
+client_handler = logging.FileHandler(filename='debug.log', encoding='utf-8', mode='w')
+client_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+client_log.addHandler(client_handler)
 
 #initialize config file
 if os.path.isfile('participants.cfg') != True:
@@ -19,7 +19,7 @@ if os.path.isfile('participants.cfg') != True:
 config = configparser.ConfigParser()
 config.read('participants.cfg')
 
-#create null key if participants have not been initalized
+#create null key if [members] has not been initalized
 if 'members' not in config.sections():
     config['members'] = {}
 
@@ -43,24 +43,30 @@ async def on_message(message):
         return
     
     #event for a user joining the secret santa
-    if message.content.startswith('$$join'):
-        #config['PARTICIPANTS'][message.author.name] = ''
-        participants.append(message.author.name)
-        config['PARTICIPANTS'][message.author.name] = None
+    #TODO: ask for and store mailing address and gift preferences for each participant
+    elif message.content.startswith('$$join'):
+        participants.append(message.author)
+        config['members'][message.author] = ''
         with open('participants.cfg') as configfile:
             config.write(configfile)
-        print(participants)
         await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa exchange!')
     
     #command for admin to begin the secret santa
-    #TODO: allow only ppl with admin permissions to run
-    if message.content.startswith('$$start'):
-        #for name in config['members']:
-            #foo
+    #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
+    #TODO: tell each participant the address and gift prefences of their partner
+    elif message.content.startswith('$$start'):
+        available = participants
+        for user in config['members']:
+            candidates = available
+            candidates.remove(user)
+            partner = candidates[random.randint(0, available.len())]
+            available.remove(partner)
+            config['members'][user] = available[partner]
+            await client.send_message(user, partner.name + 'Is your secret santa partner! Now find a gift and send it to them!')
     
     #allows a way to exit the bot
-    #TODO: allow only ppl with admin permissions to run
-    if message.content.startswith('$$shutdown'):
+    #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
+    elif message.content.startswith('$$shutdown'):
         await client.send_message(message.channel, 'Curse your sudden but inevitable betrayal!')
         raise KeyboardInterrupt
 
