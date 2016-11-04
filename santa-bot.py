@@ -5,6 +5,10 @@ import os.path
 import configparser
 import random
 
+class Participant(object):
+    def __init__(self, user, address, ):
+        self.foo = bar
+
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
 client_log.setLevel(logging.DEBUG)
@@ -50,13 +54,16 @@ async def on_message(message):
     elif message.content.startswith('$$join'):
         #append to list of participants
         participants.append(message.author)
-        #add to config and save to config file
-        config['members'][message.author] = ''
+        #add participant array to config and save to config file
+        #array format: [0] is partner, [1] is address, [2] is gift preferences, [3] is partner's address, [4] is parnter's gift preference
+        config['members'][message.author] = []  
         with open('participants.cfg', 'a+') as configfile:
             config.write(configfile)
         await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa exchange!')
 		await client.send_message(message.author, 'Please input your mailing address so your secret Santa can send you something!')
-    
+        await client.send_message(message.author, 'Use `$$setaddress` to designate your mailing adress')
+        await client.send_message(message.author, 'Use `$$setpreference` to set gift preferences for your secret santa'
+
     #command for admin to begin the secret santa
     #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
     #TODO: tell each participant the address and gift prefences of their partner
@@ -70,7 +77,7 @@ async def on_message(message):
             #remove user's partner from list of partners
             partners.remove(partner)
             #save partner in config file
-            config['members'][user] = available[partner]
+            config['members'][user][0] = available[partner]
             with open('participants.cfg', 'a+') as configfile:
                 config.write(configfile)
             
@@ -83,6 +90,14 @@ async def on_message(message):
         await client.send_message(message.channel, 'Curse your sudden but inevitable betrayal!')
         raise KeyboardInterrupt
 
+    #accept adress of participants
+    elif message.content.startswith('$$setaddress'):
+        user_address = message.content
+        config['members'][message.author][1] = user_address.replace('$$setaddress', '', 1)
+        with open('participants.cfg', 'a+') as configfile:
+            config.write(configfile)
+    
+    elif message.content.startswith('$$setpreference')
 #print message when client is connected
 @client.event
 async def on_ready():
