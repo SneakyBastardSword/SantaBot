@@ -55,6 +55,7 @@ async def on_message(message):
         with open('participants.cfg', 'a+') as configfile:
             config.write(configfile)
         await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa exchange!')
+		await client.send_message(message.author, 'Please input your mailing address so your secret Santa can send you something!')
     
     #command for admin to begin the secret santa
     #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
