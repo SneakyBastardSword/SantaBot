@@ -5,9 +5,15 @@ import os.path
 import configparser
 import random
 
+#class defining a participant and associated with them
 class Participant(object):
-    def __init__(self, user, address, ):
-        self.foo = bar
+    def __init__(self, idstr):
+        self.idstr = idstr
+        self.address = ''
+        self.preferences = ''
+        self.partner = ''
+        self.prtnr_addr = ''
+        self.prtnr_prefs = ''
 
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
@@ -21,21 +27,9 @@ if os.path.isfile('participants.cfg') != True:
     with open('participants.cfg', 'x') as cfg:
         pass    #just need to create the file, no writing to be done yet
 config = configparser.ConfigParser()
-config.read('participants.cfg')
+config.read_file('participants.cfg')
 
-#create null key if [members] has not been initalized
-if 'members' not in config.sections():
-    config['members'] = {}
-    #save to participants.cfg
-    with open('participants.cfg', 'a+') as cfg:
-        config.write(cfg)
-
-#initialize list of participants from config file
-participants = [] 
-for member in config['members']:
-    participants.append(member)
-
-#initialize client class
+#initialize client class instance 
 client = discord.Client()
 
 #handler for all on_message events
@@ -45,18 +39,16 @@ async def on_message(message):
     with open('chat.log','a+') as chatlog:
         chatlog.write('[' + message.author.name + ' in ' + message.channel.name + ' at ' + str(message.timestamp) + ']' + message.content + '\n')
     
-    #ignore messages from the bot
+    #ignore messages from the bot itself
     if message.author == client.user:
         return
     
     #event for a user joining the secret santa
     #TODO: ask for and store mailing address and gift preferences for each participant
     elif message.content.startswith('$$join'):
-        #append to list of participants
-        participants.append(message.author)
-        #add participant array to config and save to config file
-        #array format: [0] is partner, [1] is address, [2] is gift preferences, [3] is partner's address, [4] is parnter's gift preference
-        config['members'][message.author] = []  
+        #initialize instance of participant class for the author 
+        str(message.author.name) = Participant(message.author.id)
+        config['members'][message.author.name] = 
         with open('participants.cfg', 'a+') as configfile:
             config.write(configfile)
         await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa exchange!')
@@ -97,7 +89,8 @@ async def on_message(message):
         with open('participants.cfg', 'a+') as configfile:
             config.write(configfile)
     
-    elif message.content.startswith('$$setpreference')
+    elif message.content.startswith('$$setpref')
+        message.author.id = 
 #print message when client is connected
 @client.event
 async def on_ready():
