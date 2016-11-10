@@ -7,15 +7,15 @@ import random
 
 #class defining a participant and info associated with them
 class Participant(object):
-    def __init__(self, name, idstr):
-        self.name = name        #string containing name of user
-        self.idstr = idstr      #string containing id of user
-        self.address = ''       #string for user's address
-        self.preferences = ''   #string for user's gift preferences
-        self.partner = ''       #string for name of partner
-        self.partnerid = ''     #string for id of partner
-        self.prtnr_addr = ''    #string for address of partner
-        self.prtnr_prefs = ''   #string for partner gift preferences
+    def __init__(self, name, idstr, address = '', preferences = '', partner = '', partnerid = '', prtnr_addr = '', prtnr_prefs = ''):
+        self.name = name                #string containing name of user
+        self.idstr = idstr              #string containing id of user
+        self.address = address          #string for user's address
+        self.preferences = preferences  #string for user's gift preferences
+        self.partner = partner          #string for name of partner
+        self.partnerid = partnerid      #string for id of partner
+        self.prtnr_addr = prtnr_addr    #string for address of partner
+        self.prtnr_prefs = prtnr_prefs  #string for partner gift preferences
 
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
@@ -31,12 +31,13 @@ if os.path.isfile('participants.cfg') != True:
 config = configparser.ConfigParser()
 config.read_file('participants.cfg')
 
-#store the keys in the cfg file to a list of participant names
-#FIXME: refactor so a new class is initialized for each key, instead of just appending a value
-usr_list = []
-#with open('participants.cfg', 'r+') as cfg:
-#    for key in cfg:
-#        usr_list.append(key)
+#store the keys in the cfg file to a dict of participants and store the number of participants to an int
+usr_dict = {}
+total_users = 0
+with open('participants.cfg', 'r+') as cfg:
+    for key in cfg['members']:
+        usr_dict[key[0]] = (Participant(key[0], key[1], key[2], key[3], key[4], key[5], key[6], key[7], key[8]))
+        total_users = total_users + 1
 
 #initialize client class instance 
 client = discord.Client()
@@ -55,11 +56,12 @@ async def on_message(message):
     #event for a user joining the secret santa
     elif message.content.startswith('$$join'):
         #initialize instance of participant class for the author 
-        usr_list.append(Participant(message.author.name, message.author.id))
-        #write to config
-        #config['members'][usrname] = [message.author.name, message.author.id, '', '', '', '', '', '']
-        #with open('participants.cfg', 'a+') as configfile:
-        #    config.write(configfile)
+        usr_dict[message.author.name] = (Participant(message.author.name, message.author.id))
+        #write details of the class instance to config and increase total_users
+        total_users = total_users + 1
+        config['members'][total_users] = [message.author.name, message.author.id, '', '', '', '', '', '']
+        with open('participants.cfg', 'a+') as configfile:
+            config.write(configfile)
         
         #prompt user about inputting info
         await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa exchange!')
@@ -70,7 +72,8 @@ async def on_message(message):
     #accept adress of participants
     elif message.content.startswith('$$setaddress'):
         #add the input to the value in the user's class instance
-        for user in usr_list:
+        #FIXME: refactor for switch from usr_list to usr_dict
+        for user in usr_dict:
             if user.idstr = message.author.id:
                 user.preferences = message.content.replace('$$setaddress', '', 1)
                 break
@@ -83,7 +86,8 @@ async def on_message(message):
     #accept gift preferences of participants
     elif message.content.startswith('$$setprefs')
         #add the input to the value in the user's class instance
-        for user in usr_list:
+        #FIXME: refactor for switch from usr_list to usr_dict
+        for user in usr_dict:
             if user.idstr = message.author.id:
                 user.preferences = message.content.replace('$$setpref', '', 1)
                 break
@@ -97,20 +101,24 @@ async def on_message(message):
     #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
     elif message.content.startswith('$$start'):
         #first ensure all users have all info submitted
-        for user in usr_list:
+        #FIXME: refactor for switch from usr_list to usr_dict
+        for user in usr_dict:
             assign_error = False
             if user.address == '':
-                client.send_message(message.author, 'Error: ' + user.name + user.idstr + ' has not submitted their mailing address. Partner assignment canceled.')
+                await client.send_message(message.author, '```Error: ' + user.name + user.idstr + ' has not submitted their mailing address.```')
                 assign_error = True
             if user.preferences == '': 
-                client.send_message(message.author, 'Error: ' + user.name + user.idstr + ' has not submitted their gift preferences. Partner assignment cancelled.')
+                await client.send_message(message.author, '```Error: ' + user.name + user.idstr + ' has not submitted their gift preferences.```')
                 assign_error = True
         
         #only run if the above loop found no null values
-        if not assign_error:
-            partners = usr_list
+        if assign_error:
+           await client.send_message(message.author, '`Partner assignment cancelled.`')
+        else:
+            #FIXME: refactor for switch from usr_list to usr_dict
+            partners = usr_dict
             #select a random partner for each participant
-            for user in usr_list:
+            for user in usr_dict:
                 candidates = partners
                 candidates.remove(user)
                 partner = candidates[random.randint(0, available.len())]
