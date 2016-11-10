@@ -5,15 +5,17 @@ import os.path
 import configparser
 import random
 
-#class defining a participant and associated with them
+#class defining a participant and info associated with them
 class Participant(object):
-    def __init__(self, idstr):
-        self.idstr = idstr
-        self.address = ''
-        self.preferences = ''
-        self.partner = ''
-        self.prtnr_addr = ''
-        self.prtnr_prefs = ''
+    def __init__(self, name, idstr):
+        self.name = name        #string containing name of user
+        self.idstr = idstr      #string containing id of user
+        self.address = ''       #string for user's address
+        self.preferences = ''   #string for user's gift preferences
+        self.partner = ''       #string for name of partner
+        self.partnerid = ''     #string for id of partner
+        self.prtnr_addr = ''    #string for address of partner
+        self.prtnr_prefs = ''   #string for partner gift preferences
 
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
@@ -28,6 +30,13 @@ if os.path.isfile('participants.cfg') != True:
         pass    #just need to create the file, no writing to be done yet
 config = configparser.ConfigParser()
 config.read_file('participants.cfg')
+
+#store the keys in the cfg file to a list of participant names
+#FIXME: refactor so a new class is initialized for each key, instead of just appending a value
+usr_list = []
+#with open('participants.cfg', 'r+') as cfg:
+#    for key in cfg:
+#        usr_list.append(key)
 
 #initialize client class instance 
 client = discord.Client()
@@ -44,37 +53,70 @@ async def on_message(message):
         return
     
     #event for a user joining the secret santa
-    #TODO: ask for and store mailing address and gift preferences for each participant
     elif message.content.startswith('$$join'):
         #initialize instance of participant class for the author 
-        str(message.author.name) = Participant(message.author.id)
-        config['members'][message.author.name] = 
-        with open('participants.cfg', 'a+') as configfile:
-            config.write(configfile)
+        usr_list.append(Participant(message.author.name, message.author.id))
+        #write to config
+        #config['members'][usrname] = [message.author.name, message.author.id, '', '', '', '', '', '']
+        #with open('participants.cfg', 'a+') as configfile:
+        #    config.write(configfile)
+        
+        #prompt user about inputting info
         await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa exchange!')
 		await client.send_message(message.author, 'Please input your mailing address so your secret Santa can send you something!')
-        await client.send_message(message.author, 'Use `$$setaddress` to designate your mailing adress')
-        await client.send_message(message.author, 'Use `$$setpreference` to set gift preferences for your secret santa'
+        await client.send_message(message.author, 'Use `$$setaddress` to set your mailing adress')
+        await client.send_message(message.author, 'Use `$$setpreference` to set gift preferences for your secret santa')
 
-    #command for admin to begin the secret santa
+    #accept adress of participants
+    elif message.content.startswith('$$setaddress'):
+        #add the input to the value in the user's class instance
+        for user in usr_list:
+            if user.idstr = message.author.id:
+                user.preferences = message.content.replace('$$setaddress', '', 1)
+                break
+        #FIXME: refactor config file system for switch to Participant class
+        #config['members'][message.author][1] = message.content.replace('$$setaddress', '', 1)
+        #with open('participants.cfg', 'a+') as configfile:
+        #    config.write(configfile)
+        await client.send_message(message.author, 'Your address has been saved!')
+    
+    #accept gift preferences of participants
+    elif message.content.startswith('$$setprefs')
+        #add the input to the value in the user's class instance
+        for user in usr_list:
+            if user.idstr = message.author.id:
+                user.preferences = message.content.replace('$$setpref', '', 1)
+                break
+        #FIXME: refactor config file system for switch to Participant class
+        #config['members'][message.author][2] = message.content.replace('$$setpref', '', 1)
+        #with open('participants.cfg', 'a+') as configfile:
+        #    config.write(configfile)
+        await client.send_message(message.author, 'Your gift preferences have been saved')
+
+    #command for admin to begin the secret santa partner assignmenet
     #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
-    #TODO: tell each participant the address and gift prefences of their partner
     elif message.content.startswith('$$start'):
-        partners = participants
+        partners = usr_list
         #select a random partner for each participant
-        for user in config['members']:
+        for user in usr_list:
             candidates = partners
             candidates.remove(user)
             partner = candidates[random.randint(0, available.len())]
-            #remove user's partner from list of partners
+            #remove user's partner from list of possible partners
             partners.remove(partner)
-            #save partner in config file
-            config['members'][user][0] = available[partner]
-            with open('participants.cfg', 'a+') as configfile:
-                config.write(configfile)
             
+            #save the partner name, id, prefs and address to the participant's class instance
+            user.partner = partner.name
+            user.partnerid = partner.idstr
+            user.prtnr_addr = partner.address
+            user.prtnr_prefs = partner.preferences
+
             #tell participants who their partner is
-            await client.send_message(user, partner.name + 'Is your secret santa partner! Now find a gift and send it to them!')
+            #TODO: add contingency for null fields in the preferences and address values
+            await client.send_message(user, partner.name + partner.idstr + 'Is your secret santa partner! Now find a gift and send it to them!')
+            await client.send_message(user, 'Their mailing address is ' + partner.address)
+            await client.send_message(user, 'Here are their gift preferences:')
+            await client.send_message(user, partner.preferences)
     
     #allows a way to exit the bot
     #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
@@ -82,15 +124,6 @@ async def on_message(message):
         await client.send_message(message.channel, 'Curse your sudden but inevitable betrayal!')
         raise KeyboardInterrupt
 
-    #accept adress of participants
-    elif message.content.startswith('$$setaddress'):
-        user_address = message.content
-        config['members'][message.author][1] = user_address.replace('$$setaddress', '', 1)
-        with open('participants.cfg', 'a+') as configfile:
-            config.write(configfile)
-    
-    elif message.content.startswith('$$setpref')
-        message.author.id = 
 #print message when client is connected
 @client.event
 async def on_ready():
