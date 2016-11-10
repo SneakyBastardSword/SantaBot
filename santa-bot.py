@@ -96,33 +96,46 @@ async def on_message(message):
     #command for admin to begin the secret santa partner assignmenet
     #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
     elif message.content.startswith('$$start'):
-        partners = usr_list
-        #select a random partner for each participant
+        #first ensure all users have all info submitted
         for user in usr_list:
-            candidates = partners
-            candidates.remove(user)
-            partner = candidates[random.randint(0, available.len())]
-            #remove user's partner from list of possible partners
-            partners.remove(partner)
-            
-            #save the partner name, id, prefs and address to the participant's class instance
-            user.partner = partner.name
-            user.partnerid = partner.idstr
-            user.prtnr_addr = partner.address
-            user.prtnr_prefs = partner.preferences
+            assign_error = False
+            if user.address == '':
+                client.send_message(message.author, 'Error: ' + user.name + user.idstr + ' has not submitted their mailing address. Partner assignment canceled.')
+                assign_error = True
+            if user.preferences == '': 
+                client.send_message(message.author, 'Error: ' + user.name + user.idstr + ' has not submitted their gift preferences. Partner assignment cancelled.')
+                assign_error = True
+        
+        #only run if the above loop found no null values
+        if not assign_error:
+            partners = usr_list
+            #select a random partner for each participant
+            for user in usr_list:
+                candidates = partners
+                candidates.remove(user)
+                partner = candidates[random.randint(0, available.len())]
+                #remove user's partner from list of possible partners
+                partners.remove(partner)
+                
+                #save the partner name, id, prefs and address to the participant's class instance
+                user.partner = partner.name
+                user.partnerid = partner.idstr
+                user.prtnr_addr = partner.address
+                user.prtnr_prefs = partner.preferences
 
-            #tell participants who their partner is
-            #TODO: add contingency for null fields in the preferences and address values
-            await client.send_message(user, partner.name + partner.idstr + 'Is your secret santa partner! Now find a gift and send it to them!')
-            await client.send_message(user, 'Their mailing address is ' + partner.address)
-            await client.send_message(user, 'Here are their gift preferences:')
-            await client.send_message(user, partner.preferences)
+                #tell participants who their partner is
+                await client.send_message(user, partner.name + partner.idstr + 'Is your secret santa partner! Now find a gift and send it to them!')
+                await client.send_message(user, 'Their mailing address is ' + partner.address)
+                await client.send_message(user, 'Here are their gift preferences:')
+                await client.send_message(user, partner.preferences)
     
     #allows a way to exit the bot
     #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
     elif message.content.startswith('$$shutdown'):
         await client.send_message(message.channel, 'Curse your sudden but inevitable betrayal!')
         raise KeyboardInterrupt
+    
+    #TODO: add a command for the bot to list off all participant names and id's, possibly only for admins
 
 #print message when client is connected
 @client.event
