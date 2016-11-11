@@ -155,14 +155,25 @@ async def on_message(message):
         await client.send_message(message.channel, 'Curse your sudden but inevitable betrayal!')
         raise KeyboardInterrupt
     
-    #TODO: add a command for the bot to list off all participant names and id's, possibly only for admins
+    #lists off all participant names and id's
     elif message.content.startswith('$$listparticipants'):
-        pass
+        if total_users = 0:
+            await client.send_message(message.channel, 'Nobody has signed up for the secret santa exchange yet. Use `$$join` to enter the exchange.')
+        else:
+            message = '```The following people are signed up for the secret santa exchange:\n'
+            for user in usr_list:
+                message.append(user.name + user.idstr + '\n')
+            message.append('Use `$$join` to enter the exchange.```')
+            await client.send_message(message.channel, message)
 
-    
-    #TODO: add a command for listing total number of participants
+    #lists total number of participants
     elif message.content.startswith('$$totalparticipants'):
-        pass
+        if total_users = 0:
+            await client.send_message(message.channel, 'Nobody has signed up for the secret santa exchange yet. Use `$$join` to enter the exchange.')
+        elif total_users = 1:
+            await client.send_message(message.channel, '1 person has signed up for the secret santa exchange. Use `$$join` to enter the exchange.')
+        else:
+            await client.send_message(message.channel, '`A total of ' + total_users + 'Have joined the secret santa exchange so far. Use `$$join` to enter the exchange.')
 
 #print message when client is connected
 @client.event

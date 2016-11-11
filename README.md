@@ -12,8 +12,12 @@ Once all of the dependencies are installed, create a Discord bot token following
 
 ###Bot Commands:
 
-- Use `$$join` to add yourself to the list of secret santa participants.
-- use `$$setaddress` to set your mailing address for gifts to be sent to.
-- Use `$$setprefs` to let your secret santa know what kind of things you would like to receive. Keep in mind that your exact input is sent to your secret santa as is. 
-- An admin can use `$$start` to have the bot assign each participant a partner
-- An admin can use `$$shutdown` to make the bot self-terminate
+- `$$join` adds you to the list of secret santa participants.
+- `$$setaddress` saves your mailing address for gifts to be sent to.
+- `$$setprefs` saves your gift preferences so your secret santa will know what kind of things you would like to receive. Keep in mind that your exact input is sent to your secret santa as is. 
+- `$$listparticipants` makes the bot list all of the people currently participating in the secret santa exchange.
+- `$$totalparticipants` makes the bot give the number of people currently participating in the secret santa exchange
+- *`$$start` to have the bot assign each participant a partner
+- *`$$shutdown` to make the bot self-terminate
+
+all commands marked with a * can only be run by a server admin.
