@@ -119,31 +119,35 @@ async def on_message(message):
     #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
     elif message.content.startswith('$$start'):
         #first ensure all users have all info submitted
+        all_fields_complete = True
         for user in usr_list:
-            #only run if no null values in address or prefs of participant
+            #check if no null values in address or prefs of participants
             if user.addressIsSet() and user.prefIsSet:
-                partners = usr_list
-                #select a random partner for each participant
-                for user in usr_list:
-                    candidates = partners
-                    candidates.remove(user)
-                    partner = candidates[random.randint(0, available.len())]
-                    #remove user's partner from list of possible partners
-                    partners.remove(partner)
-                    
-                    #save the partner name, id, prefs and address to the participant's class instance
-                    user.partner = partner.name
-                    user.partnerid = partner.idstr
-                    user.prtnr_addr = partner.address
-                    user.prtnr_prefs = partner.preferences
-
-                    #tell participants who their partner is
-                    await client.send_message(user, partner.name + partner.idstr + 'Is your secret santa partner! Now pick out a gift for them and send it to them!')
-                    await client.send_message(user, 'Their mailing address is ' + partner.address)
-                    await client.send_message(user, 'Here are their gift preferences:')
-                    await client.send_message(user, partner.preferences)
+                pass
             else:
-                await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing address or gift preferences. Partner assignment cancelled.`')
+                all_fields_complete = False
+                await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing address or gift preferences.`')
+        #select a random partner for each participant if above loop found no empty values
+        if all_fields_complete:
+            for user in usr_list:
+                candidates = partners
+                candidates.remove(user)
+                partner = candidates[random.randint(0, available.len())]
+                #remove user's partner from list of possible partners
+                partners.remove(partner)
+                
+                #save the partner name, id, prefs and address to the participant's class instance
+                user.partner = partner.name
+                user.partnerid = partner.idstr
+                user.prtnr_addr = partner.address
+                user.prtnr_prefs = partner.preferences
+
+                #tell participants who their partner is
+                await client.send_message(user, partner.name + partner.idstr + 'Is your secret santa partner! Now pick out a gift for them and send it to them!')
+                await client.send_message(user, 'Their mailing address is ' + partner.address)
+                await client.send_message(user, 'Here are their gift preferences:')
+            else:
+                await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
     
     #allows a way to exit the bot
     #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
@@ -152,7 +156,13 @@ async def on_message(message):
         raise KeyboardInterrupt
     
     #TODO: add a command for the bot to list off all participant names and id's, possibly only for admins
+    elif message.content.startswith('$$listparticipants'):
+        pass
+
+    
     #TODO: add a command for listing total number of participants
+    elif message.content.startswith('$$totalparticipants'):
+        pass
 
 #print message when client is connected
 @client.event
