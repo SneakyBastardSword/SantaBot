@@ -33,14 +33,14 @@ class Participant(object):
             return True
 
 #takes a discord user ID string and list of participant objects, and returns the participant object with matching id, raising a ValueError if object does not exist
-def getParticipantObject(usrid, usrlist):
+def getParticipantObject(usrid, usrlist = usr_list):
     person_found = False
     for person in usrlist:
         if person.idstr = usrid:
             person_found = True
             return person
     if not person_found:
-        raise ValueError
+        return False
 
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
@@ -80,44 +80,56 @@ async def on_message(message):
     
     #event for a user joining the secret santa
     elif message.content.startswith('$$join'):
-        #initialize instance of participant class for the author 
-        usr_list[message.author.name] = (Participant(message.author.name, message.author.id))
-        #write details of the class instance to config and increase total_users
-        total_users = total_users + 1
-        config['members'][str(total_users)] = [message.author.name, message.author.id, '', '', '', '', '', '']
-        with open('participants.cfg', 'a+') as cfg:
-            config.write(cfg)
-        
-        #prompt user about inputting info
-        await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa exchange!')
-		await client.send_message(message.author, 'Please input your mailing address so your secret Santa can send you something!')
-        await client.send_message(message.author, 'Use `$$setaddress` to set your mailing adress')
-        await client.send_message(message.author, 'Use `$$setpreference` to set gift preferences for your secret santa')
+        #check if message author has already joined
+        if getParticipantObject(message.author.id, usr_list) != False:
+            await client.send_message('`Error: You have already joined!`')
+        else:
+            #initialize instance of participant class for the author 
+            usr_list[message.author.name] = (Participant(message.author.name, message.author.id))
+            #write details of the class instance to config and increase total_users
+            total_users = total_users + 1
+            config['members'][str(total_users)] = [message.author.name, message.author.id, '', '', '', '', '', '']
+            with open('participants.cfg', 'a+') as cfg:
+                config.write(cfg)
+            
+            #prompt user about inputting info
+            await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa exchange!')
+            await client.send_message(message.author, 'Please input your mailing address so your secret Santa can send you something!')
+            await client.send_message(message.author, 'Use `$$setaddress` to set your mailing adress')
+            await client.send_message(message.author, 'Use `$$setpreference` to set gift preferences for your secret santa')
     
     #accept adress of participants
     elif message.content.startswith('$$setaddress'):
-        #add the input to the value in the user's class instance
-        person = getParticipantObject(message.author.id, usr_list)
-        person.preferences = message.content.replace('$$setaddress', '', 1)
-        #save to config file
-        config['members'][str(person.usrnum)][3] = message.content.replace('$$setaddress', '', 1)
-        with open('participants.cfg', 'a+') as cfg:
-            config.write(cfg)
-        await client.send_message(message.author, 'Your address has been saved!')
+        #check if author has joined the exchange yet
+        if not getParticipantObject(message.author.id):
+            await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `$$join` to join the exchange.')
+        else:
+            #add the input to the value in the user's class instance
+            person = getParticipantObject(message.author.id)
+            person.preferences = message.content.replace('$$setaddress', '', 1)
+            #save to config file
+            config['members'][str(person.usrnum)][3] = message.content.replace('$$setaddress', '', 1)
+            with open('participants.cfg', 'a+') as cfg:
+                config.write(cfg)
+            await client.send_message(message.author, 'Your address has been saved!')
     
     #accept gift preferences of participants
     elif message.content.startswith('$$setprefs')
-        #add the input to the value in the user's class instance
-        getParticipantObject(message.author.id, usr_list).preferences = message.content.replace('$$setpref', '', 1)
-        #save to config file
-        config['members'][str(person.usrnum)][4] = message.content.replace('$$setpref', '', 1)
-        with open('participants.cfg', 'a+') as cfg:
-            config.write(cfg)
-        await client.send_message(message.author, 'Your gift preferences have been saved')
+        #check if author has joined the exchange yet
+        if not getParticipantObject(message.author.id):
+            await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `$$join` to join the exchange.')
+        else:
+            #add the input to the value in the user's class instance
+            getParticipantObject(message.author.id, usr_list).preferences = message.content.replace('$$setpref', '', 1)
+            #save to config file
+            config['members'][str(person.usrnum)][4] = message.content.replace('$$setpref', '', 1)
+            with open('participants.cfg', 'a+') as cfg:
+                config.write(cfg)
+            await client.send_message(message.author, 'Your gift preferences have been saved')
     
     #command for admin to begin the secret santa partner assignmenet
-    #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
     elif message.content.startswith('$$start'):
+        #only allow people with admin permissions to run
         if 'admin' in permissions_for(message.author): 
             #first ensure all users have all info submitted
             all_fields_complete = True
@@ -152,8 +164,8 @@ async def on_message(message):
         else:
             await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
     #allows a way to exit the bot
-    #TODO: allow only ppl with admin permissions (i.e., @physics-official) to run
     elif message.content.startswith('$$shutdown'):
+        #only allow ppl with admin permissions to run
         if 'admin' in permissions_for(message.author):
             await client.send_message(message.channel, 'Curse your sudden but inevitable betrayal!')
             raise KeyboardInterrupt
