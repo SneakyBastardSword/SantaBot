@@ -9,7 +9,7 @@ from configobj import ConfigObj
 
 #class defining a participant and info associated with them
 class Participant(object):
-    def __init__(self, name, idstr, usrnum, address = '', preferences = '', partner = '', partnerid = '', prtnr_addr = '', prtnr_prefs = ''):
+    def __init__(self, name, idstr, usrnum, address='', preferences='', partner='', partnerid='', prtnr_addr='', prtnr_prefs=''):
         self.name = name                #string containing name of user
         self.idstr = idstr              #string containing id of user
         self.usrnum = usrnum            #int value referencing the instance's location in participants.cfg and usr_list
@@ -81,10 +81,10 @@ async def on_message(message):
     elif message.content.startswith('$$join'):
         #check if message author has already joined
         if getParticipantObject(message.author.id, usr_list) != False:
-            await client.send_message('`Error: You have already joined!`')
+            await client.send_message(message.channel, '`Error: You have already joined!`')
         else:
-            #initialize instance of participant class for the author 
-            usr_list[message.author.name] = (Participant(message.author.name, message.author.id))
+            #initialize instance of participant class for the author
+            usr_list[message.author.name] = (Participant(message.author.name, message.author.id, total_users))
             #write details of the class instance to config and increment total_users
             total_users = total_users + 1
             config['members'][total_users] = [message.author.name, message.author.id, total_users]
@@ -121,7 +121,7 @@ async def on_message(message):
     #command for admin to begin the secret santa partner assignmenet
     elif message.content.startswith('$$start'):
         #only allow people with admin permissions to run
-        if 'admin' in permissions_for(message.author): 
+        if 'admin' in client.permissions_for(message.author): 
             #first ensure all users have all info submitted
             all_fields_complete = True
             for user in usr_list:
@@ -131,12 +131,14 @@ async def on_message(message):
                 else:
                     all_fields_complete = False
                     await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing address or gift preferences.`')
+            
             #select a random partner for each participant if above loop found no empty values
             if all_fields_complete:
+                partners = usr_list
                 for user in usr_list:
                     candidates = partners
                     candidates.remove(user)
-                    partner = candidates[random.randint(0, available.len())]
+                    partner = candidates[random.randint(0, len(candidates) - 1)]
                     #remove user's partner from list of possible partners
                     partners.remove(partner)
                     
@@ -193,4 +195,4 @@ async def on_ready():
     print('------')
 
 #event loop and discord connection abstraction
-client.run('token')
+client.run('MjMzMjYyNzY4NjUwODQ2MjA4.CwwXIQ.jAG-Iqja7zXvC71Ovi0z-SL16pw')
