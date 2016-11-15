@@ -1,8 +1,8 @@
-import discord
 import logging
 import asyncio
 import os.path
 import random
+import discord
 from configobj import ConfigObj
 
 #FIXME: debug all the things
@@ -35,9 +35,11 @@ class Participant(object):
             return True
 
 #initialize config file
-config = ConfigObj()
+config = ConfigObj('participants.cfg')
 config.filename = 'participants.cfg'
-config['members'] = {}
+if not os.path.exists('participants.cfg'):
+    config['members'] = {}
+    config.write()
 
 #store the keys in the cfg file to a list of participant class instances and store the number of participants to an int
 usr_list = []
@@ -47,7 +49,7 @@ for key in config['members']:
     usr_list.append(Participant(key[0], key[1], total_users, key[2], key[3], key[4], key[5], key[6], key[7]))
 
 #takes a discord user ID string and list of participant objects, and returns the participant object with matching id, returning false if user does not exist
-def getParticipantObject(usrid, usrlist = usr_list):
+def getParticipantObject(usrid, usrlist=usr_list):
     person_found = False
     for person in usrlist:
         if person.idstr == usrid:
@@ -88,6 +90,7 @@ async def on_message(message):
             #write details of the class instance to config and increment total_users
             total_users = total_users + 1
             config['members'][total_users] = [message.author.name, message.author.id, total_users]
+            config.write()
             
             #prompt user about inputting info
             await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa exchange!')
@@ -102,10 +105,11 @@ async def on_message(message):
             await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `$$join` to join the exchange.')
         else:
             #add the input to the value in the user's class instance
-            person = getParticipantObject(message.author.id)
-            person.preferences = message.content.replace('$$setaddress', '', 1)
+            user = getParticipantObject(message.author.id)
+            user.address = message.content.replace('$$setaddress', '', 1)
             #save to config file
-            
+            config['members'][user.usrnum][4] = user.address
+            config.write()
     
     #accept gift preferences of participants
     elif message.content.startswith('$$setprefs'):
@@ -114,9 +118,11 @@ async def on_message(message):
             await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `$$join` to join the exchange.')
         else:
             #add the input to the value in the user's class instance
-            getParticipantObject(message.author.id, usr_list).preferences = message.content.replace('$$setpref', '', 1)
+            user = getParticipantObject(message.author.id)
+            user.preferences = message.content.replace('$$setpref', '', 1)
             #save to config file
-            
+            config['members'][user.usrnum][5] = user.preferences
+            config.write()
     
     #command for admin to begin the secret santa partner assignmenet
     elif message.content.startswith('$$start'):
@@ -195,4 +201,4 @@ async def on_ready():
     print('------')
 
 #event loop and discord connection abstraction
-client.run('MjMzMjYyNzY4NjUwODQ2MjA4.CwwXIQ.jAG-Iqja7zXvC71Ovi0z-SL16pw')
+client.run('token')
