@@ -47,6 +47,16 @@ for key in config['members']:
     total_users = total_users + 1
     usr_list.append(Participant(key[0], key[1], total_users, key[2], key[3], key[4], key[5]))
 
+def user_is_participant(usrid, usrlist=usr_list):
+    """Takes a discord user ID string and returns whether
+    a user with that ID is in usr_list"""
+    result = False
+    for person in usrlist:
+        if person.idstr == usrid:
+            result = True
+            break
+    return result
+
 def get_participant_object(usrid, usrlist=usr_list):
     """takes a discord user ID string and list of
     participant objects, and returns the first
@@ -80,7 +90,7 @@ async def on_message(message):
     #event for a user joining the secret santa
     elif message.content.startswith('$$join'):
         #check if message author has already joined
-        if get_participant_object(message.author.id, usr_list) != False:
+        if user_is_participant(message.author.id, usr_list):
             await client.send_message(message.channel, '`Error: You have already joined.`')
         elif exchange_started:
             await client.send_message(message.channel, '`Error: Too late, the gift exchange is already in progress.`')
@@ -98,31 +108,31 @@ async def on_message(message):
             await client.send_message(message.author, 'Use `$$setaddress` to set your mailing adress')
             await client.send_message(message.author, 'Use `$$setpreference` to set gift preferences for your secret santa')
     
-    #accept adress of participants
+    #accept address of participants
     elif message.content.startswith('$$setaddress'):
         #check if author has joined the exchange yet
-        if not get_participant_object(message.author.id):
-            await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `$$join` to join the exchange.')
-        else:
+        if user_is_participant(message.author.id):
             #add the input to the value in the user's class instance
             user = get_participant_object(message.author.id)
             user.address = message.content.replace('$$setaddress', '', 1)
             #save to config file
             config['members'][user.usrnum][4] = user.address
             config.write()
+        else:
+            await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `$$join` to join the exchange.')
     
     #accept gift preferences of participants
     elif message.content.startswith('$$setprefs'):
         #check if author has joined the exchange yet
-        if not get_participant_object(message.author.id):
-            await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `$$join` to join the exchange.')
-        else:
+        if user_is_participant(message.author.id):
             #add the input to the value in the user's class instance
             user = get_participant_object(message.author.id)
             user.preferences = message.content.replace('$$setpref', '', 1)
             #save to config file
             config['members'][user.usrnum][5] = user.preferences
             config.write()
+        else:
+            await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `$$join` to join the exchange.')
     
     #command for admin to begin the secret santa partner assignmenet
     elif message.content.startswith('$$start'):
@@ -132,7 +142,7 @@ async def on_message(message):
             all_fields_complete = True
             for user in usr_list:
                 #check if no null values in address or prefs of participants
-                if user.address_is_set() and user.pref_is_set:
+                if user.address_is_set() and user.pref_is_set():
                     pass
                 else:
                     all_fields_complete = False
@@ -197,7 +207,7 @@ async def on_message(message):
     
     #allows a user to have the details of their partner restated
     elif message.content.startswith('$$partnerinfo'):
-        if exchange_started:
+        if exchange_started and user_is_participant(message.author.id):
             userobj = get_participant_object(message.author.id)
             partnerobj = get_participant_object(userobj.partnerid)
             msg = 'Your partner is ' + user.partner + user.partnerid + '\n'
@@ -205,8 +215,10 @@ async def on_message(message):
             msg = msg + 'their gift preference is as follows:\n'
             msg = msg + partnerobj.preferences
             await client.send_message(message.author, msg)
-        else:
+        elif exchange_started:
             await client.send_message(message.channel, '`Error: partners have not been assigned yet.`')
+        else:
+            await client.send_message(message.author, '`Error: You are not participating in the gift exchange.`')
 
 @client.event
 async def on_ready():
