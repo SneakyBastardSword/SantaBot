@@ -190,9 +190,9 @@ async def on_message(message):
         else:
             await client.send_message(message.channel, 'A total of ' + total_users + ' users have joined the secret santa exchange so far. Use `$$join` to enter the exchange.')
 
-#print message when client is connected
 @client.event
 async def on_ready():
+    """print message when client is connected"""
     print('Logged in as')
     print(client.user.name)
     print(client.user.id)
