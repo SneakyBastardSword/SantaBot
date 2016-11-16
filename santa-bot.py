@@ -48,15 +48,12 @@ for key in config['members']:
 
 def get_participant_object(usrid, usrlist=usr_list):
     """takes a discord user ID string and list of
-    participant objects, and returns the participant object
-    with matching id, returning false if user does not exist"""
-    person_found = False
+    participant objects, and returns the first
+    participant object with matching id."""
     for person in usrlist:
         if person.idstr == usrid:
-            person_found = True
             return person
-    if not person_found:
-        return False
+            break
 
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
