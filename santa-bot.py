@@ -10,7 +10,7 @@ class Participant(object):
     def __init__(self, name, idstr, usrnum, address='', preferences='', partner='', partnerid=''):
         self.name = name                #string containing name of user
         self.idstr = idstr              #string containing id of user
-        self.usrnum = usrnum            #int value referencing the instance's location in participants.cfg and usr_list
+        self.usrnum = usrnum            #int value referencing the instance's location in usr_list
         self.address = address          #string for user's address
         self.preferences = preferences  #string for user's gift preferences
         self.partner = partner          #string for name of partner
@@ -31,11 +31,12 @@ class Participant(object):
             return True
 
 #initialize config file
-config = ConfigObj('/files/participants.cfg')
-config.filename = '/files/participants.cfg'
-if not os.path.exists('/files/participants.cfg'):
+config = ConfigObj()
+config.filename = './files/participants.cfg'
+if not os.path.exists('./files/participants.cfg'):
+    statusdict = {'exchange_started': False}
     config['members'] = {}
-    config['status'] = {'exchange_started': False}
+    config['status'] = statusdict
     config.write()
 
 #initialize data from config file
@@ -58,7 +59,7 @@ def get_participant_object(usrid, usrlist=usr_list):
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
 client_log.setLevel(logging.DEBUG)
-client_handler = logging.FileHandler(filename='/files/debug.log', encoding='utf-8', mode='w')
+client_handler = logging.FileHandler(filename='./files/debug.log', encoding='utf-8', mode='w')
 client_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 client_log.addHandler(client_handler)
 
@@ -69,7 +70,7 @@ client = discord.Client()
 @client.event
 async def on_message(message):
     #write all messages to a chatlog
-    with open('/files/chat.log', 'a+') as chat_log:
+    with open('./files/chat.log', 'a+') as chat_log:
         chat_log.write('[' + message.author.name + message.author.id + ' in ' + message.channel.name + ' at ' + str(message.timestamp) + ']' + message.content + '\n')
     
     #ignore messages from the bot itself
