@@ -35,11 +35,13 @@ config = ConfigObj('/files/participants.cfg')
 config.filename = '/files/participants.cfg'
 if not os.path.exists('/files/participants.cfg'):
     config['members'] = {}
+    config['status'] = {'exchange_started': False}
     config.write()
 
-#store the keys in the cfg file to a list of participant class instances and store the number of participants to an int
+#initialize data from config file
 usr_list = []
 total_users = 0
+exchange_started = config['status']['exchange_started']
 for key in config['members']:
     total_users = total_users + 1
     usr_list.append(Participant(key[0], key[1], total_users, key[2], key[3], key[4], key[5]))
@@ -63,14 +65,14 @@ client_handler = logging.FileHandler(filename='/files/debug.log', encoding='utf-
 client_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 client_log.addHandler(client_handler)
 
-#initialize client class instance 
+#initialize client class instance
 client = discord.Client()
 
 #handler for all on_message events
 @client.event
 async def on_message(message):
     #write all messages to a chatlog
-    with open('/files/chat.log','a+') as chat_log:
+    with open('/files/chat.log', 'a+') as chat_log:
         chat_log.write('[' + message.author.name + message.author.id + ' in ' + message.channel.name + ' at ' + str(message.timestamp) + ']' + message.content + '\n')
     
     #ignore messages from the bot itself
@@ -81,7 +83,9 @@ async def on_message(message):
     elif message.content.startswith('$$join'):
         #check if message author has already joined
         if get_participant_object(message.author.id, usr_list) != False:
-            await client.send_message(message.channel, '`Error: You have already joined!`')
+            await client.send_message(message.channel, '`Error: You have already joined.`')
+        elif exchange_started:
+            await client.send_message(message.channel, '`Error: Too late, the gift exchange is already in progress.`')
         else:
             #initialize instance of participant class for the author
             usr_list[message.author.name] = (Participant(message.author.name, message.author.id, total_users))
@@ -156,8 +160,11 @@ async def on_message(message):
                     await client.send_message(user, partner.name + partner.idstr + 'Is your secret santa partner! Now pick out a gift for them and send it to them!')
                     await client.send_message(user, 'Their mailing address is ' + partner.address)
                     await client.send_message(user, 'Here are their gift preferences:')
-                else:
-                    await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
+                #set exchange_started + assoc. cfg value to True
+                exchange_started = True
+                config['status']['exchange_started'] = True
+            else:
+                await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
         else:
             await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
     
@@ -189,6 +196,19 @@ async def on_message(message):
             await client.send_message(message.channel, '1 person has signed up for the secret santa exchange. Use `$$join` to enter the exchange.')
         else:
             await client.send_message(message.channel, 'A total of ' + total_users + ' users have joined the secret santa exchange so far. Use `$$join` to enter the exchange.')
+    
+    #allows a user to have the details of their partner restated
+    elif message.content.startswith('$$partnerinfo'):
+        if exchange_started:
+            userobj = get_participant_object(message.author.id)
+            partnerobj = get_participant_object(userobj.partnerid)
+            msg = 'Your partner is ' + user.partner + user.partnerid + '\n'
+            msg = msg + 'Their mailing address is ' + partnerobj.address + '\n'
+            msg = msg + 'their gift preference is as follows:\n'
+            msg = msg + partnerobj.preferences
+            await client.send_message(message.author, msg)
+        else:
+            await client.send_message(message.channel, '`Error: partners have not been assigned yet.`')
 
 @client.event
 async def on_ready():
