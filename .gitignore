@@ -2,4 +2,3 @@
 *.cfg
 /.vscode
 .pylintrc
-/files
