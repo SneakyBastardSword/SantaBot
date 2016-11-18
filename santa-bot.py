@@ -234,4 +234,4 @@ async def on_ready():
     print('------')
 
 #event loop and discord initiation
-client.run('MjMzMjYyNzY4NjUwODQ2MjA4.Cw5o7g.ceFTmCWLFAKLNVY792P_kLnIikU')
+client.run('token')
