@@ -43,7 +43,6 @@ except:
 usr_list = []
 total_users = 0
 exchange_started = config['programData']['exchange_started']
-print(exchange_started)
 for key in config['members']:
     total_users = total_users + 1
     usr_list.append(Participant(key[0], key[1], total_users, key[2], key[3], key[4]))
@@ -98,8 +97,7 @@ async def on_message(message):
         if user_is_participant(message.author.id):
             await client.send_message(message.channel, '`Error: You have already joined.`')
         #check if the exchange has already started
-        elif exchange_started == True:
-            print(exchange_started)
+        elif exchange_started:
             await client.send_message(message.channel, '`Error: Too late, the gift exchange is already in progress.`')
         else:
             #initialize instance of participant class for the author
@@ -143,53 +141,51 @@ async def on_message(message):
     
     #command for admin to begin the secret santa partner assignmenet
     elif message.content.startswith('$$start'):
-        #FIXME:only allow people with admin permissions to run
-        #if 'admin' in client.permissions_for(message.author):
-        #first ensure all users have all info submitted
-        all_fields_complete = True
-        for user in usr_list:
-            #check if no null values in address or prefs of participants
-            if user.address_is_set() and user.pref_is_set():
-                pass
-            else:
-                all_fields_complete = False
-                await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing address or gift preferences.`')
-        
-        #select a random partner for each participant if above loop found no empty values
-        if all_fields_complete:
-            partners = usr_list
+        #only allow people with admin permissions to run
+        if message.author.top_role == message.server.role_heirarchy[0]:
+            #first ensure all users have all info submitted
+            all_fields_complete = True
             for user in usr_list:
-                candidates = partners
-                candidates.remove(user)
-                partner = candidates[random.randint(0, len(candidates) - 1)]
-                #remove user's partner from list of possible partners
-                partners.remove(partner)
-                #save the partner id to the participant's class instance
-                user.partnerid = partner.idstr
-                #save to config file
-                config['users'][str(user.usrnum)][5] = user.partnerid
-                config.write()
+                if user.address_is_set() and user.pref_is_set():
+                    pass
+                else:
+                    all_fields_complete = False
+                    await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing address or gift preferences.`')
+                    await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
+            
+            #select a random partner for each participant if above loop found no empty values
+            if all_fields_complete:
+                partners = usr_list
+                for user in usr_list:
+                    candidates = partners
+                    candidates.remove(user)
+                    partner = candidates[random.randint(0, len(candidates) - 1)]
+                    #remove user's partner from list of possible partners
+                    partners.remove(partner)
+                    #save the partner id to the participant's class instance
+                    user.partnerid = partner.idstr
+                    #save to config file
+                    config['users'][str(user.usrnum)][5] = user.partnerid
+                    config.write()
 
-                #tell participants who their partner is
-                await client.send_message(user, partner.name + partner.idstr + 'Is your secret santa partner! Now pick out a gift for them and send it to them!')
-                await client.send_message(user, 'Their mailing address is ' + partner.address)
-                await client.send_message(user, 'Here are their gift preferences:')
-            #set exchange_started + assoc. cfg value to True
-            exchange_started = True
-            config['programData']['exchange_started'] = True
+                    #tell participants who their partner is
+                    await client.send_message(user, partner.name + partner.idstr + 'Is your secret santa partner! Now pick out a gift for them and send it to them!')
+                    await client.send_message(user, 'Their mailing address is ' + partner.address)
+                    await client.send_message(user, 'Here are their gift preferences:')
+                #set exchange_started + assoc. cfg value to True
+                exchange_started = True
+                config['programData']['exchange_started'] = True
         else:
-            await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
-        #else:
-            #await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
+            await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
     
     #allows a way to exit the bot
-    elif message.content.startswith('$$shutdown'):
-        #FIXME: only allow ppl with admin permissions to run
-        #if 'admin' in client.permissions_for(message.author):
-        await client.send_message(message.channel, 'Curse your sudden but inevitable betrayal!')
-        raise KeyboardInterrupt
-        #else:
-        #    await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
+    elif message.content.startswith('$$shutdown') and not message.channel.is_private:
+        #Fonly allow ppl with admin permissions to run
+        if message.author.top_role == message.server.role_heirarchy[0]:
+            await client.send_message(message.channel, 'Curse your sudden but inevitable betrayal!')
+            raise KeyboardInterrupt
+        else:
+            await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
     
     #lists off all participant names and id's
     elif message.content.startswith('$$listparticipants'):
