@@ -30,13 +30,14 @@ class Participant(object):
             return True
 
 #initialize config file
-if not os.path.exists('./files/participants.cfg'):
+try:
+    config = ConfigObj('./files/participants.cfg')
+except: 
+    os.mkdir('./files/')
     config = ConfigObj('./files/participants.cfg')
     config['programData'] = {'exchange_started': False, 'discord_token': 'token'}
     config['members'] = {}
     config.write()
-else:
-    config = ConfigObj('./files/participants.cfg')
 
 #initialize data from config file
 usr_list = []
