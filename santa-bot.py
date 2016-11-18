@@ -32,8 +32,8 @@ class Participant(object):
 #initialize config file
 if not os.path.exists('./files/participants.cfg'):
     config = ConfigObj('./files/participants.cfg')
+    config['programData'] = {'exchange_started': False, 'discord_token': 'token'}
     config['members'] = {}
-    config['status'] = {'exchange_started': False}
     config.write()
 else:
     config = ConfigObj('./files/participants.cfg')
@@ -41,7 +41,7 @@ else:
 #initialize data from config file
 usr_list = []
 total_users = 0
-exchange_started = config['status']['exchange_started']
+exchange_started = config['programData']['exchange_started']
 print(exchange_started)
 for key in config['members']:
     total_users = total_users + 1
@@ -175,7 +175,7 @@ async def on_message(message):
                 await client.send_message(user, 'Here are their gift preferences:')
             #set exchange_started + assoc. cfg value to True
             exchange_started = True
-            config['status']['exchange_started'] = True
+            config['programData']['exchange_started'] = True
         else:
             await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
         #else:
@@ -234,4 +234,4 @@ async def on_ready():
     print('------')
 
 #event loop and discord initiation
-client.run('token')
+client.run(config['programData']['discord_token'])
