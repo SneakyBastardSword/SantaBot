@@ -1,3 +1,15 @@
+#IMPORTANT NOTE:
+#This branch is the development branch, where i try to get major refactorings working, so i have a (mostly) stable branch in master.
+#The current thing i'm refactoring is making it so that the bot can handle exchanges across multiple channels
+#thing is, this is getting really messy, and i really want to try to get the master branch completely operational and debugged by 
+#thanksgiving. 
+
+#As such, this branch's development is suspended until i get master to a stable release stage.
+
+
+
+
+
 import logging
 import asyncio
 import os.path
@@ -6,13 +18,15 @@ import discord
 from configobj import ConfigObj
 
 
+#FIXME: make this entire program not a mess
+
+
 class Participant(object):
     """class defining a participant and info associated with them"""
-    def __init__(self, name, idstr, usrnum, server, address='', preferences='', partnerid=''):
+    def __init__(self, name, idstr, usrnum, address='', preferences='', partnerid=''):
         self.name = name                #string containing name of user
         self.idstr = idstr              #string containing id of user
         self.usrnum = usrnum            #int value referencing the instance's location in usr_list
-        self.server = server            #string containing id of user's server
         self.address = address          #string for user's address
         self.preferences = preferences  #string for user's gift preferences
         self.partnerid = partnerid      #string for id of partner
@@ -35,10 +49,9 @@ class Participant(object):
 class Group(object):
     """class defining a group of participants
     based on server membership"""
-    def __init__(self, name, idstr, hasStarted=False, totalUsers=0, participantList=[]):
+    def __init__(self, name, idstr, totalUsers=0, participantList=[]):
         self.name = name                #server name
         self.idstr = idstr              #server ID
-        self.hasStarted = hasStarted    #whether or not parters have been assigned
         self.totalUsers = totalUsers
         self.participantList = participantList  #participant list, populated as 
                                                 #users join
@@ -70,30 +83,7 @@ class Group(object):
 #initialize client class instance
 client = discord.Client()
 
-#initialize config file
-try:
-    config = ConfigObj('./files/botdata.cfg')
-    foo = config['members'] #TODO: theres gotta be a more elegant way to do this
-except:
-    os.mkdir('./files/')
-    config = ConfigObj('./files/botdata.cfg')
-    config['programData'] = {'discord_token': 'token'}
-    config['servers'] = {}
-    config['members'] = {}
-    for _server in client.servers:
-        config['servers'][_server.id] = [_server.name, False]
-    config.write()
-
-#initialize data from config file
-usr_list = []
-server_list = []
-total_users = 0
-for _server in client.servers:
-    server_list.append(Group(_server.name, _server.id, config['servers'][_server.id][1], ))
-    print(_server.name)
-for key in config['members']:
-    total_users = total_users + 1
-    usr_list.append(Participant(key[0], key[1], total_users, key[2], key[3], key[4], key[5]))
+#TODO: initialize config file
 
 def user_is_participant(usrid, usrlist=usr_list):
     """Takes a discord user ID string and returns whether
@@ -113,10 +103,9 @@ def get_participant_object(usrid, usrlist=usr_list):
         if person.idstr == usrid:
             return person
 
-def get_group_object(serverid, serverlist=server_list):
+def get_group_object(serverid, serverlist=svr_list):
     """takes discord server id string and list of server objects,
     and returns first server object with matching id"""
-    print('I am working!')
     for group in serverlist:
         if group.idstr == serverid:
             return group
@@ -127,6 +116,34 @@ client_log.setLevel(logging.DEBUG)
 client_handler = logging.FileHandler(filename='./files/debug.log', encoding='utf-8', mode='w')
 client_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 client_log.addHandler(client_handler)
+
+
+usr_list = []
+svr_list = []
+
+
+@client.event
+async def on_ready():
+    """print message when client is connected and perform
+    some initialization"""
+    
+    #TODO:
+    #-initialize list containing Group classes for each server that the client is connected to 
+    #-initialize list containing Participant classes for each person who sends '$$join' and make sure to keep track of who is in which servers
+    #-ensure all values contained in those classes can be reconstructed from a config file      
+    
+    
+    global usr_list
+    global svr_list
+    
+    #this is the default, no reading config for saved value yet
+    for server in client.servers:
+        server_list.append(Group(server.name, server.id))
+
+    print('Logged in as')
+    print(client.user.name)
+    print(client.user.discriminator)
+    print('------')
 
 
 #handler for all on_message events
@@ -259,15 +276,6 @@ async def on_message(message):
             await client.send_message(message.channel, '`Error: partners have not been assigned yet.`')
         else:
             await client.send_message(message.author, '`Error: You are not participating in the gift exchange.`')
-
-@client.event
-async def on_ready():
-    """print message when client is connected"""
-    print('Logged in as')
-    print(client.user.name)
-    print(client.user.id)
-    print(client.user.discriminator)
-    print('------')
 
 #event loop and discord initiation
 client.run(config['programData']['discord_token'])
