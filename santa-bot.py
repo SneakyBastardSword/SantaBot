@@ -75,6 +75,10 @@ class Group(object):
         self.hasStarted = True
         config['servers'][self.idstr]['has_started'] = True
 
+client = discord.Client()
+usr_list = []
+svr_list = []
+
 def user_is_participant(usrid, usrlist=usr_list):
     """Takes a discord user ID string and returns whether
     a user with that ID is in usr_list"""
@@ -119,10 +123,6 @@ else:
     config['servers'] = {}
     firstrun = True
 
-client = discord.Client()
-usr_list = []
-svr_list = []
-
 @client.event
 async def on_ready():
     """print message when client is connected and perform
@@ -153,9 +153,9 @@ async def on_ready():
     print(client.user.discriminator)
     print('------')
 
-#handler for all on_message events
 @client.event
 async def on_message(message):
+    """on_event handler for all on_message events"""
     #declare global vars
     global usr_list
     global total_users
@@ -164,6 +164,7 @@ async def on_message(message):
     group = get_group_object(message.author.server)
     if user_is_participant(message.author.id):
         author = get_participant_object(message.author.id)
+
     #write all messages to a chatlog
     with open('./files/chat.log', 'a+') as chat_log:
         chat_log.write(
@@ -329,4 +330,4 @@ async def on_message(message):
                 '`Error: You are not participating in the gift exchange.`')
 
 #event loop and discord initiation
-client.run(config['programData']['discord_token'])
+client.run(config['token'])
