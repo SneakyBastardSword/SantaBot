@@ -31,10 +31,10 @@ class Participant(object):
 
 #initialize config file
 try:
-    config = ConfigObj('./files/participants.cfg')
+    config = ConfigObj('./files/botdata.cfg')
 except: 
     os.mkdir('./files/')
-    config = ConfigObj('./files/participants.cfg')
+    config = ConfigObj('./files/botdata.cfg')
     config['programData'] = {'exchange_started': False, 'discord_token': 'token'}
     config['members'] = {}
     config.write()
@@ -42,7 +42,7 @@ except:
 #initialize data from config file
 usr_list = []
 total_users = 0
-exchange_started = config['programData']['exchange_started']
+exchange_started = config['programData'].as_bool('exchange_started')
 for key in config['members']:
     total_users = total_users + 1
     usr_list.append(Participant(key[0], key[1], total_users, key[2], key[3], key[4]))
@@ -104,14 +104,14 @@ async def on_message(message):
             usr_list.append(Participant(message.author.name, message.author.id, total_users))
             #write details of the class instance to config and increment total_users
             total_users = total_users + 1
-            config['members'][str(total_users)] = [message.author.name, message.author.id, total_users]
+            config['members'][str(total_users)] = [message.author.name, message.author.id, total_users, '', '', '']
             config.write()
             
             #prompt user about inputting info
             await client.send_message(message.channel, message.author.mention + ' Has been added to the OfficialFam Secret Santa exchange!')
-            await client.send_message(message.author, 'Please input your mailing address so your secret Santa can send you something!')
-            await client.send_message(message.author, 'Use `$$setaddress` to set your mailing adress')
-            await client.send_message(message.author, 'Use `$$setpreference` to set gift preferences for your secret santa')
+            await client.send_message(message.author, 'Please input your mailing address so your secret Santa can send you something!\n'
+            + 'Use `$$setaddress` to set your mailing adress\n'
+            + 'Use `$$setpreference` to set gift preferences for your secret santa')
     
     #accept address of participants
     elif message.content.startswith('$$setaddress'):
@@ -120,6 +120,7 @@ async def on_message(message):
             #add the input to the value in the user's class instance
             user = get_participant_object(message.author.id)
             user.address = message.content.replace('$$setaddress', '', 1)
+            print(user.address)
             #save to config file
             config['members'][str(user.usrnum)][3] = user.address
             config.write()
