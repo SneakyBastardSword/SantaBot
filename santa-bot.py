@@ -1,12 +1,3 @@
-#IMPORTANT NOTE:
-#This branch is the development branch, where i try to get major refactorings working, so i have a (mostly) stable branch in master.
-#The current thing i'm refactoring is making it so that the bot can handle exchanges across multiple channels
-#thing is, this is getting really messy, and i really want to try to get the master branch completely operational and debugged by 
-#thanksgiving. 
-
-#As such, this branch's development is suspended until i get master to a stable release stage.
-
-
 import logging
 import os.path
 import discord
