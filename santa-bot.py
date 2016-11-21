@@ -7,9 +7,6 @@
 #As such, this branch's development is suspended until i get master to a stable release stage.
 
 
-
-
-
 import logging
 import asyncio
 import os.path
@@ -21,69 +18,67 @@ from configobj import ConfigObj
 #FIXME: make this entire program not a mess
 
 
-class Participant(object):
-    """class defining a participant and info associated with them"""
-    def __init__(self, name, idstr, usrnum, address='', preferences='', partnerid=''):
-        self.name = name                #string containing name of user
-        self.idstr = idstr              #string containing id of user
-        self.usrnum = usrnum            #int value referencing the instance's location in usr_list
-        self.address = address          #string for user's address
-        self.preferences = preferences  #string for user's gift preferences
-        self.partnerid = partnerid      #string for id of partner
-    
-    def address_is_set(self):
-        """returns whether the user has set an address"""
-        if self.address == '':
-            return False
-        else:
-            return True
-    
-    def pref_is_set(self):
-        """returns whether the user has set gift preferences"""
-        if self.preferences == '':
-            return False
-        else:
-            return True
-
-
 class Group(object):
-    """class defining a group of participants
-    based on server membership"""
-    def __init__(self, name, idstr, totalUsers=0, participantList=[]):
+    """class defining a group of participants based on server membership"""
+    def __init__(self, name, idstr, totalUsers=0, participantList=[], hasStarted=False):
         self.name = name                #server name
         self.idstr = idstr              #server ID
         self.totalUsers = totalUsers
-        self.participantList = participantList  #participant list, populated as 
-                                                #users join
+        self.participantList = participantList  #participant list, populated as users join
+        self.hasStarted = hasStarted
+        
+    class Participant(object):
+        """contains info for individual users"""
+        def __init__(self, name, idstr, usrnum, partnerid='', address='', prefs=''):
+            self.name = name
+            self.idstr = idstr
+            self.usrnum = usrnum
+            self.partnerid = partnerid
+
+            def address_is_set(self):
+                """Checks if user's address has been set"""
+                if self.address == '':
+                    return False
+                else:
+                    return True
+            
+            def pref_is_set(self):
+                """Checks if the user's gift prefs have been set"""
+                if self.prefs == '':
+                    return False
+                else:
+                    return True
+
+    def add_participant(self, name, usrid):
+        """appends a Participant object to this group's userlist"""
+        global usr_list
+        self.participantList.append(self.Participant(name, usrid, self.totalUsers))
+        usr_list.append(self.participantList[str(self.totalUsers)])
+        self.totalUsers = self.totalUsers + 1
+
     def asssign_partners(self):
+        """method to assign each user a partner"""
         partners = self.participantList
         for user in self.participantList:
             candidates = partners
-            candidates.remove(user)
+            candidates.remove(user.usrnum)
             partner = candidates[random.randint(0, len(candidates) - 1)]
             #remove user's partner from list of possible partners
-            partners.remove(partner)
+            partners.remove(partner.usrnum)
             #save the partner id to the participant's class instance
             #if user.partnerid == ''
             user.partnerid = partner.idstr
             #else:
             #    user.partnerid = [user.partnerid, partner.idstr]
-            config['users'][str(user.usrnum)][5] = user.partnerid
-            config.write()
+            #TODO: save to config file 
             #TODO: inform users of their partner
         #set hasStarted + assoc. cfg value to True
         self.hasStarted = True
-        config['servers'][self.idstr][1] = True
+        #config['servers'][self.idstr][1] = True
 
-    def add_participant(self, user):
-        """appends a Participant object to this group's userlist"""
-        self.participantList.append(get_participant_object(user))
-        self.totalUsers = self.totalUsers + 1
         
 #initialize client class instance
 client = discord.Client()
-
-#TODO: initialize config file
 
 def user_is_participant(usrid, usrlist=usr_list):
     """Takes a discord user ID string and returns whether
@@ -117,6 +112,17 @@ client_handler = logging.FileHandler(filename='./files/debug.log', encoding='utf
 client_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 client_log.addHandler(client_handler)
 
+#initiate config file
+if os.path.exists('./files/'):
+    config = ConfigObj('./fies/botdata.cfg')
+    firstrun = False
+else:
+    os.mkdir('./files')
+    config = ConfigObj('./files/botdata.cfg')
+    config['token'] = 'MjMzMjYyNzY4NjUwODQ2MjA4.CxJXuQ.QkC3vzrUWmBigXPV55k_3kY36-Q'
+    config['servers'] = {}
+    fistrun = True
+
 
 usr_list = []
 svr_list = []
@@ -126,19 +132,35 @@ svr_list = []
 async def on_ready():
     """print message when client is connected and perform
     some initialization"""
-    
+
     #TODO:
-    #-initialize list containing Group classes for each server that the client is connected to 
+    #-initialize list containing Group classes for each server that the client is connected to
     #-initialize list containing Participant classes for each person who sends '$$join' and make sure to keep track of who is in which servers
-    #-ensure all values contained in those classes can be reconstructed from a config file      
-    
-    
+    #-ensure all values contained in those classes can be reconstructed from a config file
+
+
     global usr_list
     global svr_list
+    global firstrun
     
-    #this is the default, no reading config for saved value yet
-    for server in client.servers:
-        server_list.append(Group(server.name, server.id))
+    if firstrun:
+        for server in client.servers:
+            svr_list.append(Group(server.name, server.id))
+            config['servers'][server.id] = {
+                'name': server.name,
+                'has_started': False,
+                'total_users': 0,
+                'member_list': []}
+    else:
+        svr_list.append(Group(
+            server.name,
+            server.id,
+            config['servers'][server.id]['total_users'],
+            config['servers'][server.id]['member_list'],
+            config['servers'][server.id]['has_started']))
+    
+
+        
 
     print('Logged in as')
     print(client.user.name)
@@ -178,7 +200,6 @@ async def on_message(message):
             await client.send_message(message.channel, '`Error: Too late, the gift exchange is already in progress.`')
         else:
             #initialize instance of participant class for the author
-            usr_list.append(Participant(message.author.name, message.author.id, total_users, message.author.server))
             group.add_participant(message.author.id)
             #write details of the class instance to config and increment total_users
             total_users = total_users + 1
