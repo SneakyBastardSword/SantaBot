@@ -38,17 +38,18 @@ class Group(object):
             else:
                 return True
 
-    def add_participant(self, name, usrid):
+    def add_participant(self, name, usrid, partnerid='', address='', prefs='', saveinfo=True):
         """appends a Participant object to this group's userlist"""
         global usr_list
-        global total_users
-        self.participantList.append(self.Participant(name, usrid, self.totalUsers))
-        usr_list.append(self.participantList[str(self.totalUsers)])
+        newUser = self.Participant(name, usrid, self.totalUsers, partnerid, address, prefs)
+        self.participantList.append(newUser)
+        usr_list.append(newUser)
         self.totalUsers = self.totalUsers + 1
-        total_users = total_users + 1
-        config['servers'][self.idstr]['total_users'] = self.totalUsers
-        config['servers'][self.idstr]['member_list'] = self.participantList
-        config.write()
+        if saveinfo:
+            cfgEntry = config['servers'][self.idstr]
+            cfgEntry['member_list'][newUser.idstr] = [name, newUser.usrnum, '', '', '']
+            cfgEntry['total_users'] = self.totalUsers
+            config.write()
 
     async def asssign_partners(self, message):
         """method to assign each user a partner"""
@@ -104,6 +105,8 @@ def get_group_object(serverid, serverlist=svr_list):
         if group.idstr == serverid:
             return group
 
+print('Loading...')
+
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
 client_log.setLevel(logging.DEBUG)
@@ -113,14 +116,15 @@ client_log.addHandler(client_handler)
 
 #initiate config file
 if os.path.exists('./files/') and os.path.isfile('./files/botdata.cfg'):
-    config = ConfigObj('./fies/botdata.cfg')
+    config = ConfigObj('./files/botdata.cfg')
     firstrun = False
 else:
     if not os.path.exists('./files'):
         os.mkdir('./files')
     config = ConfigObj('./files/botdata.cfg')
-    config['token'] = 'MjMzMjYyNzY4NjUwODQ2MjA4.CxJXuQ.QkC3vzrUWmBigXPV55k_3kY36-Q'
+    config['token'] = 'MjMzMjYyNzY4NjUwODQ2MjA4.Cxdlxw.niB4GCO-ELkHvAitUZ7zQST7QQk'
     config['servers'] = {}
+    config.write()
     firstrun = True
 
 @client.event
@@ -137,48 +141,67 @@ async def on_ready():
             config['servers'][server.id] = {
                 'name': server.name,
                 'has_started': False,
-                'total_users': 0,
-                'member_list': []}
+                'member_list': {}
+                }
+            config.write()
     else:
-        svr_list.append(Group(
-            server.name,
-            server.id,
-            config['servers'][server.id]['total_users'],
-            config['servers'][server.id]['member_list'],
-            config['servers'][server.id]['has_started']))
+        for server in client.servers:
+            svr_list.append(Group(
+                server.name,
+                server.id,
+                0,
+                [],
+                config['servers'][server.id].as_bool('has_started')
+            ))
+            for key in config['servers'][server.id]['member_list']:
+                infolist = config['servers'][server.id]['member_list'].as_list(key)
+                svr_list[-1].add_participant(
+                    infolist[0],
+                    key,
+                    infolist[1],
+                    infolist[2],
+                    infolist[3],
+                    False)
 
     print('initialized server data')
     print('Logged in as')
     print(client.user.name)
-    print(client.user.discriminator)
+    print('#' + client.user.discriminator)
     print('------')
 
 @client.event
 async def on_message(message):
     """on_event handler for all on_message events"""
-    #declare global vars
-    global usr_list
-    global total_users
-    global exchange_started
-    #set up some local vars for convenience sake
-    group = get_group_object(message.author.server)
-    if user_is_participant(message.author.id):
-        author = get_participant_object(message.author.id)
 
     #write all messages to a chatlog
-    with open('./files/chat.log', 'a+') as chat_log:
-        chat_log.write(
-            '[' + message.author.name + ' in '
-            + message.channel.name + ' at '
-            + str(message.timestamp) + ']'
-            + message.content + '\n')
+    if message.channel.is_private:
+        with open('./files/chat.log', 'a+') as chat_log:
+            chat_log.write(
+                '[Private msg from ' + message.author.name + ' at '
+                + str(message.timestamp) + ']'
+                + message.content + '\n')
+    else:
+        with open('./files/chat.log', 'a+') as chat_log:
+            chat_log.write(
+                '[' + message.author.name + ' in '
+                + message.channel.name + ' at '
+                + str(message.timestamp) + ']'
+                + message.content + '\n')
+        #fetch group associated with the message orgin server to make my life easier
+        group = get_group_object(message.server.id) #doing it here bc its convenient
 
     #ignore messages from the bot itself
     if message.author == client.user:
         return
 
+    #declare global var
+    global usr_list
+    #fetch author's participant class instance for convenience sake
+    if user_is_participant(message.author.id):
+        author = get_participant_object(message.author.id)
+
     #event for a user joining the secret santa
-    elif message.content.startswith('$$join'):
+    if message.content.startswith('$$join'):
         #cant really have a gift exchange in a pm
         if message.channel.is_private:
             await client.send_message(message.channel,
@@ -194,7 +217,7 @@ async def on_message(message):
                 '`Error: Too late, the gift exchange is already in progress.`')
         else:
             #initialize instance of participant class for the author
-            group.add_participant(message.author.id)
+            group.add_participant(message.author.name, message.author.id)
             #prompt user about inputting info
             await client.send_message(
                 message.channel,
@@ -202,23 +225,20 @@ async def on_message(message):
                 + ' Has been added to the OfficialFam Secret Santa exchange!')
             await client.send_message(
                 message.author,
-                'Please input your mailing address so your secret Santa can send you something!')
-            await client.send_message(
-                message.author,
-                'Use `$$setaddress` to set your mailing adress')
-            await client.send_message(
-                message.author,
-                'Use `$$setpreference` to set gift preferences for your secret santa')
+                'Please input your mailing address so your secret Santa can send you something!\n'
+                + 'Use `$$setaddress` to set your mailing adress\n'
+                + 'Use `$$setpreference` to set gift preferences for your secret santa')
 
     #accept address of participants
     elif message.content.startswith('$$setaddress'):
+        print('foobar')
         #check if author has joined the exchange yet
         if user_is_participant(message.author.id):
             #add the input to the value in the user's class instance
-            user = get_participant_object(message.author.id)
-            user.address = message.content.replace('$$setaddress', '', 1)
+            author.address = message.content.replace('$$setaddress', '', 1)
+            await client.send_message(message.author, 'Address saved.')
             #save to config file
-            config['members'][str(user.usrnum)][3] = user.address
+            config['servers'][group.idstr]['member_list'][author.idstr][2] = author.address
             config.write()
         else:
             await client.send_message(
@@ -233,7 +253,7 @@ async def on_message(message):
             #add the input to the value in the user's class instance
             author.preferences = message.content.replace('$$setpref', '', 1)
             #save to config file
-            config['members'][str(user.usrnum)][4] = author.preferences
+            config['servers']['member_list'][author.idstr][3] = author.prefs
             config.write()
         else:
             await client.send_message(
@@ -259,6 +279,7 @@ async def on_message(message):
                     await client.send_message(
                         message.author,
                         '`Partner assignment canceled: participant info incomplete.`')
+                    break
             #select a random partner for each participant if above loop found no empty values
             if all_fields_complete:
                 group.asssign_partners()
@@ -283,13 +304,13 @@ async def on_message(message):
         if group.totalUsers == 0:
             await client.send_message(
                 message.channel,
-                'Nobody has signed up for the secret santa exchange yet. '
-                + 'Use `$$join` to enter the exchange.')
+                '`Nobody has signed up for the secret santa exchange yet. '
+                + 'Use "$$join" to enter the exchange.`')
         else:
             msg = '```The following people are signed up for the secret santa exchange:\n'
             for user in group.participantList:
                 msg = msg + user.name + '\n'
-            msg = msg + 'Use `$$join` to enter the exchange.```'
+            msg = msg + 'Use "$$join" to enter the exchange.```'
             await client.send_message(message.channel, msg)
 
     #lists total number of participants
@@ -297,19 +318,19 @@ async def on_message(message):
         if group.totalUsers == 0:
             await client.send_message(
                 message.channel,
-                'Nobody has signed up for the secret santa exchange yet. '
-                + 'Use `$$join` to enter the exchange.')
+                '`Nobody has signed up for the secret santa exchange yet. '
+                + 'Use "$$join" to enter the exchange.`')
         elif group.totalUsers == 1:
             await client.send_message(
                 message.channel,
-                '1 person has signed up for the secret santa exchange. '
-                + 'Use `$$join` to enter the exchange.')
+                '`1 person has signed up for the secret santa exchange. '
+                + 'Use "$$join" to enter the exchange.`')
         else:
             await client.send_message(
                 message.channel,
-                'A total of ' + group.totalUsers
+                '`A total of ' + group.totalUsers
                 + ' users have joined the secret santa exchange so far. '
-                + 'Use `$$join` to enter the exchange.')
+                + 'Use "$$join" to enter the exchange.`')
 
     #allows a user to have the details of their partner restated
     elif message.content.startswith('$$partnerinfo'):
@@ -329,5 +350,16 @@ async def on_message(message):
                 message.author,
                 '`Error: You are not participating in the gift exchange.`')
 
+    elif message.content.startswith('$$help'):
+        pass
+
+
 #event loop and discord initiation
-client.run(config['token'])
+try:
+    client.run(config['token'])
+except discord.LoginFailure:
+    print(
+        'Error: The token in /files/botdata.cfg is invalid.\n'
+        + 'If this is the first time running the bot from this directory, then this is normal.\n'
+        + 'To fix, change the contents of the first line of /files/botdata.cfg after the "="\n'
+        + 'to a valid discord bot token.')
