@@ -173,6 +173,13 @@ async def on_ready():
 async def on_message(message):
     """on_event handler for all on_message events"""
 
+    #declare global vars
+    global usr_list
+
+    #fetch author's participant class instance for convenience sake
+    if user_is_participant(message.author.id):
+        author = get_participant_object(message.author.id)
+
     #write all messages to a chatlog
     if message.channel.is_private:
         with open('./files/chat.log', 'a+') as chat_log:
@@ -187,18 +194,21 @@ async def on_message(message):
                 + message.channel.name + ' at '
                 + str(message.timestamp) + ']'
                 + message.content + '\n')
-        #fetch group associated with the message orgin server to make my life easier
-        group = get_group_object(message.server.id) #doing it here bc its convenient
 
-    #ignore messages from the bot itself
     if message.author == client.user:
         return
 
-    #declare global var
-    global usr_list
-    #fetch author's participant class instance for convenience sake
-    if user_is_participant(message.author.id):
-        author = get_participant_object(message.author.id)
+    #create group class instance
+    if message.channel.is_private:
+        for server in svr_list:
+            for person in server.participantList:
+                if person.idstr == author.idstr:
+                    group = get_group_object(server.idstr)
+                    break
+            if group in locals():
+                break
+    else:
+        group = get_group_object(message.server.id)
 
     #event for a user joining the secret santa
     if message.content.startswith('$$join'):
@@ -252,8 +262,9 @@ async def on_message(message):
         if user_is_participant(message.author.id):
             #add the input to the value in the user's class instance
             author.preferences = message.content.replace('$$setpref', '', 1)
+            await client.send_message(message.author, 'Gift preferences saved.')
             #save to config file
-            config['servers']['member_list'][author.idstr][3] = author.prefs
+            config['servers'][group.idstr]['member_list'][author.idstr][3] = author.prefs
             config.write()
         else:
             await client.send_message(
@@ -351,7 +362,13 @@ async def on_message(message):
                 '`Error: You are not participating in the gift exchange.`')
 
     elif message.content.startswith('$$help'):
-        pass
+        await client.send_message(
+            message.channel,
+            'SantaBot Help Message\nGeneral user commands:'
+            + '`$$join`- Join the current server\'s gift exchange'
+            + '`$$listparticipants`- List people participating in the current server\'s exchange'
+            + '`$$totalparticipants`- '
+            + 'Return the total number of people in the current server\'s exchange')
 
 
 #event loop and discord initiation
