@@ -3,6 +3,7 @@ import asyncio
 import os.path
 import random
 import copy
+import time
 import discord
 import CONFIG
 from configobj import ConfigObj
@@ -317,6 +318,10 @@ async def on_message(message):
         for command in command_list:
             command_string = command_string + ("{0}\n".format(command))
         await client.send_message(message.channel, command_string)
+
+    elif message.content.startswith('$$ping'):
+        """ Pong! """
+        await client.send_message(message.channel, "Pong!")
 
 @client.event
 async def on_ready():
