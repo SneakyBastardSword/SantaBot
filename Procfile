@@ -1,0 +1,1 @@
+worker: python santa-bot.py

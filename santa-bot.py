@@ -3,7 +3,6 @@ import asyncio
 import os.path
 import random
 import copy
-import time
 import discord
 import CONFIG
 from configobj import ConfigObj
@@ -255,13 +254,39 @@ async def on_message(message):
         else:
             await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
     
-    #allows a way to exit the bot
-    elif message.content.startswith('$$shutdown') and not message.channel.is_private:
+    #allows a way to stop the bot
+    elif message.content.startswith('$$stop_bot') and not message.channel.is_private:
         #Fonly allow ppl with admin permissions to run
-        if message.author.top_role == message.server.role_hierarchy[0]:
-            await client.send_message(message.channel, 'Curse your sudden but inevitable betrayal!')
+        if (message.author.top_role == message.server.role_hierarchy[0]) & (message.author.id == CONFIG.bot_owner):
+            exchange_started = False
+            config['programData']['exchange_started'] = False
+            await client.send_message(message.channel, 'Shutting down Secret Santa bot')
             client.close()
             raise KeyboardInterrupt
+        else:
+            await client.send_message(message.channel, "Only the bot owner can do that!")
+
+    # allows a way to restart the secret santa
+    elif message.content.startswith('$$pause'):
+        #Fonly allow ppl with admin permissions to run
+        if (message.author.top_role == message.server.role_hierarchy[0]):
+            exchange_started = False
+            config['programData']['exchange_started'] = False
+            await client.send_message(message.channel, 'Secret Santa paused')
+        else:
+            await client.send_message(message.channel, '`Error: you do not have permissions to do this.`')
+
+    #allows a way to end the secret santa
+    elif message.content.startswith('$$end') and not message.channel.is_private:
+        #Fonly allow ppl with admin permissions to run
+        if (message.author.top_role == message.server.role_hierarchy[0]):
+            exchange_started = False
+            config['programData']['exchange_started'] = False
+            highest_key = 0
+            usr_list.clear()
+            config['members'].clear()
+            config.write()
+            await client.send_message(message.channel, 'Secret Santa ended')
         else:
             await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
     
