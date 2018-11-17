@@ -2,4 +2,5 @@
 *.cfg
 /.vscode
 .pylintrc
-./CONFIG.py
+CONFIG.py
+/__pycache__
