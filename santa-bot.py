@@ -303,20 +303,6 @@ async def on_message(message):
         else:
             await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
 
-    #allows a way to stop the bot
-    #elif message.content.startswith('s!shutdown') and not message.channel.is_private:
-    elif(message_split[0] == "s!shutdown") and not message.channel.is_private:
-        #Fonly allow ppl with admin permissions to run
-        if (message.author.top_role == message.server.role_hierarchy[0]) & (message.author.id == CONFIG.bot_owner):
-            exchange_started = False
-            config['programData']['exchange_started'] = False
-            config.write()
-            await client.send_message(message.channel, 'Shutting down Secret Santa bot')
-            client.close()
-            raise KeyboardInterrupt
-        else:
-            await client.send_message(message.channel, "Only the bot owner can do that!")
-
     # allows a way to restart the secret santa
     #elif message.content.startswith('s!pause'):
     elif(message_split[0] == "s!pause"):
@@ -398,7 +384,6 @@ async def on_message(message):
         c_restart = "`s!restart` **(admin only)** = attempt to restart Secret Santa after pause without changing partners"
         c_pause = "`s!pause` **(admin only)** = pause Secret Santa (will require `s!start` and will reshuffle partners)"
         c_end = "`s!end` **(admin only)** = end Secret Santa"
-        c_shutdown = "`s!shutdown` **(admin only)** = shut down Secret Santa bot"
         c_ping = "`s!ping` = check if bot is alive"
         command_list = [c_join, c_leave, c_setaddress, c_getaddress, c_setprefs, c_getprefs, c_listparticipants, c_totalparticipants, c_partnerinfo, c_start, c_pause, c_restart, c_end, c_ping]
         command_string = ''
