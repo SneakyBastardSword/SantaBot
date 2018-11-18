@@ -4,5 +4,4 @@
 .pylintrc
 CONFIG.py
 /__pycache__
-requirements.txt
 Procfile
