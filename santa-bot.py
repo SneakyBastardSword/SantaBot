@@ -47,7 +47,8 @@ except:
 server = ''
 usr_list = []
 highest_key = 0
-user_left = False
+user_left_during_pause = False
+is_paused = False
 exchange_started = config['programData'].as_bool('exchange_started')
 for key in config['members']:
     data = config['members'][str(key)]
@@ -101,11 +102,15 @@ def partners_are_valid(usrlist):
 
 ## checks if the user list changed during a pause
 def usr_list_changed_during_pause(usrlist=usr_list):
+    if(user_left_during_pause):# there's probably a better boolean logic way but this is easy
+        user_left_during_pause = False # acknowledge
+        return True
+
     has_changed = True
     for user in usrlist:
         has_match = (not (str(user.partnerid) == ""))
         has_changed = has_changed & has_match # figures out if all users have a match
-    has_changed = has_changed & (not user_left)
+    has_changed = has_changed & (not user_left_during_pause)
     return (not has_changed) ## if not all users have a match
 
 #set up discord connection debug logging
@@ -127,7 +132,8 @@ async def on_message(message):
     global usr_list
     global highest_key
     global exchange_started
-    global user_left
+    global user_left_during_pause
+    global is_paused
 
     message_split = message.content.split()
     curr_server = message.server
@@ -171,7 +177,9 @@ async def on_message(message):
             usr_list.remove(user)
             popped_user = config['members'].pop(str(user.usrnum))
             config.write()
-            user_left = True
+            if(is_paused):
+                is_paused = False
+                user_left_during_pause = True
             await client.send_message(message.channel, message.author.mention + " has left the {0} Secret Santa exchange".format(str(curr_server)))
         else:
             await client.send_message(message.channel, "You're not currently a member of the secret santa")
@@ -306,6 +314,7 @@ async def on_message(message):
             exchange_started = False
             config['programData']['exchange_started'] = False
             config.write()
+            is_paused = True
             await client.send_message(message.channel, 'Secret Santa has been paused.')
         else:
             await client.send_message(message.channel, '`Error: you do not have permissions to do this.`')
