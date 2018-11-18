@@ -9,18 +9,18 @@ from configobj import ConfigObj
 
 class Participant(object):
     """class defining a participant and info associated with them"""
-    def __init__(self, name, discriminator, idstr, usrnum, address='', preferences='', partnerid=''):
+    def __init__(self, name, discriminator, idstr, usrnum, wishlist='', preferences='', partnerid=''):
         self.name = name                   #string containing name of user
         self.discriminator = discriminator #string containing discriminant of user
         self.idstr = idstr                 #string containing id of user
         self.usrnum = usrnum               #int value referencing the instance's location in usr_list
-        self.address = address             #string for user's address
+        self.wishlist = wishlist             #string for user's wishlist
         self.preferences = preferences     #string for user's gift preferences
         self.partnerid = partnerid         #string for id of partner
     
-    def address_is_set(self):
-        """returns whether the user has set an address"""
-        if self.address == '':
+    def wishlist_is_set(self):
+        """returns whether the user has set an wishlist"""
+        if self.wishlist == '':
             return False
         else:
             return True
@@ -47,6 +47,7 @@ except:
 server = ''
 usr_list = []
 highest_key = 0
+user_left = False
 exchange_started = config['programData'].as_bool('exchange_started')
 for key in config['members']:
     data = config['members'][str(key)]
@@ -78,7 +79,6 @@ def propose_partner_list(usrlist):
     ## propose partner list
     for user in usr_list_copy:
         candidates = partners
-        #candidates.remove(user)
         partner = candidates[random.randint(0, len(candidates) - 1)]
         while(partner.idstr == user.idstr):
             partner = candidates[random.randint(0, len(candidates) - 1)]
@@ -99,13 +99,14 @@ def partners_are_valid(usrlist):
         result = result & (user.partnerid != '') & (user.partnerid != user.idstr)
     return result
 
-## checks if the user list changed during a pause - matched if the user does not have a partner
+## checks if the user list changed during a pause
 def usr_list_changed_during_pause(usrlist=usr_list):
-    result = True
+    has_changed = True
     for user in usrlist:
         has_match = (not (str(user.partnerid) == ""))
-        result = result & has_match # figures out if all users have a match
-    return (not result) ## if not all users have a match
+        has_changed = has_changed & has_match # figures out if all users have a match
+    has_changed = has_changed & (not user_left)
+    return (not has_changed) ## if not all users have a match
 
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
@@ -126,6 +127,7 @@ async def on_message(message):
     global usr_list
     global highest_key
     global exchange_started
+    global user_left
 
     message_split = message.content.split()
     curr_server = message.server
@@ -141,7 +143,6 @@ async def on_message(message):
         return
     
     #event for a user joining the secret santa
-    #elif message.content.startswith('s!join'):
     elif(message_split[0] == "s!join"):
         #check if message author has already joined
         if user_is_participant(message.author.id):
@@ -159,54 +160,50 @@ async def on_message(message):
             
             #prompt user about inputting info
             await client.send_message(message.channel, message.author.mention + " has been added to the {0} Secret Santa exchange!".format(str(curr_server)))
-            await client.send_message(message.author, 'Please input your mailing address so your Secret Santa can send you something!\n'
-            + 'Use `s!setaddress` to set your mailing adress\n'
+            await client.send_message(message.author, 'Please input your mailing wishlist so your Secret Santa can send you something!\n'
+            + 'Use `s!setwishlist` to set your mailing wishlist\n'
             + 'Use `s!setprefs` to set gift preferences for your secret santa')
 
-    #elif message.content.startswith('s!leave'):
+    #event for a user to leave the secret santa list
     elif(message_split[0] == "s!leave"):
         if user_is_participant(message.author.id):
-            print(usr_list)
             (index, user) = get_participant_object(message.author.id)
-            #del usr_list[index]
-            print(user)
             usr_list.remove(user)
             popped_user = config['members'].pop(str(user.usrnum))
             config.write()
+            user_left = True
             await client.send_message(message.channel, message.author.mention + " has left the {0} Secret Santa exchange".format(str(curr_server)))
         else:
             await client.send_message(message.channel, "You're not currently a member of the secret santa")
     
-    #accept address of participants
-    #elif message.content.startswith('s!setaddress'):
-    elif(message_split[0] == "s!setaddress"):
+    #accept wishlist of participants
+    elif(message_split[0] == "s!setwishlist"):
         #check if author has joined the exchange yet
         if user_is_participant(message.author.id):
             #add the input to the value in the user's class instance
             (index, user) = get_participant_object(message.author.id)
-            user.address = message.content.replace('s!setaddress ', '', 1)
+            user.wishlist = message.content.replace('s!setwishlist ', '', 1)
             #save to config file
-            config['members'][str(user.usrnum)][4] = user.address
+            config['members'][str(user.usrnum)][4] = user.wishlist
             config.write()
             if(message.channel.is_private):
                 pass
             else:
                 await client.delete_message(message)
-            await client.send_message(message.author, "New address: {0}".format(user.preferences))
+            await client.send_message(message.author, "New wishlist: {0}".format(user.wishlist))
         else:
             await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `s!join` to join the exchange.')
             await client.delete_message(message)
 
-    #elif message.content.startswith('s!getaddress'):
-    elif(message_split[0] == "s!getaddress"):
+    #elif message.content.startswith('s!getwishlist'):
+    elif(message_split[0] == "s!getwishlist"):
         if user_is_participant(message.author.id):
             (index, user) = get_participant_object(message.author.id)
-            await client.send_message(message.author, "Current address(es): " + str(user.address))
+            await client.send_message(message.author, "Current wishlist(es): " + str(user.wishlist))
         else:
             await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `s!join` to join the exchange.')
     
     #accept gift preferences of participants
-    #elif message.content.startswith('s!setprefs'):
     elif(message_split[0] == "s!setprefs"):
         #check if author has joined the exchange yet
         if user_is_participant(message.author.id):
@@ -233,19 +230,18 @@ async def on_message(message):
         else:
             await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `s!join` to join the exchange.')
     
-    #command for admin to begin the secret santa partner assignmenet
-    #elif message.content.startswith('s!start'):
+    #command for admin to begin the secret santa partner assignment
     elif(message_split[0] == "s!start"):
         #only allow people with admin permissions to run
         if message.author.top_role == message.server.role_hierarchy[0]:
             #first ensure all users have all info submitted
             all_fields_complete = True
             for user in usr_list:
-                if user.address_is_set() and user.pref_is_set():
+                if user.wishlist_is_set() and user.pref_is_set():
                     pass
                 else:
                     all_fields_complete = False
-                    await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing address or gift preferences.`')
+                    await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing wishlist or gift preferences.`')
                     await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
             
             #select a random partner for each participant if above loop found no empty values
@@ -266,8 +262,8 @@ async def on_message(message):
                     #tell participants who their partner is
                     this_user = discord.User(name = user.name, discriminator = user.discriminator, id = user.idstr)
                     this_partner = discord.User(name = partner.name, discriminator = partner.discriminator, id = partner.idstr)
-                    message_pt1 = str(partner.name) + '#' + str(partner.discriminator) + ' is your secret santa partner! Now pick out a gift for them and send it to them!'
-                    message_pt2 = 'Their mailing address is: ' + partner.address
+                    message_pt1 = str(partner.name) + '#' + str(partner.discriminator) + ' is your secret santa partner! Mosey on over to their wishlist(s) and pick out a gift! Remember to keep it in the $10-20 range.'
+                    message_pt2 = 'Their wishlist can be found s: ' + partner.wishlist
                     message_pt3 = 'Here are their gift preferences: ' + partner.preferences
                     santa_message = message_pt1 + '\n' + message_pt2 + '\n' + message_pt3
                     await client.send_message(this_user, santa_message)
@@ -286,11 +282,11 @@ async def on_message(message):
             #first ensure all users have all info submitted
             all_fields_complete = True
             for user in usr_list:
-                if user.address_is_set() and user.pref_is_set():
+                if user.wishlist_is_set() and user.pref_is_set():
                     pass
                 else:
                     all_fields_complete = False
-                    await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing address or gift preferences.`')
+                    await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing wishlist or gift preferences.`')
                     await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
             list_changed = usr_list_changed_during_pause()
             if(list_changed):
@@ -304,9 +300,8 @@ async def on_message(message):
             await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
 
     # allows a way to restart the secret santa
-    #elif message.content.startswith('s!pause'):
     elif(message_split[0] == "s!pause"):
-        #Fonly allow ppl with admin permissions to run
+        #only allow ppl with admin permissions to run
         if (message.author.top_role == message.server.role_hierarchy[0]):
             exchange_started = False
             config['programData']['exchange_started'] = False
@@ -316,9 +311,8 @@ async def on_message(message):
             await client.send_message(message.channel, '`Error: you do not have permissions to do this.`')
 
     #allows a way to end the secret santa
-    #elif message.content.startswith('s!end') and not message.channel.is_private:
     elif(message_split[0] == "s!end") and not message.channel.is_private:
-        #Fonly allow ppl with admin permissions to run
+        #only allow ppl with admin permissions to run
         if (message.author.top_role == message.server.role_hierarchy[0]):
             exchange_started = False
             config['programData']['exchange_started'] = False
@@ -331,7 +325,6 @@ async def on_message(message):
             await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
     
     #lists off all participant names and id's
-    #elif message.content.startswith('s!listparticipants'):
     elif(message_split[0] == "s!listparticipants"):
         if highest_key == 0:
             await client.send_message(message.channel, 'Nobody has signed up for the secret santa exchange yet. Use `s!join` to enter the exchange.')
@@ -344,7 +337,6 @@ async def on_message(message):
             await client.send_message(message.channel, msg)
     
     #lists total number of participants
-    #elif message.content.startswith('s!totalparticipants'):
     elif(message_split[0] == "s!totalparticipants"):
         if highest_key == 0:
             await client.send_message(message.channel, 'Nobody has signed up for the secret santa exchange yet. Use `s!join` to enter the exchange.')
@@ -354,13 +346,12 @@ async def on_message(message):
             await client.send_message(message.channel, 'A total of ' + len(usr_list) + ' users have joined the secret santa exchange so far. Use `s!join` to enter the exchange.')
     
     #allows a user to have the details of their partner restated
-    #elif message.content.startswith('s!partnerinfo'):
     elif(message_split[0] == "s!partnerinfo"):
         if exchange_started and user_is_participant(message.author.id):
             (usr_index, user) = get_participant_object(message.author.id)
             (partner_index, partnerobj) = get_participant_object(user.partnerid)
             msg = 'Your partner is ' + partnerobj.name + user.partnerid + '\n'
-            msg = msg + 'Their mailing address is ' + partnerobj.address + '\n'
+            msg = msg + 'Their mailing wishlist is ' + partnerobj.wishlist + '\n'
             msg = msg + 'their gift preference is as follows:\n'
             msg = msg + partnerobj.preferences
             await client.send_message(message.author, msg)
@@ -373,8 +364,8 @@ async def on_message(message):
     elif(message_split[0] == "s!help"):
         c_join = "`s!join` = join the Secret Santa"
         c_leave = "`s!leave` = leave the Secret Santa"
-        c_setaddress = "`s!setaddress [mailing address/wishlist URL]` = set your address (replaces current)"
-        c_getaddress = "`s!getaddress` = bot will PM you your current address"
+        c_setwishlist = "`s!setwishlist [mailing wishlist/wishlist URL]` = set your wishlist (replaces current)"
+        c_getwishlist = "`s!getwishlist` = bot will PM you your current wishlist"
         c_setprefs = "`s!setprefs [specific preferences, the things you like]` = set preferences (replaces current)"
         c_getprefs = "`s!getprefs` = bot will PM you your current preferences"
         c_listparticipants = "`s!listparticipants` = get the current participants"
@@ -385,7 +376,7 @@ async def on_message(message):
         c_pause = "`s!pause` **(admin only)** = pause Secret Santa (will require `s!start` and will reshuffle partners)"
         c_end = "`s!end` **(admin only)** = end Secret Santa"
         c_ping = "`s!ping` = check if bot is alive"
-        command_list = [c_join, c_leave, c_setaddress, c_getaddress, c_setprefs, c_getprefs, c_listparticipants, c_totalparticipants, c_partnerinfo, c_start, c_pause, c_restart, c_end, c_ping]
+        command_list = [c_join, c_leave, c_setwishlist, c_getwishlist, c_setprefs, c_getprefs, c_listparticipants, c_totalparticipants, c_partnerinfo, c_start, c_pause, c_restart, c_end, c_ping]
         command_string = ''
         for command in command_list:
             command_string = command_string + ("{0}\n".format(command))
@@ -400,6 +391,9 @@ async def on_message(message):
     elif(message_split[0] == "s!invite"):
         link = "https://discordapp.com/oauth2/authorize?client_id=513141948383756289&scope=bot&permissions=67185664"
         await client.send_message(message.channel, "Bot invite link: {0}".format(link))
+
+    else:
+        await client.send_message(message.channel, "Command not found")
 
 @client.event
 async def on_ready():
