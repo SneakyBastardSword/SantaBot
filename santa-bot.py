@@ -5,6 +5,7 @@ import random
 import copy
 import discord
 import CONFIG
+import idx_list
 from configobj import ConfigObj
 
 class Participant(object):
@@ -52,7 +53,7 @@ is_paused = False
 exchange_started = config['programData'].as_bool('exchange_started')
 for key in config['members']:
     data = config['members'][str(key)]
-    usr_list.append(Participant(data[0], data[1], data[2], data[3], data[4], data[5], data[6]))
+    usr_list.append(Participant(data[idx_list.NAME], data[idx_list.DISCRIMINATOR], data[idx_list.IDSTR], data[idx_list.USRNUM], data[idx_list.WISHLISTURL], data[idx_list.PREFERENCES], data[idx_list.PARTNERID]))
     highest_key = int(key)
 
 def user_is_participant(usrid, usrlist=usr_list):
@@ -166,9 +167,9 @@ async def on_message(message):
                 
                 #prompt user about inputting info
                 await client.send_message(message.channel, message.author.mention + " has been added to the {0} Secret Santa exchange!".format(str(curr_server)))
-                await client.send_message(message.author, 'Please input your wishlist URL and preferences (through DMs) so your Secret Santa can send you something!\n'
-                + 'Use `s!setwishlisturl` to set your wishlist URL\n'
-                + 'Use `s!setprefs` to set gift preferences for your secret santa. Put N/A if none.')
+                await client.send_message(message.author, 'Please input your wishlist URL and preferences (by DMing this bot) so your Secret Santa can send you something!\n'
+                + 'Use `s!setwishlisturl [wishlist urls separated by commas]` to set your wishlist URL\n'
+                + 'Use `s!setprefs [preferences separated by commas]` to set gift preferences for your secret santa. Put N/A if none.')
 
         #event for a user to leave the secret santa list
         elif(message_split[0] == "s!leave"):
@@ -192,7 +193,7 @@ async def on_message(message):
                 (index, user) = get_participant_object(message.author.id)
                 user.wishlisturl = message.content.replace('s!setwishlisturl ', '', 1)
                 #save to config file
-                config['members'][str(user.usrnum)][4] = user.wishlisturl
+                config['members'][str(user.usrnum)][idx_list.WISHLISTURL] = user.wishlisturl
                 config.write()
                 if(message.channel.is_private):
                     pass
@@ -219,7 +220,7 @@ async def on_message(message):
                 (index, user) = get_participant_object(message.author.id)
                 user.preferences = message.content.replace('s!setprefs ', '', 1)
                 #save to config file
-                config['members'][str(user.usrnum)][5] = user.preferences
+                config['members'][str(user.usrnum)][idx_list.PREFERENCES] = user.preferences
                 config.write()
                 if(message.channel.is_private):
                     pass
@@ -265,7 +266,7 @@ async def on_message(message):
                         (temp_index, temp_user) = get_participant_object(user.idstr)
                         (index, partner) = get_participant_object(user.partnerid, potential_list)
                         temp_user.partnerid = user.partnerid
-                        config['members'][str(user.usrnum)][6] = user.partnerid # update config file
+                        config['members'][str(user.usrnum)][idx_list.PARTNERID] = user.partnerid # update config file
                         config.write()
                         #tell participants who their partner is
                         this_user = discord.User(name = user.name, discriminator = user.discriminator, id = user.idstr)
