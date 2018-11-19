@@ -56,7 +56,7 @@ for key in config['members']:
     usr_list.append(Participant(data[idx_list.NAME], data[idx_list.DISCRIMINATOR], data[idx_list.IDSTR], data[idx_list.USRNUM], data[idx_list.WISHLISTURL], data[idx_list.PREFERENCES], data[idx_list.PARTNERID]))
     highest_key = int(key)
 
-def user_is_participant(usrid, usrlist=usr_list):
+def user_is_participant(usrid, usrlist):
     """Takes a discord user ID string and returns whether
     a user with that ID is in usr_list"""
     result = False
@@ -66,7 +66,7 @@ def user_is_participant(usrid, usrlist=usr_list):
             break
     return result
 
-def get_participant_object(usrid, usrlist=usr_list):
+def get_participant_object(usrid, usrlist):
     """takes a discord user ID string and list of
     participant objects, and returns the first
     participant object with matching id."""
@@ -102,7 +102,7 @@ def partners_are_valid(usrlist):
     return result
 
 ## checks if the user list changed during a pause
-def usr_list_changed_during_pause(usrlist=usr_list):
+def usr_list_changed_during_pause(usrlist):
     if(user_left_during_pause):# there's probably a better boolean logic way but this is easy
         user_left_during_pause = False # acknowledge
         return True
@@ -152,7 +152,8 @@ async def on_message(message):
         #event for a user joining the Secret Santa
         elif(message_split[0] == "s!join"):
             #check if message author has already joined
-            if user_is_participant(message.author.id):
+            print(len(usr_list))
+            if user_is_participant(message.author.id, usr_list):
                 await client.send_message(message.channel, '`Error: You have already joined.`')
             #check if the exchange has already started
             elif exchange_started:
@@ -173,8 +174,8 @@ async def on_message(message):
 
         #event for a user to leave the Secret Santa list
         elif(message_split[0] == "s!leave"):
-            if user_is_participant(message.author.id):
-                (index, user) = get_participant_object(message.author.id)
+            if user_is_participant(message.author.id, usr_list):
+                (index, user) = get_participant_object(message.author.id, usr_list)
                 usr_list.remove(user)
                 popped_user = config['members'].pop(str(user.usrnum))
                 config.write()
@@ -187,9 +188,9 @@ async def on_message(message):
         #accept wishlisturl of participants
         elif(message_split[0] == "s!setwishlisturl"):
             #check if author has joined the exchange yet
-            if user_is_participant(message.author.id):
+            if user_is_participant(message.author.id, usr_list):
                 #add the input to the value in the user's class instance
-                (index, user) = get_participant_object(message.author.id)
+                (index, user) = get_participant_object(message.author.id, usr_list)
                 user.wishlisturl = message.content.replace('s!setwishlisturl ', '', 1)
                 #save to config file
                 config['members'][str(user.usrnum)][idx_list.WISHLISTURL] = user.wishlisturl
@@ -205,8 +206,8 @@ async def on_message(message):
         
         # get current wishlist URL(s)
         elif(message_split[0] == "s!getwishlisturl"):
-            if user_is_participant(message.author.id):
-                (index, user) = get_participant_object(message.author.id)
+            if user_is_participant(message.author.id, usr_list):
+                (index, user) = get_participant_object(message.author.id, usr_list)
                 await client.send_message(message.author, "Current wishlist URL(s): " + user.wishlisturl)
             else:
                 await client.send_message(message.author, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
@@ -214,9 +215,9 @@ async def on_message(message):
         #accept gift preferences of participants
         elif(message_split[0] == "s!setprefs"):
             #check if author has joined the exchange yet
-            if user_is_participant(message.author.id):
+            if user_is_participant(message.author.id, usr_list):
                 #add the input to the value in the user's class instance
-                (index, user) = get_participant_object(message.author.id)
+                (index, user) = get_participant_object(message.author.id, usr_list)
                 user.preferences = message.content.replace('s!setprefs ', '', 1)
                 #save to config file
                 config['members'][str(user.usrnum)][idx_list.PREFERENCES] = user.preferences
@@ -232,8 +233,8 @@ async def on_message(message):
         
         #get current preferences
         elif(message_split[0] == "s!getprefs"):
-            if user_is_participant(message.author.id):
-                (index, user) = get_participant_object(message.author.id)
+            if user_is_participant(message.author.id, usr_list):
+                (index, user) = get_participant_object(message.author.id, usr_list)
                 await client.send_message(message.author, "Current preference(s): " + str(user.preferences))
             else:
                 await client.send_message(message.author, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
@@ -256,13 +257,13 @@ async def on_message(message):
                 if all_fields_complete:
                     print("proposing a list")
                     potential_list = propose_partner_list(usr_list)
-                    while(not partners_are_valid):
+                    while(not partners_are_valid(potential_list)):
                         print("proposing a list")
                         potential_list = propose_partner_list(usr_list)
                     #save to config file
                     print("list passed")
                     for user in potential_list:
-                        (temp_index, temp_user) = get_participant_object(user.idstr)
+                        (temp_index, temp_user) = get_participant_object(user.idstr, usr_list)
                         (index, partner) = get_participant_object(user.partnerid, potential_list)
                         temp_user.partnerid = user.partnerid
                         config['members'][str(user.usrnum)][idx_list.PARTNERID] = user.partnerid # update config file
@@ -298,7 +299,7 @@ async def on_message(message):
                         all_fields_complete = False
                         await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing wishlist URL or gift preferences.`')
                         await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
-                list_changed = usr_list_changed_during_pause()
+                list_changed = usr_list_changed_during_pause(usr_list)
                 if(list_changed):
                     await client.send_message(message.channel, "User list changed during the pause. Partners must be picked again with `s!start`.")
                 else:
@@ -331,6 +332,7 @@ async def on_message(message):
                 config['programData']['exchange_started'] = False
                 highest_key = 0
                 del usr_list[:]
+                print(len(usr_list))
                 config['members'].clear()
                 config.write()
                 await client.send_message(message.channel, 'Secret Santa ended')
@@ -360,9 +362,9 @@ async def on_message(message):
         
         #allows a user to have the details of their partner restated
         elif(message_split[0] == "s!partnerinfo"):
-            if exchange_started and user_is_participant(message.author.id):
-                (usr_index, user) = get_participant_object(message.author.id)
-                (partner_index, partnerobj) = get_participant_object(user.partnerid)
+            if exchange_started and user_is_participant(message.author.id, usr_list):
+                (usr_index, user) = get_participant_object(message.author.id, usr_list)
+                (partner_index, partnerobj) = get_participant_object(user.partnerid, usr_list)
                 msg = 'Your partner is ' + partnerobj.name + user.partnerid + '\n'
                 msg = msg + 'Their mailing wishlist URL is ' + partnerobj.wishlisturl + '\n'
                 msg = msg + 'their gift preference is as follows: ' + partnerobj.preferences + '\n'
