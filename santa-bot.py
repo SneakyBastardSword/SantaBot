@@ -167,9 +167,9 @@ async def on_message(message):
                 
                 #prompt user about inputting info
                 await client.send_message(message.channel, message.author.mention + " has been added to the {0} Secret Santa exchange!".format(str(curr_server)))
-                await client.send_message(message.author, 'Please input your wishlist URL and preferences (by DMing this bot) so your Secret Santa can send you something!\n'
-                + 'Use `s!setwishlisturl [wishlist urls separated by commas]` to set your wishlist URL\n'
-                + 'Use `s!setprefs [preferences separated by commas]` to set gift preferences for your Secret Santa. Put N/A if none.')
+                await client.send_message(message.author, 'Welcome to the __' + str(curr_server) + '__ Secret Santa! Please input your wishlist URL and preferences **(by DMing this bot)** so your Secret Santa can send you something.\n'
+                + 'Use `s!setwishlisturl [wishlist urls separated by ;]` to set your wishlist URL (you may also add your mailing address).\n'
+                + 'Use `s!setprefs [preferences separated by ;]` to set gift preferences for your Secret Santa. Put N/A if none.')
 
         #event for a user to leave the Secret Santa list
         elif(message_split[0] == "s!leave"):
@@ -207,7 +207,7 @@ async def on_message(message):
         elif(message_split[0] == "s!getwishlisturl"):
             if user_is_participant(message.author.id):
                 (index, user) = get_participant_object(message.author.id)
-                await client.send_message(message.author, "Current wishlist URL(s): " + str(user.wishlisturl))
+                await client.send_message(message.author, "Current wishlist URL(s): " + user.wishlisturl)
             else:
                 await client.send_message(message.author, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
         
@@ -377,9 +377,9 @@ async def on_message(message):
         elif(message_split[0] == "s!help"):
             c_join = "`s!join` = join the Secret Santa"
             c_leave = "`s!leave` = leave the Secret Santa"
-            c_setwishlisturl = "`s!setwishlisturl [wishlist URL]` = set your wishlist (replaces current). Required."
+            c_setwishlisturl = "`s!setwishlisturl [wishlist URL]` = set your wishlist URL (replaces current). You may also add your mailing address. __This field required__."
             c_getwishlisturl = "`s!getwishlisturl` = bot will PM you your current wishlist"
-            c_setprefs = "`s!setprefs [specific preferences, the things you like]` = set preferences (replaces current). Put N/A if none."
+            c_setprefs = "`s!setprefs [specific preferences, the things you like]` = set preferences (replaces current). Put N/A if none. __This field required__."
             c_getprefs = "`s!getprefs` = bot will PM you your current preferences"
             c_listparticipants = "`s!listparticipants` = get the current participants"
             c_totalparticipants = "`s!totalparticipants` = get the total number of participants"
