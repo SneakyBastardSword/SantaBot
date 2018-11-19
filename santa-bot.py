@@ -149,7 +149,7 @@ async def on_message(message):
         if message.author == client.user:
             return
         
-        #event for a user joining the secret santa
+        #event for a user joining the Secret Santa
         elif(message_split[0] == "s!join"):
             #check if message author has already joined
             if user_is_participant(message.author.id):
@@ -169,9 +169,9 @@ async def on_message(message):
                 await client.send_message(message.channel, message.author.mention + " has been added to the {0} Secret Santa exchange!".format(str(curr_server)))
                 await client.send_message(message.author, 'Please input your wishlist URL and preferences (by DMing this bot) so your Secret Santa can send you something!\n'
                 + 'Use `s!setwishlisturl [wishlist urls separated by commas]` to set your wishlist URL\n'
-                + 'Use `s!setprefs [preferences separated by commas]` to set gift preferences for your secret santa. Put N/A if none.')
+                + 'Use `s!setprefs [preferences separated by commas]` to set gift preferences for your Secret Santa. Put N/A if none.')
 
-        #event for a user to leave the secret santa list
+        #event for a user to leave the Secret Santa list
         elif(message_split[0] == "s!leave"):
             if user_is_participant(message.author.id):
                 (index, user) = get_participant_object(message.author.id)
@@ -182,7 +182,7 @@ async def on_message(message):
                     user_left_during_pause = True
                 await client.send_message(message.channel, message.author.mention + " has left the {0} Secret Santa exchange".format(str(curr_server)))
             else:
-                await client.send_message(message.channel, "You're not currently a member of the secret santa")
+                await client.send_message(message.channel, "You're not currently a member of the Secret Santa")
         
         #accept wishlisturl of participants
         elif(message_split[0] == "s!setwishlisturl"):
@@ -200,7 +200,7 @@ async def on_message(message):
                     await client.delete_message(message)
                 await client.send_message(message.author, "New wishlist URL: {0}".format(user.wishlisturl))
             else:
-                await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `s!join` to join the exchange.')
+                await client.send_message(message.author, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
                 await client.delete_message(message)
         
         # get current wishlist URL(s)
@@ -209,7 +209,7 @@ async def on_message(message):
                 (index, user) = get_participant_object(message.author.id)
                 await client.send_message(message.author, "Current wishlist URL(s): " + str(user.wishlisturl))
             else:
-                await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `s!join` to join the exchange.')
+                await client.send_message(message.author, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
         
         #accept gift preferences of participants
         elif(message_split[0] == "s!setprefs"):
@@ -227,7 +227,7 @@ async def on_message(message):
                     await client.delete_message(message)
                 await client.send_message(message.author, "New preferences: {0}".format(user.preferences))
             else:
-                await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `s!join` to join the exchange.')
+                await client.send_message(message.author, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
                 await client.delete_message(message)
         
         #get current preferences
@@ -236,9 +236,9 @@ async def on_message(message):
                 (index, user) = get_participant_object(message.author.id)
                 await client.send_message(message.author, "Current preference(s): " + str(user.preferences))
             else:
-                await client.send_message(message.author, 'Error: you have not yet joined the secret santa exchange. Use `s!join` to join the exchange.')
+                await client.send_message(message.author, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
         
-        #command for admin to begin the secret santa partner assignment
+        #command for admin to begin the Secret Santa partner assignment
         elif(message_split[0] == "s!start"):
             #only allow people with admin permissions to run
             if message.author.top_role == message.server.role_hierarchy[0]:
@@ -310,7 +310,7 @@ async def on_message(message):
             else:
                 await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
 
-        # allows a way to restart the secret santa
+        # allows a way to restart the Secret Santa
         elif(message_split[0] == "s!pause"):
             #only allow ppl with admin permissions to run
             if (message.author.top_role == message.server.role_hierarchy[0]):
@@ -322,7 +322,7 @@ async def on_message(message):
             else:
                 await client.send_message(message.channel, '`Error: you do not have permissions to do this.`')
 
-        #allows a way to end the secret santa
+        #allows a way to end the Secret Santa
         elif(message_split[0] == "s!end") and not message.channel.is_private:
             #only allow ppl with admin permissions to run
             if (message.author.top_role == message.server.role_hierarchy[0]):
@@ -340,9 +340,9 @@ async def on_message(message):
         #lists off all participant names and id's
         elif(message_split[0] == "s!listparticipants"):
             if highest_key == 0:
-                await client.send_message(message.channel, 'Nobody has signed up for the secret santa exchange yet. Use `s!join` to enter the exchange.')
+                await client.send_message(message.channel, 'Nobody has signed up for the Secret Santa exchange yet. Use `s!join` to enter the exchange.')
             else:
-                msg = '```The following people are signed up for the secret santa exchange:\n'
+                msg = '```The following people are signed up for the Secret Santa exchange:\n'
                 for user in usr_list:
                     this_user = discord.User(user = user.name, id = user.idstr)
                     msg = msg + str(user.name) + '#' + str(user.discriminator) + '\n'
@@ -352,11 +352,11 @@ async def on_message(message):
         #lists total number of participants
         elif(message_split[0] == "s!totalparticipants"):
             if highest_key == 0:
-                await client.send_message(message.channel, 'Nobody has signed up for the secret santa exchange yet. Use `s!join` to enter the exchange.')
+                await client.send_message(message.channel, 'Nobody has signed up for the Secret Santa exchange yet. Use `s!join` to enter the exchange.')
             elif highest_key == 1:
-                await client.send_message(message.channel, '1 person has signed up for the secret santa exchange. Use `s!join` to enter the exchange.')
+                await client.send_message(message.channel, '1 person has signed up for the Secret Santa exchange. Use `s!join` to enter the exchange.')
             else:
-                await client.send_message(message.channel, 'A total of ' + len(usr_list) + ' users have joined the secret santa exchange so far. Use `s!join` to enter the exchange.')
+                await client.send_message(message.channel, 'A total of ' + len(usr_list) + ' users have joined the Secret Santa exchange so far. Use `s!join` to enter the exchange.')
         
         #allows a user to have the details of their partner restated
         elif(message_split[0] == "s!partnerinfo"):
@@ -412,6 +412,7 @@ async def on_ready():
     print('Logged in as')
     print(client.user.name)
     print(client.user.id)
+    await client.change_presence(game = discord.Game(name = "s!help"))
     print('------')
 
 
