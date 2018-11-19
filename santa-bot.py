@@ -189,16 +189,16 @@ async def on_message(message):
         elif(message_split[0] == "s!setwishlisturl"):
             #check if author has joined the exchange yet
             if user_is_participant(message.author.id, usr_list):
+                if(message.channel.is_private):
+                    pass
+                else:
+                    await client.delete_message(message)
                 #add the input to the value in the user's class instance
                 (index, user) = get_participant_object(message.author.id, usr_list)
                 user.wishlisturl = message.content.replace('s!setwishlisturl ', '', 1)
                 #save to config file
                 config['members'][str(user.usrnum)][idx_list.WISHLISTURL] = user.wishlisturl
                 config.write()
-                if(message.channel.is_private):
-                    pass
-                else:
-                    await client.delete_message(message)
                 await client.send_message(message.author, "New wishlist URL: {0}".format(user.wishlisturl))
             else:
                 await client.send_message(message.author, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
@@ -216,16 +216,16 @@ async def on_message(message):
         elif(message_split[0] == "s!setprefs"):
             #check if author has joined the exchange yet
             if user_is_participant(message.author.id, usr_list):
+                if(message.channel.is_private):
+                    pass
+                else:
+                    await client.delete_message(message)
                 #add the input to the value in the user's class instance
                 (index, user) = get_participant_object(message.author.id, usr_list)
                 user.preferences = message.content.replace('s!setprefs ', '', 1)
                 #save to config file
                 config['members'][str(user.usrnum)][idx_list.PREFERENCES] = user.preferences
                 config.write()
-                if(message.channel.is_private):
-                    pass
-                else:
-                    await client.delete_message(message)
                 await client.send_message(message.author, "New preferences: {0}".format(user.preferences))
             else:
                 await client.send_message(message.author, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
