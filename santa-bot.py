@@ -179,7 +179,6 @@ async def on_message(message):
                 popped_user = config['members'].pop(str(user.usrnum))
                 config.write()
                 if(is_paused):
-                    is_paused = False
                     user_left_during_pause = True
                 await client.send_message(message.channel, message.author.mention + " has left the {0} Secret Santa exchange".format(str(curr_server)))
             else:
@@ -271,7 +270,7 @@ async def on_message(message):
                         #tell participants who their partner is
                         this_user = discord.User(name = user.name, discriminator = user.discriminator, id = user.idstr)
                         this_partner = discord.User(name = partner.name, discriminator = partner.discriminator, id = partner.idstr)
-                        message_pt1 = str(partner.name) + '#' + str(partner.discriminator) + ' is your secret santa partner! Mosey on over to their wishlist URL(s) and pick out a gift! Remember to keep it in the $10-20 range.'
+                        message_pt1 = str(partner.name) + '#' + str(partner.discriminator) + ' is your Secret Santa partner! Mosey on over to their wishlist URL(s) and pick out a gift! Remember to keep it in the $10-20 range.\n'
                         message_pt2 = 'Their wishlist(s) can be found here: ' + partner.wishlisturl + '\n'
                         message_pt3 = 'And their gift preferences can be found here: ' + partner.preferences + '\n'
                         message_pt4 = "If you have trouble accessing your partner's wishlist, please contact an admin to get in touch with your partner. This is a *secret* santa, after all!"
@@ -279,6 +278,7 @@ async def on_message(message):
                         await client.send_message(this_user, santa_message)
                     #set exchange_started + assoc. cfg value to True
                     exchange_started = True
+                    is_paused = False
                     config['programData']['exchange_started'] = True
                     config.write()
                     usr_list = copy.deepcopy(potential_list)
@@ -288,7 +288,7 @@ async def on_message(message):
         
         #command allows you to restart without rematching if no change was made while s!paused
         elif(message_split[0] == "s!restart"):
-            if message.author.top_role == message.server.role_hierarchy[0]:
+            if (message.author.top_role == message.server.role_hierarchy[0]) and is_paused:
                 #first ensure all users have all info submitted
                 all_fields_complete = True
                 for user in usr_list:
@@ -303,6 +303,7 @@ async def on_message(message):
                     await client.send_message(message.channel, "User list changed during the pause. Partners must be picked again with `s!start`.")
                 else:
                     exchange_started = True
+                    is_paused = False
                     config['programData']['exchange_started'] = True
                     config.write()
                     await client.send_message(message.channel, "No change was made during the pause. Secret Santa resumed with the same partners.")
@@ -326,9 +327,10 @@ async def on_message(message):
             #only allow ppl with admin permissions to run
             if (message.author.top_role == message.server.role_hierarchy[0]):
                 exchange_started = False
+                is_paused = False
                 config['programData']['exchange_started'] = False
                 highest_key = 0
-                usr_list.clear()
+                del usr_list[:]
                 config['members'].clear()
                 config.write()
                 await client.send_message(message.channel, 'Secret Santa ended')
