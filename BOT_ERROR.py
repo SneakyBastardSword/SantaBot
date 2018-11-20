@@ -1,0 +1,1 @@
+DM_FAILED = " `Error: DM with information failed to send. Please turn on server DMs to receive important Secret Santa-related messages.`"
