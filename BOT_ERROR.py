@@ -1,1 +1,6 @@
 DM_FAILED = " `Error: DM with information failed to send. Please turn on server DMs to receive important Secret Santa-related messages.`"
+UNJOINED = "Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange."
+INVALID_INPUT = "`Error: invalid input"
+EXCHANGE_IN_PROGRESS = "`Error: Too late, the gift exchange is already in progress.`"
+NOT_STARTED = "`Error: partners have not been assigned yet.`"
+NO_PERMISSION = "`Error: you do not have permissions to do this.`"

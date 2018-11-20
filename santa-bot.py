@@ -159,7 +159,7 @@ async def on_message(message):
                 await client.send_message(message.channel, '`Error: You have already joined.`')
             #check if the exchange has already started
             elif exchange_started:
-                await client.send_message(message.channel, '`Error: Too late, the gift exchange is already in progress.`')
+                await client.send_message(message.channel, BOT_ERROR.EXCHANGE_IN_PROGRESS)
             else:
                 #initialize instance of participant class for the author
                 highest_key = highest_key + 1
@@ -188,7 +188,7 @@ async def on_message(message):
                     user_left_during_pause = True
                 await client.send_message(message.channel, message.author.mention + " has left the {0} Secret Santa exchange".format(str(curr_server)))
             else:
-                await client.send_message(message.channel, "You're not currently a member of the Secret Santa")
+                await client.send_message(message.channel, BOT_ERROR.UNJOINED)
         
         #accept wishlisturl of participants
         elif(message_split[0] == "s!setwishlisturl"):
@@ -215,7 +215,7 @@ async def on_message(message):
                     usr_list = usr_list
                 except:
                     try:
-                        await client.send_message(message.author, "`Error: invalid input`")
+                        await client.send_message(message.author, BOT_ERROR.INVALID_INPUT)
                     except:
                         await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
                 try:
@@ -223,7 +223,7 @@ async def on_message(message):
                 except:
                     await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
             else:
-                await client.send_message(message.channel, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
+                await client.send_message(message.channel, )
         
         # get current wishlist URL(s)
         elif(message_split[0] == "s!getwishlisturl"):
@@ -235,7 +235,7 @@ async def on_message(message):
                 except:
                     await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
             else:
-                await client.send_message(message.channel, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
+                await client.send_message(message.channel, BOT_ERROR.UNJOINED)
         
         #accept gift preferences of participants
         elif(message_split[0] == "s!setprefs"):
@@ -263,11 +263,11 @@ async def on_message(message):
                         await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
                 except:
                     try:
-                        await client.send_message(message.author, "`Error: invalid input")
+                        await client.send_message(message.author, BOT_ERROR.INVALID_INPUT)
                     except:
                         await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
             else:
-                await client.send_message(message.channel, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
+                await client.send_message(message.channel, BOT_ERROR.UNJOINED)
                 await client.delete_message(message)
         
         #get current preferences
@@ -279,7 +279,7 @@ async def on_message(message):
                 except:
                     await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
             else:
-                await client.send_message(message.channel, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
+                await client.send_message(message.channel, BOT_ERROR.UNJOINED)
         
         #command for admin to begin the Secret Santa partner assignment
         elif(message_split[0] == "s!start"):
@@ -335,7 +335,7 @@ async def on_message(message):
                 elif not all_fields_complete:
                     await client.send_message(message.channel, message.author.mention + " `Error: time for some love through harassment`")
             else:
-                await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
+                await client.send_message(message.channel, BOT_ERROR.NO_PERMISSION)
         
         #command allows you to restart without rematching if no change was made while s!paused
         elif(message_split[0] == "s!restart"):
@@ -362,7 +362,7 @@ async def on_message(message):
                     config.write()
                     await client.send_message(message.channel, "No change was made during the pause. Secret Santa resumed with the same partners.")
             else:
-                await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
+                await client.send_message(message.channel, BOT_ERROR.NO_PERMISSION)
 
         # allows a way to restart the Secret Santa
         elif(message_split[0] == "s!pause"):
@@ -374,7 +374,7 @@ async def on_message(message):
                 is_paused = True
                 await client.send_message(message.channel, 'Secret Santa has been paused.')
             else:
-                await client.send_message(message.channel, '`Error: you do not have permissions to do this.`')
+                await client.send_message(message.channel, BOT_ERROR.NO_PERMISSION)
 
         #allows a way to end the Secret Santa
         elif(message_split[0] == "s!end") and not message.channel.is_private:
@@ -388,9 +388,9 @@ async def on_message(message):
                 print(len(usr_list))
                 config['members'].clear()
                 config.write()
-                await client.send_message(message.channel, 'Secret Santa ended')
+                await client.send_message(message.channel, "Secret Santa ended")
             else:
-                await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
+                await client.send_message(message.channel, BOT_ERROR.NO_PERMISSION)
         
         #lists off all participant names and id's
         elif(message_split[0] == "s!listparticipants"):
@@ -428,7 +428,7 @@ async def on_message(message):
                     await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
                 await client.send_message(message.channel, "The information has been sent to your DMs.")
             elif not exchange_started:
-                await client.send_message(message.channel, '`Error: partners have not been assigned yet.`')
+                await client.send_message(message.channel, BOT_ERROR.NOT_STARTED)
             elif not user_is_participant(message.author.id, usr_list):
                 await client.send_message(message.channel, '`Error: You are not participating in the gift exchange.`')
             else:
