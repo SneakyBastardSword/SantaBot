@@ -5,6 +5,7 @@ import random
 import copy
 import discord
 import CONFIG
+import BOT_ERROR
 import idx_list
 from configobj import ConfigObj
 
@@ -53,7 +54,8 @@ is_paused = False
 exchange_started = config['programData'].as_bool('exchange_started')
 for key in config['members']:
     data = config['members'][str(key)]
-    usr_list.append(Participant(data[idx_list.NAME], data[idx_list.DISCRIMINATOR], data[idx_list.IDSTR], data[idx_list.USRNUM], data[idx_list.WISHLISTURL], data[idx_list.PREFERENCES], data[idx_list.PARTNERID]))
+    usr = Participant(data[idx_list.NAME], data[idx_list.DISCRIMINATOR], data[idx_list.IDSTR], data[idx_list.USRNUM], data[idx_list.WISHLISTURL], data[idx_list.PREFERENCES], data[idx_list.PARTNERID])
+    usr_list.append(usr)
     highest_key = int(key)
 
 def user_is_participant(usrid, usrlist):
@@ -168,9 +170,12 @@ async def on_message(message):
                 
                 #prompt user about inputting info
                 await client.send_message(message.channel, message.author.mention + " has been added to the {0} Secret Santa exchange!".format(str(curr_server)))
-                await client.send_message(message.author, 'Welcome to the __' + str(curr_server) + '__ Secret Santa! Please input your wishlist URL and preferences **(by DMing this bot)** so your Secret Santa can send you something.\n'
-                + 'Use `s!setwishlisturl [wishlist urls separated by ;]` to set your wishlist URL (you may also add your mailing address).\n'
-                + 'Use `s!setprefs [preferences separated by ;]` to set gift preferences for your Secret Santa. Put N/A if none.')
+                try:
+                    await client.send_message(message.author, 'Welcome to the __' + str(curr_server) + '__ Secret Santa! Please input your wishlist URL and preferences **(by DMing this bot)** so your Secret Santa can send you something.\n'
+                    + 'Use `s!setwishlisturl [wishlist urls separated by ;]` to set your wishlist URL (you may also add your mailing address).\n'
+                    + 'Use `s!setprefs [preferences separated by ;]` to set gift preferences for your Secret Santa. Put N/A if none.')
+                except:
+                    await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
 
         #event for a user to leave the Secret Santa list
         elif(message_split[0] == "s!leave"):
@@ -193,24 +198,44 @@ async def on_message(message):
                     pass
                 else:
                     await client.delete_message(message)
-                #add the input to the value in the user's class instance
-                (index, user) = get_participant_object(message.author.id, usr_list)
-                user.wishlisturl = message.content.replace('s!setwishlisturl ', '', 1)
-                #save to config file
-                config['members'][str(user.usrnum)][idx_list.WISHLISTURL] = user.wishlisturl
-                config.write()
-                await client.send_message(message.author, "New wishlist URL: {0}".format(user.wishlisturl))
+                new_wishlist = ""
+                if(message.content == "s!setwishlisturl"):
+                    new_wishlist = ""
+                else:
+                    new_wishlist = message.content.replace("s!setwishlisturl ", "", 1)
+                try:
+                    (index, user) = get_participant_object(message.author.id, usr_list)
+                    #save to config file
+                    config['members'][str(user.usrnum)][idx_list.WISHLISTURL] = new_wishlist
+                    config.write()
+                    #add the input to the value in the user's class instance
+                    user.wishlisturl = new_wishlist
+                    (index, user) = get_participant_object(message.author.id, usr_list)
+                    print(user.wishlisturl)
+                    usr_list = usr_list
+                except:
+                    try:
+                        await client.send_message(message.author, "`Error: invalid input`")
+                    except:
+                        await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
+                try:
+                    await client.send_message(message.author, "New wishlist URL: {0}".format(new_wishlist))
+                except:
+                    await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
             else:
-                await client.send_message(message.author, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
-                await client.delete_message(message)
+                await client.send_message(message.channel, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
         
         # get current wishlist URL(s)
         elif(message_split[0] == "s!getwishlisturl"):
             if user_is_participant(message.author.id, usr_list):
                 (index, user) = get_participant_object(message.author.id, usr_list)
-                await client.send_message(message.author, "Current wishlist URL(s): " + user.wishlisturl)
+                print("Wishlist url = " + user.wishlisturl)# debugging ## WORKING JUST FINE
+                try:
+                    await client.send_message(message.author, "Current wishlist URL(s): {0}".format(user.wishlisturl)) ## NOT WORKING
+                except:
+                    await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
             else:
-                await client.send_message(message.author, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
+                await client.send_message(message.channel, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
         
         #accept gift preferences of participants
         elif(message_split[0] == "s!setprefs"):
@@ -220,24 +245,41 @@ async def on_message(message):
                     pass
                 else:
                     await client.delete_message(message)
-                #add the input to the value in the user's class instance
-                (index, user) = get_participant_object(message.author.id, usr_list)
-                user.preferences = message.content.replace('s!setprefs ', '', 1)
                 #save to config file
-                config['members'][str(user.usrnum)][idx_list.PREFERENCES] = user.preferences
-                config.write()
-                await client.send_message(message.author, "New preferences: {0}".format(user.preferences))
+                new_prefs = ""
+                if(message.content == "s!setprefs"):
+                    new_prefs = ""
+                else:
+                    new_prefs = message.content.replace("s!setprefs ", "", 1)
+                try:
+                    (index, user) = get_participant_object(message.author.id, usr_list)
+                    config['members'][str(user.usrnum)][idx_list.PREFERENCES] = new_prefs
+                    config.write()
+                    #add the input to the value in the user's class instance
+                    user.preferences = new_prefs
+                    try:
+                        await client.send_message(message.author, "New preferences: {0}".format(user.preferences))
+                    except:
+                        await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
+                except:
+                    try:
+                        await client.send_message(message.author, "`Error: invalid input")
+                    except:
+                        await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
             else:
-                await client.send_message(message.author, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
+                await client.send_message(message.channel, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
                 await client.delete_message(message)
         
         #get current preferences
         elif(message_split[0] == "s!getprefs"):
             if user_is_participant(message.author.id, usr_list):
                 (index, user) = get_participant_object(message.author.id, usr_list)
-                await client.send_message(message.author, "Current preference(s): " + str(user.preferences))
+                try:
+                    await client.send_message(message.author, "Current preference(s): {0}" + str(user.preferences))
+                except:
+                    await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
             else:
-                await client.send_message(message.author, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
+                await client.send_message(message.channel, 'Error: you have not yet joined the Secret Santa exchange. Use `s!join` to join the exchange.')
         
         #command for admin to begin the Secret Santa partner assignment
         elif(message_split[0] == "s!start"):
@@ -250,11 +292,14 @@ async def on_message(message):
                         pass
                     else:
                         all_fields_complete = False
-                        await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing wishlist URL or gift preferences.`')
-                        await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
+                        try:
+                            await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing wishlist URL or gift preferences.`')
+                            await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
+                        except:
+                            await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
                 
-                #select a random partner for each participant if above loop found no empty values
-                if all_fields_complete:
+                #select a random partner for each participant if above loop found no empty values and there are enough people to do it
+                if all_fields_complete & (len(usr_list) > 1):
                     print("proposing a list")
                     potential_list = propose_partner_list(usr_list)
                     while(not partners_are_valid(potential_list)):
@@ -276,7 +321,10 @@ async def on_message(message):
                         message_pt3 = 'And their gift preferences can be found here: ' + partner.preferences + '\n'
                         message_pt4 = "If you have trouble accessing your partner's wishlist, please contact an admin to get in touch with your partner. This is a *secret* santa, after all!"
                         santa_message = message_pt1 + message_pt2 + message_pt3 + message_pt4
-                        await client.send_message(this_user, santa_message)
+                        try:
+                            await client.send_message(this_user, santa_message)
+                        except:
+                            await client.send_message(message.author, "Failed to send message to {0}#{1} about their partner. Harass them to turn on server DMs for Secret Santa stuff.".format(this_user.name, this_user.discriminator))
                     #set exchange_started + assoc. cfg value to True
                     exchange_started = True
                     is_paused = False
@@ -284,6 +332,8 @@ async def on_message(message):
                     config.write()
                     usr_list = copy.deepcopy(potential_list)
                     await client.send_message(message.channel, "Secret Santa pairs have been picked! Check your PMs and remember not to let your partner know. Have fun!")
+                elif not all_fields_complete:
+                    await client.send_message(message.channel, message.author.mention + " `Error: time for some love through harassment`")
             else:
                 await client.send_message(message.channel, '`Error: you do not have permission to do this.`')
         
@@ -297,8 +347,11 @@ async def on_message(message):
                         pass
                     else:
                         all_fields_complete = False
-                        await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing wishlist URL or gift preferences.`')
-                        await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
+                        try:
+                            await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing wishlist URL or gift preferences.`')
+                            await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
+                        except:
+                            await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
                 list_changed = usr_list_changed_during_pause(usr_list)
                 if(list_changed):
                     await client.send_message(message.channel, "User list changed during the pause. Partners must be picked again with `s!start`.")
@@ -369,12 +422,17 @@ async def on_message(message):
                 msg = msg + 'Their mailing wishlist URL is ' + partnerobj.wishlisturl + '\n'
                 msg = msg + 'their gift preference is as follows: ' + partnerobj.preferences + '\n'
                 msg = msg + "If you have trouble accessing your partner's wishlist, please contact an admin to get in touch with your partner. This is a *secret* santa, after all!"
-                await client.send_message(message.author, msg)
+                try:
+                    await client.send_message(message.author, msg)
+                except:
+                    await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
                 await client.send_message(message.channel, "The information has been sent to your DMs.")
-            elif exchange_started:
+            elif not exchange_started:
                 await client.send_message(message.channel, '`Error: partners have not been assigned yet.`')
+            elif not user_is_participant(message.author.id, usr_list):
+                await client.send_message(message.channel, '`Error: You are not participating in the gift exchange.`')
             else:
-                await client.send_message(message.author, '`Error: You are not participating in the gift exchange.`')
+                await client.send_message(message.channel, "`Error: this shouldn't happen`")
 
         elif(message_split[0] == "s!help"):
             c_join = "`s!join` = join the Secret Santa"
