@@ -198,30 +198,27 @@ async def on_message(message):
                     pass
                 else:
                     await client.delete_message(message)
+                (index, user) = get_participant_object(message.author.id, usr_list)
                 new_wishlist = ""
                 if(message.content == "s!setwishlisturl"):
                     new_wishlist = ""
                 else:
                     new_wishlist = message.content.replace("s!setwishlisturl ", "", 1)
                 try:
-                    (index, user) = get_participant_object(message.author.id, usr_list)
                     #save to config file
                     config['members'][str(user.usrnum)][idx_list.WISHLISTURL] = new_wishlist
                     config.write()
                     #add the input to the value in the user's class instance
                     user.wishlisturl = new_wishlist
-                    (index, user) = get_participant_object(message.author.id, usr_list)
-                    print(user.wishlisturl)
-                    usr_list = usr_list
+                    try:
+                        await client.send_message(message.author, "New wishlist URL: {0}".format(new_wishlist))
+                    except:
+                        await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
                 except:
                     try:
                         await client.send_message(message.author, BOT_ERROR.INVALID_INPUT)
                     except:
                         await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
-                try:
-                    await client.send_message(message.author, "New wishlist URL: {0}".format(new_wishlist))
-                except:
-                    await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
             else:
                 await client.send_message(message.channel, )
         
@@ -229,9 +226,8 @@ async def on_message(message):
         elif(message_split[0] == "s!getwishlisturl"):
             if user_is_participant(message.author.id, usr_list):
                 (index, user) = get_participant_object(message.author.id, usr_list)
-                print("Wishlist url = " + user.wishlisturl)# debugging ## WORKING JUST FINE
                 try:
-                    await client.send_message(message.author, "Current wishlist URL(s): {0}".format(user.wishlisturl)) ## NOT WORKING
+                    await client.send_message(message.author, "Current wishlist URL(s): {0}".format(user.wishlisturl))
                 except:
                     await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
             else:
@@ -245,20 +241,20 @@ async def on_message(message):
                     pass
                 else:
                     await client.delete_message(message)
-                #save to config file
+                (index, user) = get_participant_object(message.author.id, usr_list)
                 new_prefs = ""
                 if(message.content == "s!setprefs"):
                     new_prefs = ""
                 else:
                     new_prefs = message.content.replace("s!setprefs ", "", 1)
                 try:
-                    (index, user) = get_participant_object(message.author.id, usr_list)
-                    config['members'][str(user.usrnum)][idx_list.PREFERENCES] = new_prefs
+                    #save to config file
+                    config['members'][str(user.usrnum)][idx_list.PREFERENCES] = str(new_prefs)
                     config.write()
                     #add the input to the value in the user's class instance
                     user.preferences = new_prefs
                     try:
-                        await client.send_message(message.author, "New preferences: {0}".format(user.preferences))
+                        await client.send_message(message.author, "New preferences: {0}".format(new_prefs))
                     except:
                         await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
                 except:
@@ -275,7 +271,7 @@ async def on_message(message):
             if user_is_participant(message.author.id, usr_list):
                 (index, user) = get_participant_object(message.author.id, usr_list)
                 try:
-                    await client.send_message(message.author, "Current preference(s): {0}" + str(user.preferences))
+                    await client.send_message(message.author, "Current preference(s): {0}".format(user.preferences))
                 except:
                     await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
             else:
