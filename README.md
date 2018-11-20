@@ -1,23 +1,30 @@
-#SantaBot
+# SantaBot
 
 A Discord bot to organize secret santa gift exchanges using the discord.py Python library
 
-##Instructions: 
+### Requirements
+    - python 3.5 or later (can be installed [here](https://www.python.org/downloads/))
+    - pip3
 
-###Installation and Dependencies:
+### Steps to run:
+1. Run `pip3 install -r requirements.txt`
+2. Once all of the dependencies are installed, create a Discord bot token following the instructions [here](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token).
+3. Replace `discord_token` in CONFIG.py with your bot token
+4. Run `python3 santa-bot.py`
 
-To add this bot to your Discord server, first ensure you have [Python version 3.5 or later installed](https://www.python.org/downloads/), along with [the discord.py library](https://github.com/Rapptz/discord.py) and [the configobj library](https://www.voidspace.org.uk/python/configobj.html#downloading). The asyncio, logging, os.path, and random libraries are also required, but they should be included in most Python installations by default. 
+#### Bot Commands:
 
-Once all of the dependencies are installed, create a Discord bot token following the instructions [here](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token). Then, open the santa-bot.py file with your favorite plaintext editor, and replace the word `'token'` in the last line that reads `client.run('token')` with the token you have generated, keeping the single quotes. The santa-bot.py file can now be excecuted, and the bot should function as normal.
-
-###Bot Commands:
-
-- `$$join` adds you to the list of secret santa participants.
-- `$$setaddress` saves your mailing address for gifts to be sent to.
-- `$$setprefs` saves your gift preferences so your secret santa will know what kind of things you would like to receive. Keep in mind that your exact input is sent to your secret santa as is. 
-- `$$listparticipants` makes the bot list all of the people currently participating in the secret santa exchange.
-- `$$totalparticipants` makes the bot give the number of people currently participating in the secret santa exchange
-- *`$$start` to have the bot assign each participant a partner
-- *`$$shutdown` to make the bot self-terminate
-
-all commands marked with a * can only be run by a server admin.
+- `s!join` = join the Secret Santa
+- `s!leave` = leave the Secret Santa
+- `s!setwishlisturl [wishlist URL]` = set your wishlist URL (replaces current). You may also add your mailing address. __This field required__.
+- `s!getwishlisturl` = bot will PM you your current wishlist
+- `s!setprefs [specific preferences, the things you like]` = set preferences (replaces current). Put N/A if none. __This field required__.
+- `s!getprefs` = bot will PM you your current preferences
+- `s!listparticipants` = get the current participants
+- `s!totalparticipants` = get the total number of participants
+- `s!partnerinfo` = be DM'd your partner's information
+- `s!start` **(admin only)** = assign Secret Santa partners
+- `s!restart` **(admin only)** = attempt to restart Secret Santa after pause without changing partners
+- `s!pause` **(admin only)** = pause Secret Santa (will require `s!start` and will reshuffle partners)
+- `s!end` **(admin only)** = end Secret Santa
+- `s!ping` = check if bot is alive
