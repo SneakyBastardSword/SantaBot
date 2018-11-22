@@ -172,8 +172,8 @@ async def on_message(message):
                 await client.send_message(message.channel, message.author.mention + " has been added to the {0} Secret Santa exchange!".format(str(curr_server)))
                 try:
                     await client.send_message(message.author, 'Welcome to the __' + str(curr_server) + '__ Secret Santa! Please input your wishlist URL and preferences **(by DMing this bot)** so your Secret Santa can send you something.\n'
-                    + 'Use `s!setwishlisturl [wishlist urls separated by ;]` to set your wishlist URL (you may also add your mailing address).\n'
-                    + 'Use `s!setprefs [preferences separated by ;]` to set gift preferences for your Secret Santa. Put N/A if none.')
+                    + 'Use `s!setwishlisturl [wishlist urls separated by | ]` to set your wishlist URL (you may also add your mailing address).\n'
+                    + 'Use `s!setprefs [preferences separated by | ]` to set gift preferences for your Secret Santa. Put N/A if none.')
                 except:
                     await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
 
@@ -390,15 +390,18 @@ async def on_message(message):
         
         #lists off all participant names and id's
         elif(message_split[0] == "s!listparticipants"):
-            if highest_key == 0:
-                await client.send_message(message.channel, 'Nobody has signed up for the Secret Santa exchange yet. Use `s!join` to enter the exchange.')
+            if (message.author.top_role == message.server.role_hierarchy[0]):
+                if highest_key == 0:
+                    await client.send_message(message.channel, 'Nobody has signed up for the Secret Santa exchange yet. Use `s!join` to enter the exchange.')
+                else:
+                    msg = '```The following people are signed up for the Secret Santa exchange:\n'
+                    for user in usr_list:
+                        this_user = discord.User(user = user.name, id = user.idstr)
+                        msg = msg + str(user.name) + '#' + str(user.discriminator) + '\n'
+                    msg = msg + 'Use `s!join` to enter the exchange.```'
+                    await client.send_message(message.channel, msg)
             else:
-                msg = '```The following people are signed up for the Secret Santa exchange:\n'
-                for user in usr_list:
-                    this_user = discord.User(user = user.name, id = user.idstr)
-                    msg = msg + str(user.name) + '#' + str(user.discriminator) + '\n'
-                msg = msg + 'Use `s!join` to enter the exchange.```'
-                await client.send_message(message.channel, msg)
+                await client.send_message(message.channel, BOT_ERROR.NO_PERMISSION)
         
         #lists total number of participants
         elif(message_split[0] == "s!totalparticipants"):
@@ -407,7 +410,7 @@ async def on_message(message):
             elif highest_key == 1:
                 await client.send_message(message.channel, '1 person has signed up for the Secret Santa exchange. Use `s!join` to enter the exchange.')
             else:
-                await client.send_message(message.channel, 'A total of ' + len(usr_list) + ' users have joined the Secret Santa exchange so far. Use `s!join` to enter the exchange.')
+                await client.send_message(message.channel, 'A total of ' + str(len(usr_list)) + ' users have joined the Secret Santa exchange so far. Use `s!join` to enter the exchange.')
         
         #allows a user to have the details of their partner restated
         elif(message_split[0] == "s!partnerinfo"):
@@ -415,7 +418,7 @@ async def on_message(message):
                 (usr_index, user) = get_participant_object(message.author.id, usr_list)
                 (partner_index, partnerobj) = get_participant_object(user.partnerid, usr_list)
                 msg = 'Your partner is ' + partnerobj.name + user.partnerid + '\n'
-                msg = msg + 'Their mailing wishlist URL is ' + partnerobj.wishlisturl + '\n'
+                msgs = msg + 'Their mailing wishlist URL is ' + partnerobj.wishlisturl + '\n'
                 msg = msg + 'their gift preference is as follows: ' + partnerobj.preferences + '\n'
                 msg = msg + "If you have trouble accessing your partner's wishlist, please contact an admin to get in touch with your partner. This is a *secret* santa, after all!"
                 try:
@@ -433,11 +436,11 @@ async def on_message(message):
         elif(message_split[0] == "s!help"):
             c_join = "`s!join` = join the Secret Santa"
             c_leave = "`s!leave` = leave the Secret Santa"
-            c_setwishlisturl = "`s!setwishlisturl [wishlist URL]` = set your wishlist URL (replaces current). You may also add your mailing address. __This field required__."
+            c_setwishlisturl = "`s!setwishlisturl [wishlist urls separated by | ]` = set your wishlist URL (replaces current). You may also add your mailing address. __This field required__."
             c_getwishlisturl = "`s!getwishlisturl` = bot will PM you your current wishlist"
-            c_setprefs = "`s!setprefs [specific preferences, the things you like]` = set preferences (replaces current). Put N/A if none. __This field required__."
+            c_setprefs = "`s!setprefs [preferences separated by | ]` = set preferences (replaces current). Put N/A if none. __This field required__."
             c_getprefs = "`s!getprefs` = bot will PM you your current preferences"
-            c_listparticipants = "`s!listparticipants` = get the current participants"
+            c_listparticipants = "`s!listparticipants` **(admin only)** = get the current participants"
             c_totalparticipants = "`s!totalparticipants` = get the total number of participants"
             c_partnerinfo = "`s!partnerinfo` = be DM'd your partner's information"
             c_start = "`s!start` **(admin only)** = assign Secret Santa partners"
