@@ -104,9 +104,9 @@ def partners_are_valid(usrlist):
     return result
 
 ## checks if the user list changed during a pause
-def usr_list_changed_during_pause(usrlist):
-    if(user_left_during_pause):# there's probably a better boolean logic way but this is easy
-        user_left_during_pause = False # acknowledge
+def usr_list_changed_during_pause(usrlist, usr_left):
+    if(usr_left):# there's probably a better boolean logic way but this is easy
+        usr_left = False # acknowledge
         return True
 
     has_changed = True
@@ -144,7 +144,7 @@ async def on_message(message):
     if((message.content[0:2]) == "s!"):
         print(message.content)
         with open('./files/chat.log', 'a+') as chat_log:
-            #chat_log.write('[' + message.author.name + message.author.id + ' in ' + message.channel.name + ' at ' + str(message.timestamp) + ']' + message.content + '\n')
+            chat_log.write("[{0}#{1} ({2}) at {3}] {4}\n".format(message.author.name, message.author.discriminator, message.author.id, str(message.timestamp), message.content))
             pass
     
         #ignore messages from the bot itself
@@ -154,7 +154,6 @@ async def on_message(message):
         #event for a user joining the Secret Santa
         elif(message_split[0] == "s!join"):
             #check if message author has already joined
-            print(len(usr_list))
             if user_is_participant(message.author.id, usr_list):
                 await client.send_message(message.channel, '`Error: You have already joined.`')
             #check if the exchange has already started
@@ -169,7 +168,7 @@ async def on_message(message):
                 config.write()
                 
                 #prompt user about inputting info
-                await client.send_message(message.channel, message.author.mention + " has been added to the {0} Secret Santa exchange!".format(str(curr_server)))
+                await client.send_message(message.channel, message.author.mention + " has been added to the {0} Secret Santa exchange!".format(str(curr_server)) + "\nMore instructions have been DMd to you.")
                 try:
                     await client.send_message(message.author, 'Welcome to the __' + str(curr_server) + '__ Secret Santa! Please input your wishlist URL and preferences **(by DMing this bot)** so your Secret Santa can send you something.\n'
                     + 'Use `s!setwishlisturl [wishlist urls separated by | ]` to set your wishlist URL (you may also add your mailing address).\n'
@@ -329,12 +328,13 @@ async def on_message(message):
                     usr_list = copy.deepcopy(potential_list)
                     await client.send_message(message.channel, "Secret Santa pairs have been picked! Check your PMs and remember not to let your partner know. Have fun!")
                 elif not all_fields_complete:
-                    await client.send_message(message.channel, message.author.mention + " `Error: time for some love through harassment`")
+                    await client.send_message(message.channel, message.author.mention + " `Error: Signups incomplete. Time for some love through harassment.`")
             else:
                 await client.send_message(message.channel, BOT_ERROR.NO_PERMISSION)
         
         #command allows you to restart without rematching if no change was made while s!paused
         elif(message_split[0] == "s!restart"):
+            is_paused = True
             if (message.author.top_role == message.server.role_hierarchy[0]) and is_paused:
                 #first ensure all users have all info submitted
                 all_fields_complete = True
@@ -348,7 +348,7 @@ async def on_message(message):
                             await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
                         except:
                             await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
-                list_changed = usr_list_changed_during_pause(usr_list)
+                list_changed = usr_list_changed_during_pause(usr_list, user_left_during_pause)
                 if(list_changed):
                     await client.send_message(message.channel, "User list changed during the pause. Partners must be picked again with `s!start`.")
                 else:
@@ -357,8 +357,12 @@ async def on_message(message):
                     config['programData']['exchange_started'] = True
                     config.write()
                     await client.send_message(message.channel, "No change was made during the pause. Secret Santa resumed with the same partners.")
-            else:
+            elif(message.author.top_role != message.server.role_hierarchy[0]):
                 await client.send_message(message.channel, BOT_ERROR.NO_PERMISSION)
+            elif(not is_paused):
+                await client.send_message(message.channel, "`Error: Secret Santa is not paused`")
+            else:
+                await client.send_message(message.channel, "idklol")
 
         # allows a way to restart the Secret Santa
         elif(message_split[0] == "s!pause"):
@@ -417,9 +421,9 @@ async def on_message(message):
             if exchange_started and user_is_participant(message.author.id, usr_list):
                 (usr_index, user) = get_participant_object(message.author.id, usr_list)
                 (partner_index, partnerobj) = get_participant_object(user.partnerid, usr_list)
-                msg = 'Your partner is ' + partnerobj.name + user.partnerid + '\n'
-                msgs = msg + 'Their mailing wishlist URL is ' + partnerobj.wishlisturl + '\n'
-                msg = msg + 'their gift preference is as follows: ' + partnerobj.preferences + '\n'
+                msg = 'Your partner is ' + partnerobj.name + "#" + partnerobj.discriminator + '\n'
+                msg = msg + 'Their wishlist(s) can be found here: ' + partnerobj.wishlisturl + '\n'
+                msg = msg + 'And their gift preferences can be found here: ' + partnerobj.preferences + '\n'
                 msg = msg + "If you have trouble accessing your partner's wishlist, please contact an admin to get in touch with your partner. This is a *secret* santa, after all!"
                 try:
                     await client.send_message(message.author, msg)
@@ -442,7 +446,7 @@ async def on_message(message):
             c_getprefs = "`s!getprefs` = bot will PM you your current preferences"
             c_listparticipants = "`s!listparticipants` **(admin only)** = get the current participants"
             c_totalparticipants = "`s!totalparticipants` = get the total number of participants"
-            c_partnerinfo = "`s!partnerinfo` = be DM'd your partner's information"
+            c_partnerinfo = "`s!partnerinfo` = be DMd your partner's information"
             c_start = "`s!start` **(admin only)** = assign Secret Santa partners"
             c_restart = "`s!restart` **(admin only)** = attempt to restart Secret Santa after pause without changing partners"
             c_pause = "`s!pause` **(admin only)** = pause Secret Santa (will require `s!start` and will reshuffle partners)"
