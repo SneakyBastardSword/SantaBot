@@ -3,8 +3,8 @@
 A Discord bot to organize secret santa gift exchanges using the discord.py Python library
 
 ### Requirements
-    - python 3.5 or later (can be installed [here](https://www.python.org/downloads/))
-    - pip3
+- python 3.5 or later (can be installed [here](https://www.python.org/downloads/))
+- pip3
 
 ### Steps to run:
 1. Run `pip3 install -r requirements.txt`
@@ -20,7 +20,7 @@ A Discord bot to organize secret santa gift exchanges using the discord.py Pytho
 - `s!getwishlisturl` = bot will PM you your current wishlist
 - `s!setprefs [specific preferences, the things you like]` = set preferences (replaces current). Put N/A if none. __This field required__.
 - `s!getprefs` = bot will PM you your current preferences
-- `s!listparticipants` = get the current participants
+- `s!listparticipants` **(admin only)** = get the current participants
 - `s!totalparticipants` = get the total number of participants
 - `s!partnerinfo` = be DM'd your partner's information
 - `s!start` **(admin only)** = assign Secret Santa partners
