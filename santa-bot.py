@@ -155,7 +155,7 @@ async def on_message(message):
         elif(message_split[0] == "s!join"):
             #check if message author has already joined
             if user_is_participant(message.author.id, usr_list):
-                await client.send_message(message.channel, '`Error: You have already joined.`')
+                await client.send_message(message.channel, BOT_ERROR.ALREADY_JOINED)
             #check if the exchange has already started
             elif exchange_started:
                 await client.send_message(message.channel, BOT_ERROR.EXCHANGE_IN_PROGRESS)
@@ -288,7 +288,8 @@ async def on_message(message):
                     else:
                         all_fields_complete = False
                         try:
-                            await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing wishlist URL or gift preferences.`')
+                            #await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing wishlist URL or gift preferences.`')
+                            await client.send_message(message.author, BOT_ERROR.HAS_NOT_SUBMITTED(user.name))
                             await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
                         except:
                             await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
@@ -328,7 +329,7 @@ async def on_message(message):
                     usr_list = copy.deepcopy(potential_list)
                     await client.send_message(message.channel, "Secret Santa pairs have been picked! Check your PMs and remember not to let your partner know. Have fun!")
                 elif not all_fields_complete:
-                    await client.send_message(message.channel, message.author.mention + " `Error: Signups incomplete. Time for some love through harassment.`")
+                    await client.send_message(message.channel, message.author.mention + BOT_ERROR.SIGNUPS_INCOMPLETE)
             else:
                 await client.send_message(message.channel, BOT_ERROR.NO_PERMISSION)
         
@@ -344,7 +345,7 @@ async def on_message(message):
                     else:
                         all_fields_complete = False
                         try:
-                            await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing wishlist URL or gift preferences.`')
+                            await client.send_message(message.author, BOT_ERROR.HAS_NOT_SUBMITTED(user.name))
                             await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
                         except:
                             await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
@@ -360,7 +361,7 @@ async def on_message(message):
             elif(message.author.top_role != message.server.role_hierarchy[0]):
                 await client.send_message(message.channel, BOT_ERROR.NO_PERMISSION)
             elif(not is_paused):
-                await client.send_message(message.channel, "`Error: Secret Santa is not paused`")
+                await client.send_message(message.channel, BOT_ERROR.NOT_PAUSED)
             else:
                 await client.send_message(message.channel, "idklol")
 
@@ -427,13 +428,15 @@ async def on_message(message):
                 msg = msg + "If you have trouble accessing your partner's wishlist, please contact an admin to get in touch with your partner. This is a *secret* santa, after all!"
                 try:
                     await client.send_message(message.author, msg)
+                    await client.send_message(message.channel, "The information has been sent to your DMs.")
                 except:
                     await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
-                await client.send_message(message.channel, "The information has been sent to your DMs.")
-            elif not exchange_started:
+            elif (not exchange_started) and user_is_participant(message.author.id, usr_list):
                 await client.send_message(message.channel, BOT_ERROR.NOT_STARTED)
-            elif not user_is_participant(message.author.id, usr_list):
-                await client.send_message(message.channel, '`Error: You are not participating in the gift exchange.`')
+            elif exchange_started and (not user_is_participant(message.author.id, usr_list)):
+                await client.send_message(message.channel, BOT_ERROR.EXCHANGE_STARTED_UNJOINED)
+            elif (not exchange_started) and (not user_is_participant(message.author.id, usr_list)):
+                await client.send_message(message.channel, BOT_ERROR.UNJOINED)
             else:
                 await client.send_message(message.channel, "`Error: this shouldn't happen`")
 
