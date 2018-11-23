@@ -41,7 +41,7 @@ except:
     os.mkdir('./files/')
     config = ConfigObj()
     config.filename = './files/botdata.cfg'
-    config['programData'] = {'exchange_started': False, 'discord_token': CONFIG.discord_token}
+    config['programData'] = {'exchange_started': False}
     config['members'] = {}
     config.write()
 
@@ -113,7 +113,7 @@ def usr_list_changed_during_pause(usrlist, usr_left):
     for user in usrlist:
         has_match = (not (str(user.partnerid) == ""))
         has_changed = has_changed & has_match # figures out if all users have a match
-    has_changed = has_changed & (not user_left_during_pause)
+    has_changed = has_changed & (not usr_left)
     return (not has_changed) ## if not all users have a match
 
 #set up discord connection debug logging
@@ -372,7 +372,7 @@ async def on_message(message):
                 config['programData']['exchange_started'] = False
                 config.write()
                 is_paused = True
-                await client.send_message(message.channel, 'Secret Santa has been paused.')
+                await client.send_message(message.channel, 'Secret Santa has been paused. New people may now join.')
             else:
                 await client.send_message(message.channel, BOT_ERROR.NO_PERMISSION)
 
@@ -464,7 +464,7 @@ async def on_message(message):
 
         elif(message_split[0] == "s!invite"):
             link = "https://discordapp.com/oauth2/authorize?client_id=513141948383756289&scope=bot&permissions=67185664"
-            await client.send_message(message.channel, "Bot invite link: {0}".format(link))
+            await client.send_message(message.channel, "Non-testing bot invite link: {0}".format(link))
 
         else:
             await client.send_message(message.channel, "Command not found. Please use `s!help` if you need help with the commands.")
@@ -480,4 +480,4 @@ async def on_ready():
 
 
 #event loop and discord initiation
-client.run(config['programData']['discord_token'])
+client.run(CONFIG.discord_token)
