@@ -219,7 +219,7 @@ async def on_message(message):
                     except:
                         await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
             else:
-                await client.send_message(message.channel, )
+                await client.send_message(message.channel, BOT_ERROR.UNJOINED)
         
         # get current wishlist URL(s)
         elif(message_split[0] == "s!getwishlisturl"):
@@ -263,7 +263,6 @@ async def on_message(message):
                         await client.send_message(message.channel, message.author.mention + BOT_ERROR.DM_FAILED)
             else:
                 await client.send_message(message.channel, BOT_ERROR.UNJOINED)
-                await client.delete_message(message)
         
         #get current preferences
         elif(message_split[0] == "s!getprefs"):
