@@ -22,14 +22,14 @@ class Participant(object):
     
     def wishlisturl_is_set(self):
         """returns whether the user has set an wishlisturl"""
-        if self.wishlisturl == '':
+        if (self.wishlisturl == "None") or (self.wishlisturl == ""):
             return False
         else:
             return True
     
     def pref_is_set(self):
         """returns whether the user has set gift preferences"""
-        if self.preferences == '':
+        if (self.preferences == "None") or (self.preferences == ""):
             return False
         else:
             return True
@@ -198,9 +198,9 @@ async def on_message(message):
                 else:
                     await client.delete_message(message)
                 (index, user) = get_participant_object(message.author.id, usr_list)
-                new_wishlist = ""
+                new_wishlist = "None"
                 if(message.content == "s!setwishlisturl"):
-                    new_wishlist = ""
+                    new_wishlist = "None"
                 else:
                     new_wishlist = message.content.replace("s!setwishlisturl ", "", 1)
                 try:
@@ -241,9 +241,9 @@ async def on_message(message):
                 else:
                     await client.delete_message(message)
                 (index, user) = get_participant_object(message.author.id, usr_list)
-                new_prefs = ""
+                new_prefs = "None"
                 if(message.content == "s!setprefs"):
-                    new_prefs = ""
+                    new_prefs = "None"
                 else:
                     new_prefs = message.content.replace("s!setprefs ", "", 1)
                 try:
@@ -363,7 +363,7 @@ async def on_message(message):
             elif(not is_paused):
                 await client.send_message(message.channel, BOT_ERROR.NOT_PAUSED)
             else:
-                await client.send_message(message.channel, "idklol")
+                await client.send_message(message.channel, "`Error: this shouldn't happen`")
 
         # allows a way to restart the Secret Santa
         elif(message_split[0] == "s!pause"):
