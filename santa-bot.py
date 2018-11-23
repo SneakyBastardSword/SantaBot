@@ -287,7 +287,6 @@ async def on_message(message):
                     else:
                         all_fields_complete = False
                         try:
-                            #await client.send_message(message.author, '`Error: ' + user.name + ' has not submitted either a mailing wishlist URL or gift preferences.`')
                             await client.send_message(message.author, BOT_ERROR.HAS_NOT_SUBMITTED(user.name))
                             await client.send_message(message.author, '`Partner assignment canceled: participant info incomplete.`')
                         except:
@@ -329,6 +328,10 @@ async def on_message(message):
                     await client.send_message(message.channel, "Secret Santa pairs have been picked! Check your PMs and remember not to let your partner know. Have fun!")
                 elif not all_fields_complete:
                     await client.send_message(message.channel, message.author.mention + BOT_ERROR.SIGNUPS_INCOMPLETE)
+                elif not(len(usr_list) > 1):
+                    await client.send_message(message.channel, BOT_ERROR.NOT_ENOUGH_SIGNUPS)
+                else:
+                    await client.send_message(message.channel, BOT_ERROR.UNREACHABLE)
             else:
                 await client.send_message(message.channel, BOT_ERROR.NO_PERMISSION)
         
@@ -362,7 +365,7 @@ async def on_message(message):
             elif(not is_paused):
                 await client.send_message(message.channel, BOT_ERROR.NOT_PAUSED)
             else:
-                await client.send_message(message.channel, "`Error: this shouldn't happen`")
+                await client.send_message(message.channel, BOT_ERROR.UNREACHABLE)
 
         # allows a way to restart the Secret Santa
         elif(message_split[0] == "s!pause"):
@@ -437,7 +440,7 @@ async def on_message(message):
             elif (not exchange_started) and (not user_is_participant(message.author.id, usr_list)):
                 await client.send_message(message.channel, BOT_ERROR.UNJOINED)
             else:
-                await client.send_message(message.channel, "`Error: this shouldn't happen`")
+                await client.send_message(message.channel, BOT_ERROR.UNREACHABLE)
 
         elif(message_split[0] == "s!help"):
             c_join = "`s!join` = join the Secret Santa"

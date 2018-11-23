@@ -10,3 +10,5 @@ SIGNUPS_INCOMPLETE = "`Error: Signups incomplete. Time for some love through har
 NOT_PAUSED = "`Error: Secret Santa is not paused`"
 def HAS_NOT_SUBMITTED(usrname):
     return "`Error: " + usrname + " has not submitted either a mailing wishlist URL or gift preferences.`"
+UNREACHABLE = "`Error: this shouldn't happen`"
+NOT_ENOUGH_SIGNUPS = "`Error: Secret santa not started. Need more people.`"
