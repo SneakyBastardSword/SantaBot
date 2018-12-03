@@ -463,7 +463,7 @@ async def on_message(message):
 
         elif(message_split[0] == "s!ping"):
             """ Pong! """
-            await client.send_message(message.channel, "Pong!")
+            await client.send_message(message.channel, "Pong! I'm alive!")
 
         elif(message_split[0] == "s!invite"):
             link = "https://discordapp.com/oauth2/authorize?client_id=513141948383756289&scope=bot&permissions=67185664"
