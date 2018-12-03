@@ -34,30 +34,6 @@ class Participant(object):
         else:
             return True
 
-#initialize config file
-try:
-    config = ConfigObj('./files/botdata.cfg', file_error = True)
-except: 
-    os.mkdir('./files/')
-    config = ConfigObj()
-    config.filename = './files/botdata.cfg'
-    config['programData'] = {'exchange_started': False}
-    config['members'] = {}
-    config.write()
-
-#initialize data from config file
-server = ''
-usr_list = []
-highest_key = 0
-user_left_during_pause = False
-is_paused = False
-exchange_started = config['programData'].as_bool('exchange_started')
-for key in config['members']:
-    data = config['members'][str(key)]
-    usr = Participant(data[idx_list.NAME], data[idx_list.DISCRIMINATOR], data[idx_list.IDSTR], data[idx_list.USRNUM], data[idx_list.WISHLISTURL], data[idx_list.PREFERENCES], data[idx_list.PARTNERID])
-    usr_list.append(usr)
-    highest_key = int(key)
-
 def user_is_participant(usrid, usrlist):
     """Takes a discord user ID string and returns whether
     a user with that ID is in usr_list"""
@@ -116,6 +92,28 @@ def usr_list_changed_during_pause(usrlist, usr_left):
     has_changed = has_changed & (not usr_left)
     return (not has_changed) ## if not all users have a match
 
+#initialize config file
+try:
+    config = ConfigObj('./files/botdata.cfg', file_error = True)
+except: 
+    os.mkdir('./files/')
+    config = ConfigObj()
+    config.filename = './files/botdata.cfg'
+    config['programData'] = {'exchange_started': False}
+    config['members'] = {}
+    config.write()
+#initialize data from config file
+server = ''
+usr_list = []
+highest_key = 0
+user_left_during_pause = False
+is_paused = False
+exchange_started = config['programData'].as_bool('exchange_started')
+for key in config['members']:
+    data = config['members'][str(key)]
+    usr = Participant(data[idx_list.NAME], data[idx_list.DISCRIMINATOR], data[idx_list.IDSTR], data[idx_list.USRNUM], data[idx_list.WISHLISTURL], data[idx_list.PREFERENCES], data[idx_list.PARTNERID])
+    usr_list.append(usr)
+    highest_key = int(key)
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
 client_log.setLevel(logging.DEBUG)
