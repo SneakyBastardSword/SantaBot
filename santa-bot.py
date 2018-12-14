@@ -459,6 +459,7 @@ async def on_message(message):
             command_string = ''
             for command in command_list:
                 command_string = command_string + ("{0}\n".format(command))
+            command_string += "\nContact your server's SantaBot administrator or <@224949031514800128> if you need any more help."
             await client.send_message(message.channel, command_string)
 
         elif(message_split[0] == "s!ping"):
