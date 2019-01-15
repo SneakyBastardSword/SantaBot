@@ -484,4 +484,4 @@ async def on_ready():
 
 
 #event loop and discord initiation
-client.run(CONFIG.discord_token)
+client.run(CONFIG.discord_token, reconnect = True)
