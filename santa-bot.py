@@ -467,7 +467,7 @@ async def on_message(message):
             await client.send_message(message.channel, "Pong! I'm alive!")
 
         elif(message_split[0] == "s!invite"):
-            link = "https://discordapp.com/oauth2/authorize?client_id=513141948383756289&scope=bot&permissions=67185664"
+            link = "https://discordapp.com/oauth2/authorize?client_id={0}&scope=bot&permissions=67185664".format(CONFIG.client_id)
             await client.send_message(message.channel, "Non-testing bot invite link: {0}".format(link))
 
         else:
