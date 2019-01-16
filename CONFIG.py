@@ -1,2 +1,2 @@
-discord_token = YOUR_TOKEN_HERE
-bot_owner = BOT_OWNER_ID_HERE 
+discord_token = "YOUR_TOKEN_HERE"
+client_id = "YOUR_CLIENT_ID"
