@@ -7,6 +7,7 @@ import discord
 import CONFIG
 import BOT_ERROR
 import idx_list
+import datetime.datetime as DT
 from configobj import ConfigObj
 
 class Participant(object):
@@ -476,7 +477,10 @@ async def on_message(message):
 @client.event
 async def on_ready():
     """print message when client is connected"""
-    print('Logged in as')
+    currentDT = DT.now()
+    print('------')
+    print (currentDT.strftime("%Y-%m-%d %H:%M:%S"))
+    print("Logged in as")
     print(client.user.name)
     print(client.user.id)
     await client.change_presence(game = discord.Game(name = "s!help"))
