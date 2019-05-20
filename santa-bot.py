@@ -113,11 +113,28 @@ async def ping(ctx):
     await ctx.send("pong")
 
 @bot.command()
-async def echo(ctx, content:str, number:int = 1):
+async def echo(ctx, content:str, number:int = 1, *args):
     '''
     [content]
     '''
     for x in range(number):
         await ctx.send(content)
+    await ctx.send("{1}".format(len(args)))
+
+@bot.command()
+async def setwishlisturl(ctx, urls:str):
+    await ctx.send(urls)
+    return
+
+#initialize config file
+try:
+    config = ConfigObj('./files/botdata.cfg', file_error = True)
+except: 
+    os.mkdir('./files/')
+    config = ConfigObj()
+    config.filename = './files/botdata.cfg'
+    config['programData'] = {'exchange_started': False}
+    config['members'] = {}
+    config.write()
 
 bot.run(CONFIG.discord_token, reconnect = True)
