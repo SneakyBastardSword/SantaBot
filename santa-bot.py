@@ -108,7 +108,7 @@ async def on_ready():
     print("Logged in as")
     print(bot.user.name)
     print(bot.user.id)
-    await bot.change_presence(activity = discord.Game(name = "s!help"))
+    await bot.change_presence(activity = discord.Game(name = CONFIG.prefix + "help"))
     print('------')
 
 @bot.command()
@@ -128,10 +128,13 @@ async def echo(ctx, *content:str):
     '''
     [content] = echos back the [content]
     '''
-    await ctx.send(' '.join(content))
+    if(len(content) == 0):
+        pass
+    else:
+        await ctx.send(' '.join(content))
 
 @bot.command()
-async def setwishlisturl(ctx, *urls:str):
+async def setwishlisturl(ctx, *destination:str):
     '''
      [Any number of wishlist URLs or mailing addresses] = set wishlist destinations or mailing address. Surround mailing address with quotation marks and separate EACH wishlist destination with a space (eg. amazon.com "P. Sherman 42 Wallaby Way, Sydney" ).
     '''
@@ -143,10 +146,10 @@ async def setwishlisturl(ctx, *urls:str):
             await ctx.messsage.delete()
         (index, user) = get_participant_object(currAuthor.id, usr_list)
         new_wishlist = "None"
-        if(len(urls) == 0):
+        if(len(destination) == 0):
             pass
         else:
-            new_wishlist = ", ".join(urls)
+            new_wishlist = ", ".join(destination)
         try:
             # save to config file
             config['members'][str(user.usrnum)][idx_list.WISHLISTURL] = new_wishlist
@@ -181,6 +184,39 @@ async def getwishlisturl(ctx):
     else:
         await ctx.send(BOT_ERROR.UNJOINED)
     return
+
+@bot.command()
+async def join(ctx):
+    '''
+    Join Secret Santa if it has not started. Contact the Secret Santa admin if you wish to join.
+    '''
+    currAuthor = ctx.author
+    # check if the exchange has already started
+    if user_is_participant(currAuthor.id, usr_list):
+        await ctx.send(BOT_ERROR.ALREADY_JOINED)
+    else:
+        # initialize instance of Participant for the author
+        highest_key = highest_key + 1
+        usr_list.append(Participant(currAuthor.name, currAuthor.discriminator, currAuthor.id, highest_key))
+        # write details of the class isntance to config and increment total_users
+        config['members'][str(highest_key)] = [currAuthor.name, currAuthor.discriminator, currAuthor.id, highest_key, "", "", ""]
+        config.write()
+
+        # prompt user about inputting info
+        ctx.send(currAuthor.mention + " has been added to the {0} Secret Santa exchange!".format(str(ctx.guild)) + "\nMore instructions have been DMd to you.")
+        try:
+            userPrompt = """Welcome to the __{0}__ Secret Santa! Please input your wishlist URL and preferences **(by DMing this bot)** so your Secret Santa can send you something.\n
+                Use `s!setwishlisturl [wishlist urls separated by | ]` to set your wishlist URL (you may also add your mailing address).\n
+                Use `s!setprefs [preferences separated by | ]` to set gift preferences for your Secret Santa. Put N/A if none.""".format(str(ctx.guild))
+            currAuthor.send(userPrompt)
+        except:
+            ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+    return
+
+@bot.command()
+async def invite(ctx):
+    link = "https://discordapp.com/oauth2/authorize?client_id={0}&scope=bot&permissions=67185664".format(CONFIG.client_id)
+    await ctx.send_message("Non-testing bot invite link: {0}".format(link))
 
 #initialize config file
 try:
