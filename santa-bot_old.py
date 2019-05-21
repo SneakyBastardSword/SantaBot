@@ -130,7 +130,6 @@ client = discord.Client()
 async def on_message(message):
     #declare global vars
     
-    global curr_server
     global usr_list
     global highest_key
     global exchange_started
