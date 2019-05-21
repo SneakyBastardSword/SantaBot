@@ -186,6 +186,16 @@ async def getwishlisturl(ctx):
     return
 
 @bot.command()
+async def setprefs(ctx, *preferences:str):
+    currAuthor = ctx.author
+    if user_is_participant(currAuthor.id, usr_list):
+        if(ctx.message.channel.is_private):
+            pass
+        else:
+            ctx.message.delete()
+    return
+
+@bot.command()
 async def join(ctx):
     '''
     Join Secret Santa if it has not started. Contact the Secret Santa admin if you wish to join.
