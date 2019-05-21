@@ -117,7 +117,7 @@ async def ping(ctx):
     = Basic ping command
     '''
     latency = bot.latency
-    await ctx.send(latency)
+    await ctx.send("{0} milliseconds".format(round(latency, 4)*1000))
 
 @bot.command()
 async def ding(ctx):
