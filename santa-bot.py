@@ -8,6 +8,7 @@ from discord.ext import commands
 import CONFIG
 import BOT_ERROR
 import idx_list
+import datetime as DT
 from configobj import ConfigObj
 
 class Participant(object):
@@ -55,6 +56,7 @@ def get_participant_object(usrid, usrlist):
             break
 
 def propose_partner_list(usrlist):
+    """Generate a proposed partner list"""
     usr_list_copy = copy.deepcopy(usrlist)
     partners = copy.deepcopy(usrlist)
     ## propose partner list
@@ -73,6 +75,8 @@ def propose_partner_list(usrlist):
 
 ## everybody has a partner, nobody's partnered with themselves
 def partners_are_valid(usrlist):
+    """Make sure that everybody has a partner
+    and nobody is partnered with themselves"""
     if(not usrlist):
         return False
     result = True
@@ -98,11 +102,13 @@ bot = commands.Bot(command_prefix = CONFIG.prefix)
 @bot.event
 async def on_ready():
     """print message when client is connected"""
-    print('Logged in as')
+    currentDT = DT.datetime.now()
+    print('------')
+    print (currentDT.strftime("%Y-%m-%d %H:%M:%S"))
+    print("Logged in as")
     print(bot.user.name)
     print(bot.user.id)
-    game = discord.Game(name = "s!help")
-    await bot.change_presence(activity = game)
+    await bot.change_presence(activity = discord.Game(name = "s!help"))
     print('------')
 
 @bot.command()
@@ -110,20 +116,70 @@ async def ping(ctx):
     '''
     = Basic ping command
     '''
-    await ctx.send("pong")
+    latency = bot.latency
+    await ctx.send(latency)
 
 @bot.command()
-async def echo(ctx, content:str, number:int = 1, *args):
-    '''
-    [content]
-    '''
-    for x in range(number):
-        await ctx.send(content)
-    await ctx.send("{1}".format(len(args)))
+async def ding(ctx):
+    await ctx.send("dong")
 
 @bot.command()
-async def setwishlisturl(ctx, urls:str):
-    await ctx.send(urls)
+async def echo(ctx, *content:str):
+    '''
+    [content] = echos back the [content]
+    '''
+    await ctx.send(' '.join(content))
+
+@bot.command()
+async def setwishlisturl(ctx, *urls:str):
+    '''
+     [Any number of wishlist URLs or mailing addresses] = set wishlist destinations or mailing address. Surround mailing address with quotation marks and separate EACH wishlist destination with a space (eg. amazon.com "P. Sherman 42 Wallaby Way, Sydney" ).
+    '''
+    currAuthor = ctx.author
+    if user_is_participant(currAuthor.id, usr_list):
+        if(ctx.message.channel.is_private):
+            pass
+        else:
+            await ctx.messsage.delete()
+        (index, user) = get_participant_object(currAuthor.id, usr_list)
+        new_wishlist = "None"
+        if(len(urls) == 0):
+            pass
+        else:
+            new_wishlist = ", ".join(urls)
+        try:
+            # save to config file
+            config['members'][str(user.usrnum)][idx_list.WISHLISTURL] = new_wishlist
+            config.write()
+            # add the input to the value in the user's class instance
+            user.wishlisturl = new_wishlist
+            try:
+                await currAuthor.send("New wishlist URL: {0}".format(new_wishlist))
+            except:
+                await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+        except:
+            try:
+                await currAuthor.send(BOT_ERROR.INVALID_INPUT)
+            except:
+                await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+    else:
+        await ctx.send(BOT_ERROR.UNJOINED)
+    return
+    
+@bot.command()
+async def getwishlisturl(ctx):
+    '''
+     = get return current wishlist url
+    '''
+    currAuthor = ctx.author
+    if user_is_participant(ctx.author.id, usr_list):
+        (index, user) = get_participant_object(ctx.author.id, usr_list)
+        try:
+            await currAuthor.send("Current wishlist destination(s): {0}".format(user.wishlisturl))
+        except:
+            await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+    else:
+        await ctx.send(BOT_ERROR.UNJOINED)
     return
 
 #initialize config file
@@ -136,5 +192,23 @@ except:
     config['programData'] = {'exchange_started': False}
     config['members'] = {}
     config.write()
+#initialize data from config file
+server = ''
+usr_list = []
+highest_key = 0
+user_left_during_pause = False
+is_paused = False
+exchange_started = config['programData'].as_bool('exchange_started')
+for key in config['members']:
+    data = config['members'][str(key)]
+    usr = Participant(data[idx_list.NAME], data[idx_list.DISCRIMINATOR], data[idx_list.IDSTR], data[idx_list.USRNUM], data[idx_list.WISHLISTURL], data[idx_list.PREFERENCES], data[idx_list.PARTNERID])
+    usr_list.append(usr)
+    highest_key = int(key)
+#set up discord connection debug logging
+client_log = logging.getLogger('discord')
+client_log.setLevel(logging.DEBUG)
+client_handler = logging.FileHandler(filename='./files/debug.log', encoding='utf-8', mode='w')
+client_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+client_log.addHandler(client_handler)
 
 bot.run(CONFIG.discord_token, reconnect = True)
