@@ -244,6 +244,40 @@ async def start(ctx):
     return
 
 @bot.command()
+async def restart(ctx):
+    is_paused = True
+    currAuthor = ctx.author
+    if((currAuthor.top_role == ctx.guild.role_hierarchy[0]) and is_paused):
+        # ensure all users have all info submitted
+        all_fields_complete = True
+        for user in usr_list:
+            if(user.wishlisturl_is_set() and user.pref_is_set()):
+                pass
+            else:
+                all_fields_complete = False
+                try:
+                    await currAuthor.send(BOT_ERROR.HAS_NOT_SUBMITTED(user.name))
+                    await ctx.send("`Partner assignment cancelled: participant info incomplete.`")
+                except:
+                    await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+        list_changed = usr_list_changed_during_pause(usr_list, user_left_during_pause)
+        if(list_changed):
+            ctx.send("User list changed during the pause. Partners must be picked again with `s!start`.")
+        else:
+            exchange_started = True
+            is_paused = False
+            config['programData']['exchange_started'] = True
+            config.write()
+            await ctx.send("No change was made during the pause. Secret Santa resumed with the same partners.")
+    elif(currAuthor.top_role != ctx.guild.role_hierarchy[0]):
+        await ctx.send(BOT_ERROR.NO_PERMISSION)
+    elif(not is_paused):
+        await ctx.send(BOT_ERROR.NOT_PAUSED)
+    else:
+        await ctx.send(BOT_ERROR.UNREACHABLE)
+    return
+
+@bot.command()
 async def join(ctx):
     '''
     Join Secret Santa if it has not started. Contact the Secret Santa admin if you wish to join.
