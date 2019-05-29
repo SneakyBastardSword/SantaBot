@@ -7,34 +7,10 @@ import discord
 from discord.ext import commands
 
 from Helpers import *
+import Participant
 import CONFIG
 import BOT_ERROR
 import idx_list
-
-class Participant(object):
-    """class defining a participant and info associated with them"""
-    def __init__(self, name, discriminator, idstr, usrnum, wishlisturl='', preferences='', partnerid=''):
-        self.name = name                   #string containing name of user
-        self.discriminator = discriminator #string containing discriminant of user
-        self.idstr = idstr                 #string containing id of user
-        self.usrnum = usrnum               #int value referencing the instance's location in usr_list
-        self.wishlisturl = wishlisturl             #string for user's wishlisturl
-        self.preferences = preferences     #string for user's gift preferences
-        self.partnerid = partnerid         #string for id of partner
-    
-    def wishlisturl_is_set(self):
-        """returns whether the user has set an wishlisturl"""
-        if (self.wishlisturl == "None") or (self.wishlisturl == ""):
-            return False
-        else:
-            return True
-    
-    def pref_is_set(self):
-        """returns whether the user has set gift preferences"""
-        if (self.preferences == "None") or (self.preferences == ""):
-            return False
-        else:
-            return True
 
 bot = commands.Bot(command_prefix = CONFIG.prefix)
 
@@ -174,6 +150,68 @@ async def getprefs(ctx):
             await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
     else:
         await ctx.send(BOT_ERROR.UNJOINED)
+    return
+
+@bot.command()
+async def start(ctx):
+    currAuthor = ctx.author
+    if(currAuthor.top_role == ctx.guild.role_hierarchy[0]):
+        # first ensure all users have all info submitted
+        all_fields_complete = True
+        for user in usr_list:
+            if(user.wishlisturl_is_set() and user.pref_is_set()):
+                pass
+            else:
+                all_fields_complete = False
+                try:
+                    await currAuthor.send(BOT_ERROR.HAS_NOT_SUBMITTED(user.name))
+                    await ctx.send("`Partner assignment cancelled: participant info incomplete.`")
+                except:
+                    await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+        
+        # select a random partner for each participant if all information is complete and there are enough people to do it
+        if(all_fields_complete and (len(usr_list) > 1)):
+            print("Proposing a partner list")
+            potential_list = propose_partner_list(usr_list)
+            while(not partners_are_valid(potential_list)):
+                print("Proposing a partner list")
+                potential_list = propose_partner_list(usr_list)
+            # save to config file
+            print("Partner assignment successful")
+            for user in potential_list:
+                (temp_index, temp_user) = get_participant_object(user.idstr, usr_list)
+                (index, partner) = get_participant_object(user.partnerid, potential_list)
+                temp_user.partnerid = user.partnerid
+                config['members'][str(user.usrnum)][idx_list.PARTNERID] = user.partnerid
+                config.write()
+                # tell participants who their partner is
+                this_user = discord.User(name = user.name, discriminator = user.discriminator, id = user.idstr)
+                this_user = discord.User(name = partner.name, discriminator = partner.discriminator, id = partner.idstr)
+                message_pt1 = str(partner.name) + "#" + str(partner.discriminator) + " is your Secret Santa partner! Mosey on over to their wishlist URL(s) and pick out a gift! Remember to keep it in the $10-20 range.\n"
+                message_pt2 = "Their wishlist(s) can be found here: " + partner.wishlisturl + "\n"
+                message_pt3 = "And their gift preferences can be found here: " + partner.preferences + "\n"
+                message_pt4 = "If you have trouble accessing your partner's wishlist, please contact an admin to get in touch with your partner. This is a *secret* santa, after all!"
+                santa_message = message_pt1 + message_pt2 + message_pt3 + message_pt4
+                try:
+                    await this_user.send(santa_message)
+                except:
+                    await currAuthor.send("Failed to send message to {0}#{1} about their partner. Harass them to turn on server DMs for Secret Santa stuff.".format(this_user.name, this_user.discriminator))
+            
+            # mark the exchange as in-progress
+            exchange_started = True
+            is_paused = False
+            config['programData']['exchange_started'] = True
+            config.write()
+            usr_list = copy.deepcopy(potential_list)
+            await ctx.send("Secret Santa pairs have been picked! Check your PMs and remember not to let your partner know. Have fun!")
+        elif not all_fields_complete:
+            await ctx.send(currAuthor.mention + BOT_ERROR.SIGNUPS_INCOMPLETE)
+        elif not (len(usr_list) > 1):
+            await ctx.send(BOT_ERROR.NOT_ENOUGH_SIGNUPS)
+        else:
+            await ctx.send(BOT_ERROR.UNREACHABLE)
+    else:
+        await ctx.send(BOT_ERROR.NO_PERMISSION)
     return
 
 @bot.command()
