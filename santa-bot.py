@@ -14,11 +14,11 @@ import idx_list
 
 #initialize config file
 try:
-    config = ConfigObj('./files/botdata.cfg', file_error = True)
+    config = ConfigObj(CONFIG.cfg_path, file_error = True)
 except: 
-    os.mkdir('./files/')
+    os.mkdir(CONFIG.bot_folder)
     config = ConfigObj()
-    config.filename = './files/botdata.cfg'
+    config.filename = CONFIG.cfg_path
     config['programData'] = {'exchange_started': False}
     config['members'] = {}
     config.write()
@@ -37,7 +37,7 @@ for key in config['members']:
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
 client_log.setLevel(logging.DEBUG)
-client_handler = logging.FileHandler(filename='./files/debug.log', encoding='utf-8', mode='w')
+client_handler = logging.FileHandler(filename=CONFIG.dbg_path, encoding='utf-8', mode='w')
 client_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 client_log.addHandler(client_handler)
 
