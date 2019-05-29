@@ -222,6 +222,22 @@ async def setprefs(ctx, *preferences:str):
     return
 
 @bot.command()
+async def getprefs(ctx):
+    '''
+    Get current preferences
+    '''
+    currAuthor = ctx.author
+    if user_is_participant(ctx.author.id, usr_list):
+        (index, user) = get_participant_object(ctx.author.id, usr_list)
+        try:
+            await currAuthor.send("Current preference(s): {0}".format(user.preferences))
+        except:
+            await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+    else:
+        await ctx.send(BOT_ERROR.UNJOINED)
+    return
+
+@bot.command()
 async def join(ctx):
     '''
     Join Secret Santa if it has not started. Contact the Secret Santa admin if you wish to join.
