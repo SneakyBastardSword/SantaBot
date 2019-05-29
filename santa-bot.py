@@ -193,6 +193,29 @@ async def setprefs(ctx, *preferences:str):
             pass
         else:
             ctx.message.delete()
+        (index, user) = get_participant_object(currAuthor, usr_list)
+        new_prefs = "None"
+        if(len(preferences) == 0):
+            pass
+        else:
+            new_prefs = ", ".join(preferences)
+        try:
+            #save to config file
+            config['members'][str(user.usrnum)][idx_list.PREFERENCES] = str(new_prefs)
+            config.write()
+            #add the input to the value in the user's class instance
+            user.preferences = new_prefs
+            try:
+                await currAuthor.send("New preferences: {0}".format(new_prefs))
+            except:
+                await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+        except:
+                try:
+                    await currAuthor.send(BOT_ERROR.INVALID_INPUT)
+                except:
+                    await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+    else:
+        await ctx.send(BOT_ERROR.UNJOINED)
     return
 
 @bot.command()
