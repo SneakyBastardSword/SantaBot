@@ -12,6 +12,35 @@ import CONFIG
 import BOT_ERROR
 import idx_list
 
+#initialize config file
+try:
+    config = ConfigObj('./files/botdata.cfg', file_error = True)
+except: 
+    os.mkdir('./files/')
+    config = ConfigObj()
+    config.filename = './files/botdata.cfg'
+    config['programData'] = {'exchange_started': False}
+    config['members'] = {}
+    config.write()
+#initialize data from config file
+server = ''
+usr_list = []
+highest_key = 0
+user_left_during_pause = False
+is_paused = False
+exchange_started = config['programData'].as_bool('exchange_started')
+for key in config['members']:
+    data = config['members'][str(key)]
+    usr = Participant(data[idx_list.NAME], data[idx_list.DISCRIMINATOR], data[idx_list.IDSTR], data[idx_list.USRNUM], data[idx_list.WISHLISTURL], data[idx_list.PREFERENCES], data[idx_list.PARTNERID])
+    usr_list.append(usr)
+    highest_key = int(key)
+#set up discord connection debug logging
+client_log = logging.getLogger('discord')
+client_log.setLevel(logging.DEBUG)
+client_handler = logging.FileHandler(filename='./files/debug.log', encoding='utf-8', mode='w')
+client_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+client_log.addHandler(client_handler)
+
 bot = commands.Bot(command_prefix = CONFIG.prefix)
 
 @bot.event
@@ -246,34 +275,5 @@ async def join(ctx):
 async def invite(ctx):
     link = "https://discordapp.com/oauth2/authorize?client_id={0}&scope=bot&permissions=67185664".format(CONFIG.client_id)
     await ctx.send_message("Bot invite link: {0}".format(link))
-
-#initialize config file
-try:
-    config = ConfigObj('./files/botdata.cfg', file_error = True)
-except: 
-    os.mkdir('./files/')
-    config = ConfigObj()
-    config.filename = './files/botdata.cfg'
-    config['programData'] = {'exchange_started': False}
-    config['members'] = {}
-    config.write()
-#initialize data from config file
-server = ''
-usr_list = []
-highest_key = 0
-user_left_during_pause = False
-is_paused = False
-exchange_started = config['programData'].as_bool('exchange_started')
-for key in config['members']:
-    data = config['members'][str(key)]
-    usr = Participant(data[idx_list.NAME], data[idx_list.DISCRIMINATOR], data[idx_list.IDSTR], data[idx_list.USRNUM], data[idx_list.WISHLISTURL], data[idx_list.PREFERENCES], data[idx_list.PARTNERID])
-    usr_list.append(usr)
-    highest_key = int(key)
-#set up discord connection debug logging
-client_log = logging.getLogger('discord')
-client_log.setLevel(logging.DEBUG)
-client_handler = logging.FileHandler(filename='./files/debug.log', encoding='utf-8', mode='w')
-client_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-client_log.addHandler(client_handler)
 
 bot.run(CONFIG.discord_token, reconnect = True)
