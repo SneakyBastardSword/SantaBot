@@ -262,7 +262,7 @@ async def restart(ctx):
                     await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
         list_changed = usr_list_changed_during_pause(usr_list, user_left_during_pause)
         if(list_changed):
-            ctx.send("User list changed during the pause. Partners must be picked again with `s!start`.")
+            ctx.send("User list changed during the pause. Partners must be picked again with `{0}start`.".format(CONFIG.prefix))
         else:
             exchange_started = True
             is_paused = False
@@ -298,8 +298,8 @@ async def join(ctx):
         ctx.send(currAuthor.mention + " has been added to the {0} Secret Santa exchange!".format(str(ctx.guild)) + "\nMore instructions have been DMd to you.")
         try:
             userPrompt = """Welcome to the __{0}__ Secret Santa! Please input your wishlist URL and preferences **(by DMing this bot)** so your Secret Santa can send you something.\n
-                Use `s!setwishlisturl [wishlist urls separated by | ]` to set your wishlist URL (you may also add your mailing address).\n
-                Use `s!setprefs [preferences separated by | ]` to set gift preferences for your Secret Santa. Put N/A if none.""".format(str(ctx.guild))
+                Use `{1}setwishlisturl [wishlist urls separated by | ]` to set your wishlist URL (you may also add your mailing address).\n
+                Use `{2}setprefs [preferences separated by | ]` to set gift preferences for your Secret Santa. Put N/A if none.""".format(str(ctx.guild), CONFIG.prefix, CONFIG.prefix)
             currAuthor.send(userPrompt)
         except:
             ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
