@@ -136,7 +136,7 @@ async def echo(ctx, *content:str):
 @bot.command()
 async def setwishlisturl(ctx, *destination:str):
     '''
-     [Any number of wishlist URLs or mailing addresses] = set wishlist destinations or mailing address. Surround mailing address with quotation marks and separate EACH wishlist destination with a space (eg. amazon.com "P. Sherman 42 Wallaby Way, Sydney" ).
+     [Any number of wishlist URLs or mailing addresses] = set wishlist destinations or mailing address. Surround mailing address with quotation marks and separate EACH wishlist destination with a space (eg. amazon.com "P. Sherman 42 Wallaby Way, Sydney" http://rightstufanime.com/).
     '''
     currAuthor = ctx.author
     if user_is_participant(currAuthor.id, usr_list):
@@ -149,7 +149,7 @@ async def setwishlisturl(ctx, *destination:str):
         if(len(destination) == 0):
             pass
         else:
-            new_wishlist = ", ".join(destination)
+            new_wishlist = " | ".join(destination)
         try:
             # save to config file
             config['members'][str(user.usrnum)][idx_list.WISHLISTURL] = new_wishlist
@@ -198,7 +198,7 @@ async def setprefs(ctx, *preferences:str):
         if(len(preferences) == 0):
             pass
         else:
-            new_prefs = ", ".join(preferences)
+            new_prefs = " | ".join(preferences)
         try:
             #save to config file
             config['members'][str(user.usrnum)][idx_list.PREFERENCES] = str(new_prefs)
