@@ -136,7 +136,7 @@ async def echo(ctx, *content:str):
 @bot.command()
 async def setwishlisturl(ctx, *destination:str):
     '''
-     [Any number of wishlist URLs or mailing addresses] = set wishlist destinations or mailing address. Surround mailing address with quotation marks and separate EACH wishlist destination with a space (eg. amazon.com "P. Sherman 42 Wallaby Way, Sydney" http://rightstufanime.com/).
+    [Any number of wishlist URLs or mailing addresses] = set wishlist destinations or mailing address. Surround mailing address with quotation marks and separate EACH wishlist destination with a space (eg. amazon.com "P. Sherman 42 Wallaby Way, Sydney" http://rightstufanime.com/).
     '''
     currAuthor = ctx.author
     if user_is_participant(currAuthor.id, usr_list):
@@ -172,7 +172,7 @@ async def setwishlisturl(ctx, *destination:str):
 @bot.command()
 async def getwishlisturl(ctx):
     '''
-     = get return current wishlist url
+    Get current wishlist
     '''
     currAuthor = ctx.author
     if user_is_participant(ctx.author.id, usr_list):
@@ -187,6 +187,9 @@ async def getwishlisturl(ctx):
 
 @bot.command()
 async def setprefs(ctx, *preferences:str):
+    '''
+    Set new preferences
+    '''
     currAuthor = ctx.author
     if user_is_participant(currAuthor.id, usr_list):
         if(ctx.message.channel.is_private):
@@ -249,7 +252,7 @@ async def join(ctx):
 @bot.command()
 async def invite(ctx):
     link = "https://discordapp.com/oauth2/authorize?client_id={0}&scope=bot&permissions=67185664".format(CONFIG.client_id)
-    await ctx.send_message("Non-testing bot invite link: {0}".format(link))
+    await ctx.send_message("Bot invite link: {0}".format(link))
 
 #initialize config file
 try:
