@@ -183,6 +183,7 @@ async def getprefs(ctx):
 
 @bot.command()
 async def start(ctx):
+    # TODO: add help menu instruction
     currAuthor = ctx.author
     if(currAuthor.top_role == ctx.guild.role_hierarchy[0]):
         # first ensure all users have all info submitted
@@ -245,6 +246,7 @@ async def start(ctx):
 
 @bot.command()
 async def restart(ctx):
+    # TODO: add help menu instruction
     is_paused = True
     currAuthor = ctx.author
     if((currAuthor.top_role == ctx.guild.role_hierarchy[0]) and is_paused):
@@ -279,6 +281,7 @@ async def restart(ctx):
 
 @bot.command()
 async def pause(ctx):
+    # TODO: add help menu instruction
     if(ctx.author.top_role == ctx.guild.role_hierarchy[0]):
         exchange_started = False
         config['programData']['exchange_started'] = False
@@ -319,6 +322,7 @@ async def join(ctx):
 
 @bot.command()
 async def end(ctx):
+    # TODO: add help menu instruction
     if(ctx.author.top_role == ctx.guild.role_hierarchy[0]):
         exchange_started = False
         is_paused = False
@@ -335,6 +339,7 @@ async def end(ctx):
 
 @bot.command()
 async def listparticipants(ctx):
+    # TODO: add help menu instruction
     if(ctx.author.top_role == ctx.guild.role_hierarchy[0]):
         if(highest_key == 0):
             await ctx.send("Nobody has signed up for the secret Santa exchange yet. Use `{0}join` to enter the exchange.".format(CONFIG.prefix))
@@ -350,6 +355,7 @@ async def listparticipants(ctx):
 
 @bot.command()
 async def totalparticipants(ctx):
+    # TODO: add help menu instruction
     if highest_key == 0:
         await ctx.send("Nobody has signed up for the Secret Santa exchange yet. Use `{0}join` to enter the exchange.".format(CONFIG.prefix))
     elif highest_key == 1:
@@ -360,6 +366,7 @@ async def totalparticipants(ctx):
 
 @bot.command()
 async def partnerinfo(ctx):
+    # TODO: add help menu instruction
     currAuthor = ctx.author
     authorIsParticipant = user_is_participant(currAuthor.id, usr_list)
     if(exchange_started and authorIsParticipant):
@@ -383,7 +390,7 @@ async def partnerinfo(ctx):
     else:
         await ctx.send(BOT_ERROR.UNREACHABLE)
     return
-    
+
 @bot.command()
 async def invite(ctx):
     link = "https://discordapp.com/oauth2/authorize?client_id={0}&scope=bot&permissions=67185664".format(CONFIG.client_id)
