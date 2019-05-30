@@ -359,6 +359,32 @@ async def totalparticipants(ctx):
     return
 
 @bot.command()
+async def partnerinfo(ctx):
+    currAuthor = ctx.author
+    authorIsParticipant = user_is_participant(currAuthor.id, usr_list)
+    if(exchange_started and authorIsParticipant):
+        (usr_index, user) = get_participant_object(currAuthor, usr_list)
+        (partner_index, partnerobj) = get_participant_object(user.partnerid, usr_list)
+        msg = "Your partner is " + partnerobj.name + "#" + partnerobj.discriminator + "\n"
+        msg = msg + "Their wishlist(s) can be found here: " + partnerobj.wishlisturl + "\n"
+        msg = msg + "And their gift preferences can be found here: " + partnerobj.preferences + "\n"
+        msg = msg + "If you have trouble accessing your partner's wishlist, please contact an admin to get in touch with your partner. This is a *Secret* Santa, after all!"
+        try:
+            await currAuthor.send(msg)
+            await ctx.send("The information has been sent to your DMs.")
+        except:
+            await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+    elif((not exchange_started) and authorIsParticipant):
+        await ctx.send(BOT_ERROR.NOT_STARTED)
+    elif(exchange_started and (not authorIsParticipant)):
+        await ctx.send(BOT_ERROR.EXCHANGE_STARTED_UNJOINED)
+    elif((not exchange_started) and (not authorIsParticipant)):
+        await ctx.send(BOT_ERROR.UNJOINED)
+    else:
+        await ctx.send(BOT_ERROR.UNREACHABLE)
+    return
+    
+@bot.command()
 async def invite(ctx):
     link = "https://discordapp.com/oauth2/authorize?client_id={0}&scope=bot&permissions=67185664".format(CONFIG.client_id)
     await ctx.send_message("Bot invite link: {0}".format(link))
