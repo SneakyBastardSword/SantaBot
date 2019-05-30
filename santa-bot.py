@@ -278,6 +278,18 @@ async def restart(ctx):
     return
 
 @bot.command()
+async def pause(ctx):
+    if(ctx.author.top_role == ctx.guild.role_hierarchy[0]):
+        exchange_started = False
+        config['programData']['exchange_started'] = False
+        config.write()
+        is_paused = True
+        await ctx.send("Secret Santa has been paused. New people may now join.")
+    else:
+        await ctx.send(BOT_ERROR.NO_PERMISSION)
+    return
+
+@bot.command()
 async def join(ctx):
     '''
     Join Secret Santa if it has not started. Contact the Secret Santa admin if you wish to join.
@@ -303,6 +315,47 @@ async def join(ctx):
             currAuthor.send(userPrompt)
         except:
             ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+    return
+
+@bot.command()
+async def end(ctx):
+    if(ctx.author.top_role == ctx.guild.role_hierarchy[0]):
+        exchange_started = False
+        is_paused = False
+        config['programData']['exchange_started'] = False
+        highest_key = 0
+        del usr_list[:]
+        print(len(usr_list))
+        config['members'].clear()
+        config.write()
+        await ctx.send("Secret Santa ended")
+    else:
+        ctx.send(BOT_ERROR.NO_PERMISSION)
+    return
+
+@bot.command()
+async def listparticipants(ctx):
+    if(ctx.author.top_role == ctx.guild.role_hierarchy[0]):
+        if(highest_key == 0):
+            await ctx.send("Nobody has signed up for the secret Santa exchange yet. Use `{0}join` to enter the exchange.".format(CONFIG.prefix))
+        else:
+            msg = '```The following people are signed up for the Secret Santa exchange:\n'
+            for user in usr_list:
+                this_user = discord.User(user = user.name, id = user.idstr)
+                msg = msg + str(user.name) + "#" + str(user.discriminator) + "\n"
+            msg = msg + "\nUse `{0}join` to enter the exchange.```".format(CONFIG.prefix)
+    else:
+        ctx.send(BOT_ERROR.NO_PERMISSION)
+    return
+
+@bot.command()
+async def totalparticipants(ctx):
+    if highest_key == 0:
+        await ctx.send("Nobody has signed up for the Secret Santa exchange yet. Use `{0}join` to enter the exchange.".format(CONFIG.prefix))
+    elif highest_key == 1:
+        await ctx.send("1 person has signed up for the Secret Santa exchange. Use `{0}join` to enter the exchange.".format(CONFIG.prefix))
+    else:
+        await ctx.send("{0} people have joined the Secret Santa exchange so far. Use `{1}join` to enter the exchange.".format(str(len(usr_list)), CONFIG.prefix))
     return
 
 @bot.command()
