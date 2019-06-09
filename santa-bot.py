@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from Helpers import *
-import Participant
+from Participant import Participant
 import CONFIG
 import BOT_ERROR
 import idx_list
@@ -16,13 +16,22 @@ import idx_list
 try:
     config = ConfigObj(CONFIG.cfg_path, file_error = True)
 except: 
-    os.mkdir(CONFIG.bot_folder)
+    try:
+        os.mkdir(CONFIG.bot_folder)
+    except:
+        pass
     config = ConfigObj()
     config.filename = CONFIG.cfg_path
     config['programData'] = {'exchange_started': False}
     config['members'] = {}
     config.write()
 #initialize data from config file
+global usr_list
+global highest_key
+global exchange_started
+global user_left_during_pause
+global is_paused
+
 server = ''
 usr_list = []
 highest_key = 0
@@ -83,6 +92,7 @@ async def setwishlisturl(ctx, *destination:str):
     [Any number of wishlist URLs or mailing addresses] = set wishlist destinations or mailing address. Surround mailing address with quotation marks and separate EACH wishlist destination with a space (eg. amazon.com "P. Sherman 42 Wallaby Way, Sydney" http://rightstufanime.com/).
     '''
     currAuthor = ctx.author
+    global usr_list
     if user_is_participant(currAuthor.id, usr_list):
         if(ctx.message.channel.is_private):
             pass
@@ -119,6 +129,7 @@ async def getwishlisturl(ctx):
     Get current wishlist
     '''
     currAuthor = ctx.author
+    global usr_list
     if user_is_participant(ctx.author.id, usr_list):
         (index, user) = get_participant_object(ctx.author.id, usr_list)
         try:
@@ -135,6 +146,7 @@ async def setprefs(ctx, *preferences:str):
     Set new preferences
     '''
     currAuthor = ctx.author
+    global usr_list
     if user_is_participant(currAuthor.id, usr_list):
         if(ctx.message.channel.is_private):
             pass
@@ -171,6 +183,7 @@ async def getprefs(ctx):
     Get current preferences
     '''
     currAuthor = ctx.author
+    global usr_list
     if user_is_participant(ctx.author.id, usr_list):
         (index, user) = get_participant_object(ctx.author.id, usr_list)
         try:
@@ -185,6 +198,9 @@ async def getprefs(ctx):
 async def start(ctx):
     # TODO: add help menu instruction
     currAuthor = ctx.author
+    global usr_list
+    global exchange_started
+    global is_paused
     if(currAuthor.top_role == ctx.guild.role_hierarchy[0]):
         # first ensure all users have all info submitted
         all_fields_complete = True
@@ -247,8 +263,11 @@ async def start(ctx):
 @bot.command()
 async def restart(ctx):
     # TODO: add help menu instruction
-    is_paused = True
     currAuthor = ctx.author
+    global usr_list
+    global exchange_started
+    global is_paused
+    is_paused = True
     if((currAuthor.top_role == ctx.guild.role_hierarchy[0]) and is_paused):
         # ensure all users have all info submitted
         all_fields_complete = True
@@ -282,6 +301,8 @@ async def restart(ctx):
 @bot.command()
 async def pause(ctx):
     # TODO: add help menu instruction
+    global exchange_started
+    global is_paused
     if(ctx.author.top_role == ctx.guild.role_hierarchy[0]):
         exchange_started = False
         config['programData']['exchange_started'] = False
@@ -298,6 +319,8 @@ async def join(ctx):
     Join Secret Santa if it has not started. Contact the Secret Santa admin if you wish to join.
     '''
     currAuthor = ctx.author
+    global usr_list
+    global highest_key
     # check if the exchange has already started
     if user_is_participant(currAuthor.id, usr_list):
         await ctx.send(BOT_ERROR.ALREADY_JOINED)
@@ -310,12 +333,12 @@ async def join(ctx):
         config.write()
 
         # prompt user about inputting info
-        ctx.send(currAuthor.mention + " has been added to the {0} Secret Santa exchange!".format(str(ctx.guild)) + "\nMore instructions have been DMd to you.")
+        await ctx.send(currAuthor.mention + " has been added to the {0} Secret Santa exchange!".format(str(ctx.guild)) + "\nMore instructions have been DMd to you.")
         try:
             userPrompt = """Welcome to the __{0}__ Secret Santa! Please input your wishlist URL and preferences **(by DMing this bot)** so your Secret Santa can send you something.\n
                 Use `{1}setwishlisturl [wishlist urls separated by | ]` to set your wishlist URL (you may also add your mailing address).\n
                 Use `{2}setprefs [preferences separated by | ]` to set gift preferences for your Secret Santa. Put N/A if none.""".format(str(ctx.guild), CONFIG.prefix, CONFIG.prefix)
-            currAuthor.send(userPrompt)
+            await currAuthor.send(userPrompt)
         except:
             ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
     return
@@ -323,6 +346,10 @@ async def join(ctx):
 @bot.command()
 async def end(ctx):
     # TODO: add help menu instruction
+    global usr_list
+    global highest_key
+    global exchange_started
+    global is_paused
     if(ctx.author.top_role == ctx.guild.role_hierarchy[0]):
         exchange_started = False
         is_paused = False
@@ -340,6 +367,8 @@ async def end(ctx):
 @bot.command()
 async def listparticipants(ctx):
     # TODO: add help menu instruction
+    global usr_list
+    global highest_key
     if(ctx.author.top_role == ctx.guild.role_hierarchy[0]):
         if(highest_key == 0):
             await ctx.send("Nobody has signed up for the secret Santa exchange yet. Use `{0}join` to enter the exchange.".format(CONFIG.prefix))
@@ -356,6 +385,7 @@ async def listparticipants(ctx):
 @bot.command()
 async def totalparticipants(ctx):
     # TODO: add help menu instruction
+    global highest_key
     if highest_key == 0:
         await ctx.send("Nobody has signed up for the Secret Santa exchange yet. Use `{0}join` to enter the exchange.".format(CONFIG.prefix))
     elif highest_key == 1:
@@ -368,6 +398,8 @@ async def totalparticipants(ctx):
 async def partnerinfo(ctx):
     # TODO: add help menu instruction
     currAuthor = ctx.author
+    global usr_list
+    global exchange_started
     authorIsParticipant = user_is_participant(currAuthor.id, usr_list)
     if(exchange_started and authorIsParticipant):
         (usr_index, user) = get_participant_object(currAuthor, usr_list)

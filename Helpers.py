@@ -1,5 +1,6 @@
 import copy
 import random
+from Participant import Participant
 
 def user_is_participant(usrid, usrlist):
     """Takes a discord user ID string and returns whether
