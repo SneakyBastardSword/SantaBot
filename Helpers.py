@@ -10,8 +10,9 @@ def isListOfParticipants(usrlist):
 def user_is_participant(usrid, usrlist):
     """Takes a discord user ID string and returns whether
     a user with that ID is in usr_list"""
+    print(usrlist)
     for person in usrlist:
-        if person.idstr == str(usrid):
+        if int(person.idstr) == usrid:
             return True
     return False
 
@@ -20,7 +21,7 @@ def get_participant_object(usrid, usrlist):
     participant objects, and returns the first
     participant object with matching id."""
     for (index, person) in enumerate(usrlist):
-        if person.idstr == str(usrid):
+        if person.idstr == int(usrid):
             return (index, person)
 
 def propose_partner_list(usrlist):

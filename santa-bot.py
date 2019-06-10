@@ -356,7 +356,7 @@ async def leave(ctx):
         config.write()
         if(is_paused):
             user_left_during_pause = True
-        await ctx.send(currAuthor.mention + " has left the {0} Secret Santa exchange".format(str(curr_server)))
+        await ctx.send(currAuthor.mention + " has left the {0} Secret Santa exchange".format(str(ctx.guild)))
     else:
         await ctx.send(BOT_ERROR.UNJOINED)
     return
