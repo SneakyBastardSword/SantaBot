@@ -9,6 +9,12 @@ class Participant(object):
         self.preferences = preferences     #string for user's gift preferences
         self.partnerid = partnerid         #string for id of partner
     
+    def __repr__(self):
+        return f"User: {self.name}#{self.discriminator}, Key: {self.usrnum}"
+
+    def __str__(self):
+        return f"User: {self.name}#{self.discriminator}, Key: {self.usrnum}"
+    
     def wishlisturl_is_set(self):
         """returns whether the user has set an wishlisturl"""
         if (self.wishlisturl == "None") or (self.wishlisturl == ""):

@@ -201,7 +201,7 @@ async def start(ctx):
     global usr_list
     global exchange_started
     global is_paused
-    if(currAuthor.top_role == ctx.guild.role_hierarchy[0]):
+    if(currAuthor.top_role == ctx.guild.roles[-1]):
         # first ensure all users have all info submitted
         all_fields_complete = True
         for user in usr_list:
@@ -257,7 +257,7 @@ async def start(ctx):
         else:
             await ctx.send(BOT_ERROR.UNREACHABLE)
     else:
-        await ctx.send(BOT_ERROR.NO_PERMISSION)
+        await ctx.send(BOT_ERROR.NO_PERMISSION(ctx.guild.roles[-1]))
     return
 
 @bot.command()
@@ -268,7 +268,7 @@ async def restart(ctx):
     global exchange_started
     global is_paused
     is_paused = True
-    if((currAuthor.top_role == ctx.guild.role_hierarchy[0]) and is_paused):
+    if((currAuthor.top_role == ctx.guild.roles[-1]) and is_paused):
         # ensure all users have all info submitted
         all_fields_complete = True
         for user in usr_list:
@@ -290,8 +290,8 @@ async def restart(ctx):
             config['programData']['exchange_started'] = True
             config.write()
             await ctx.send("No change was made during the pause. Secret Santa resumed with the same partners.")
-    elif(currAuthor.top_role != ctx.guild.role_hierarchy[0]):
-        await ctx.send(BOT_ERROR.NO_PERMISSION)
+    elif(currAuthor.top_role != ctx.guild.roles[-1]):
+        await ctx.send(BOT_ERROR.NO_PERMISSION(ctx.guild.roles[-1]))
     elif(not is_paused):
         await ctx.send(BOT_ERROR.NOT_PAUSED)
     else:
@@ -303,14 +303,14 @@ async def pause(ctx):
     # TODO: add help menu instruction
     global exchange_started
     global is_paused
-    if(ctx.author.top_role == ctx.guild.role_hierarchy[0]):
+    if(ctx.author.top_role == ctx.guild.roles[-1]):
         exchange_started = False
         config['programData']['exchange_started'] = False
         config.write()
         is_paused = True
         await ctx.send("Secret Santa has been paused. New people may now join.")
     else:
-        await ctx.send(BOT_ERROR.NO_PERMISSION)
+        await ctx.send(BOT_ERROR.NO_PERMISSION(ctx.guild.roles[-1]))
     return
 
 @bot.command()
@@ -350,7 +350,7 @@ async def end(ctx):
     global highest_key
     global exchange_started
     global is_paused
-    if(ctx.author.top_role == ctx.guild.role_hierarchy[0]):
+    if(ctx.author.top_role == ctx.guild.roles[-1]):
         exchange_started = False
         is_paused = False
         config['programData']['exchange_started'] = False
@@ -361,7 +361,7 @@ async def end(ctx):
         config.write()
         await ctx.send("Secret Santa ended")
     else:
-        ctx.send(BOT_ERROR.NO_PERMISSION)
+        await ctx.send(BOT_ERROR.NO_PERMISSION(ctx.guild.roles[-1]))
     return
 
 @bot.command()
@@ -369,7 +369,7 @@ async def listparticipants(ctx):
     # TODO: add help menu instruction
     global usr_list
     global highest_key
-    if(ctx.author.top_role == ctx.guild.role_hierarchy[0]):
+    if(ctx.author.top_role == ctx.guild.roles[-1]):
         if(highest_key == 0):
             await ctx.send("Nobody has signed up for the secret Santa exchange yet. Use `{0}join` to enter the exchange.".format(CONFIG.prefix))
         else:
@@ -379,7 +379,7 @@ async def listparticipants(ctx):
                 msg = msg + str(user.name) + "#" + str(user.discriminator) + "\n"
             msg = msg + "\nUse `{0}join` to enter the exchange.```".format(CONFIG.prefix)
     else:
-        ctx.send(BOT_ERROR.NO_PERMISSION)
+        await ctx.send(BOT_ERROR.NO_PERMISSION(ctx.guild.roles[-1]))
     return
 
 @bot.command()

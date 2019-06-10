@@ -2,15 +2,18 @@ import copy
 import random
 from Participant import Participant
 
+def isListOfParticipants(usrlist):
+    for usr in usrlist:
+        if(not isinstance(usr, Participant)):
+            return False
+
 def user_is_participant(usrid, usrlist):
     """Takes a discord user ID string and returns whether
     a user with that ID is in usr_list"""
-    result = False
     for person in usrlist:
-        if person.idstr == usrid:
-            result = True
-            break
-    return result
+        if int(person.idstr) == usrid:
+            return True
+    return False
 
 def get_participant_object(usrid, usrlist):
     """takes a discord user ID string and list of
