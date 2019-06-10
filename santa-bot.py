@@ -344,6 +344,24 @@ async def join(ctx):
     return
 
 @bot.command()
+async def leave(ctx):
+    currAuthor = ctx.author
+    global usr_list
+    global is_paused
+    global user_left_during_pause
+    if(user_is_participant(currAuthor.id, usr_list)):
+        (index, user) = get_participant_object(currAuthor.id, usr_list)
+        usr_list.remove(user)
+        popped_user = config['members'].pop(str(user.usrnum))
+        config.write()
+        if(is_paused):
+            user_left_during_pause = True
+        await ctx.send(currAuthor.mention + " has left the {0} Secret Santa exchange".format(str(curr_server)))
+    else:
+        await ctx.send(BOT_ERROR.UNJOINED)
+    return
+
+@bot.command()
 async def end(ctx):
     # TODO: add help menu instruction
     global usr_list
