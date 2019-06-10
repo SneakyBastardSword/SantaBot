@@ -94,10 +94,10 @@ async def setwishlisturl(ctx, *destination:str):
     currAuthor = ctx.author
     global usr_list
     if user_is_participant(currAuthor.id, usr_list):
-        if(ctx.message.channel.is_private):
+        if(channelIsPrivate(ctx.channel)):
             pass
         else:
-            await ctx.messsage.delete()
+            await ctx.message.delete()
         (index, user) = get_participant_object(currAuthor.id, usr_list)
         new_wishlist = "None"
         if(len(destination) == 0):
@@ -148,10 +148,10 @@ async def setprefs(ctx, *preferences:str):
     currAuthor = ctx.author
     global usr_list
     if user_is_participant(currAuthor.id, usr_list):
-        if(ctx.message.channel.is_private):
+        if(channelIsPrivate(ctx.channel)):
             pass
         else:
-            ctx.message.delete()
+            await ctx.message.delete()
         (index, user) = get_participant_object(currAuthor, usr_list)
         new_prefs = "None"
         if(len(preferences) == 0):

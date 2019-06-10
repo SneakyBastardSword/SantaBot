@@ -1,5 +1,6 @@
 import copy
 import random
+from discord.abc import PrivateChannel
 from Participant import Participant
 
 def isListOfParticipants(usrlist):
@@ -21,7 +22,7 @@ def get_participant_object(usrid, usrlist):
     participant objects, and returns the first
     participant object with matching id."""
     for (index, person) in enumerate(usrlist):
-        if person.idstr == int(usrid):
+        if(int(person.idstr) == usrid):
             return (index, person)
 
 def propose_partner_list(usrlist):
@@ -65,3 +66,6 @@ def usr_list_changed_during_pause(usrlist, usr_left):
         has_changed = has_changed & has_match # figures out if all users have a match
     has_changed = has_changed & (not usr_left)
     return (not has_changed) ## if not all users have a match
+
+def channelIsPrivate(channel):
+    return isinstance(channel, PrivateChannel)
