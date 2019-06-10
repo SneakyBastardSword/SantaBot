@@ -328,7 +328,7 @@ async def join(ctx):
         # initialize instance of Participant for the author
         highest_key = highest_key + 1
         usr_list.append(Participant(currAuthor.name, currAuthor.discriminator, currAuthor.id, highest_key))
-        # write details of the class isntance to config and increment total_users
+        # write details of the class instance to config and increment total_users
         config['members'][str(highest_key)] = [currAuthor.name, currAuthor.discriminator, currAuthor.id, highest_key, "", "", ""]
         config.write()
 
@@ -345,6 +345,7 @@ async def join(ctx):
 
 @bot.command()
 async def leave(ctx):
+    # TODO: add help menu instruction
     currAuthor = ctx.author
     global usr_list
     global is_paused
