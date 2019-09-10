@@ -93,6 +93,24 @@ def usr_list_changed_during_pause(usrlist, usr_left):
     has_changed = has_changed & (not usr_left)
     return (not has_changed) ## if not all users have a match
 
+def member_is_mod(person, mod_list):
+    if(isinstance(person, discord.Member)):
+        person_roles = person.roles
+        person_roles_ids = []
+        for person_role in person_roles:
+            person_roles_ids.append(person_role.id)
+        lst3 = [value for value in person_roles_ids if value in mod_list]
+        if(lst3):
+            return True
+    return False
+
+def is_role_in_server(p_role, server_role_hierarchy):
+    if(isinstance(p_role, str)):
+        for server_role in server_role_hierarchy:
+            if((str(server_role) == p_role) or (str(server_role.mention) == p_role)):
+                return server_role
+    return False
+
 #initialize config file
 try:
     config = ConfigObj('./files/botdata.cfg', file_error = True)
@@ -110,6 +128,8 @@ highest_key = 0
 user_left_during_pause = False
 is_paused = False
 exchange_started = config['programData'].as_bool('exchange_started')
+mods = []
+mute_role = False
 for key in config['members']:
     data = config['members'][str(key)]
     usr = Participant(data[idx_list.NAME], data[idx_list.DISCRIMINATOR], data[idx_list.IDSTR], data[idx_list.USRNUM], data[idx_list.WISHLISTURL], data[idx_list.PREFERENCES], data[idx_list.PARTNERID])
@@ -136,6 +156,9 @@ async def on_message(message):
     global exchange_started
     global user_left_during_pause
     global is_paused
+    global mods
+    global mute_role
+    global client
 
     message_split = message.content.split()
     curr_server = message.server
@@ -440,6 +463,45 @@ async def on_message(message):
                 await client.send_message(message.channel, BOT_ERROR.UNJOINED)
             else:
                 await client.send_message(message.channel, BOT_ERROR.UNREACHABLE)
+
+##############################################################
+##############  DELETE BELOW IN FUTURE COMMIT ################
+##############################################################
+        elif(message_split[0] == "s!setmods"):
+            if(message.author.top_role == message.server.role_hierarchy[0]):
+                message_split = list(message_split)
+                message_split.pop(0)
+                for mod_role in message_split:
+                    for server_role in message.server.role_hierarchy:
+                        if(mod_role == server_role.mention):
+                            mods.append(server_role.id)
+                await client.send_message(message.channel, mods)
+            else:
+                await client.send_message(message.channel, "Only the admin can do this")
+
+        elif(message_split[0] == "s!setmute"):
+            temp_mute_role = is_role_in_server(message_split[1], message.server.role_hierarchy)
+            print(temp_mute_role)
+            if(member_is_mod(message.author, mods) and temp_mute_role):
+                mute_role = temp_mute_role
+                await client.send_message(message.channel, mute_role)
+
+
+        elif(message_split[0] == "s!mute"):
+            mute_subject = message.mentions[0].id
+            mute_subject_name = message.mentions[0].name
+            mute_member = message.server.get_member(mute_subject)
+
+            print(mute_subject_name)
+            if(not mute_role):
+                await client.send_message(message.channel, "No mute role set")
+            else:
+                await client.add_roles(message.mentions[0], mute_role)
+                await client.send_message(message.channel, f"**@{mute_subject_name} muted** ")
+
+##############################################################
+##############  DELETE ABOVE IN FUTURE COMMIT ################
+##############################################################
 
         elif(message_split[0] == "s!help"):
             c_join = "`s!join` = join the Secret Santa"
