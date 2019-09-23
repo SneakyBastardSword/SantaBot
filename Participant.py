@@ -5,7 +5,7 @@ class Participant(object):
         self.discriminator = discriminator #string containing discriminant of user
         self.idstr = idstr                 #string containing id of user
         self.usrnum = usrnum               #int value referencing the instance's location in usr_list
-        self.wishlisturl = wishlisturl             #string for user's wishlisturl
+        self.wishlisturl = wishlisturl     #string for user's wishlisturl
         self.preferences = preferences     #string for user's gift preferences
         self.partnerid = partnerid         #string for id of partner
     

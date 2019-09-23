@@ -1,16 +1,18 @@
-import logging
 import asyncio
-import os.path
 import datetime as DT
-from configobj import ConfigObj
+import logging
+import os.path
+import copy
+
 import discord
+from configobj import ConfigObj
 from discord.ext import commands
 
-from Helpers import *
-from Participant import Participant
-import CONFIG
 import BOT_ERROR
-import idx_list
+import CONFIG
+from SantaBotConstants import SantaBotConstants
+from SantaBotHelpers import SantaBotHelpers
+from Participant import Participant
 
 #initialize config file
 try:
@@ -37,10 +39,12 @@ usr_list = []
 highest_key = 0
 user_left_during_pause = False
 is_paused = False
+SantaBotHelper = SantaBotHelpers()
+
 exchange_started = config['programData'].as_bool('exchange_started')
 for key in config['members']:
     data = config['members'][str(key)]
-    usr = Participant(data[idx_list.NAME], data[idx_list.DISCRIMINATOR], data[idx_list.IDSTR], data[idx_list.USRNUM], data[idx_list.WISHLISTURL], data[idx_list.PREFERENCES], data[idx_list.PARTNERID])
+    usr = Participant(data[SantaBotConstants.NAME], data[SantaBotConstants.DISCRIMINATOR], data[SantaBotConstants.IDSTR], data[SantaBotConstants.USRNUM], data[SantaBotConstants.WISHLISTURL], data[SantaBotConstants.PREFERENCES], data[SantaBotConstants.PARTNERID])
     usr_list.append(usr)
     highest_key = int(key)
 #set up discord connection debug logging
@@ -93,12 +97,12 @@ async def setwishlisturl(ctx, *destination:str):
     '''
     currAuthor = ctx.author
     global usr_list
-    if user_is_participant(currAuthor.id, usr_list):
-        if(channelIsPrivate(ctx.channel)):
+    if SantaBotHelper.user_is_participant(currAuthor.id, usr_list):
+        if(SantaBotHelper.channelIsPrivate(ctx.channel)):
             pass
         else:
             await ctx.message.delete()
-        (index, user) = get_participant_object(currAuthor.id, usr_list)
+        (index, user) = SantaBotHelper.get_participant_object(currAuthor.id, usr_list)
         new_wishlist = "None"
         if(len(destination) == 0):
             pass
@@ -106,7 +110,7 @@ async def setwishlisturl(ctx, *destination:str):
             new_wishlist = " | ".join(destination)
         try:
             # save to config file
-            config['members'][str(user.usrnum)][idx_list.WISHLISTURL] = new_wishlist
+            config['members'][str(user.usrnum)][SantaBotConstants.WISHLISTURL] = new_wishlist
             config.write()
             # add the input to the value in the user's class instance
             user.wishlisturl = new_wishlist
@@ -130,8 +134,8 @@ async def getwishlisturl(ctx):
     '''
     currAuthor = ctx.author
     global usr_list
-    if user_is_participant(ctx.author.id, usr_list):
-        (index, user) = get_participant_object(ctx.author.id, usr_list)
+    if SantaBotHelper.user_is_participant(ctx.author.id, usr_list):
+        (index, user) = SantaBotHelper.get_participant_object(ctx.author.id, usr_list)
         try:
             await currAuthor.send("Current wishlist destination(s): {0}".format(user.wishlisturl))
         except:
@@ -147,12 +151,12 @@ async def setprefs(ctx, *preferences:str):
     '''
     currAuthor = ctx.author
     global usr_list
-    if user_is_participant(currAuthor.id, usr_list):
-        if(channelIsPrivate(ctx.channel)):
+    if SantaBotHelper.user_is_participant(currAuthor.id, usr_list):
+        if(SantaBotHelper.channelIsPrivate(ctx.channel)):
             pass
         else:
             await ctx.message.delete()
-        (index, user) = get_participant_object(currAuthor, usr_list)
+        (index, user) = SantaBotHelper.get_participant_object(currAuthor, usr_list)
         new_prefs = "None"
         if(len(preferences) == 0):
             pass
@@ -160,7 +164,7 @@ async def setprefs(ctx, *preferences:str):
             new_prefs = " | ".join(preferences)
         try:
             #save to config file
-            config['members'][str(user.usrnum)][idx_list.PREFERENCES] = str(new_prefs)
+            config['members'][str(user.usrnum)][SantaBotConstants.PREFERENCES] = str(new_prefs)
             config.write()
             #add the input to the value in the user's class instance
             user.preferences = new_prefs
@@ -184,8 +188,8 @@ async def getprefs(ctx):
     '''
     currAuthor = ctx.author
     global usr_list
-    if user_is_participant(ctx.author.id, usr_list):
-        (index, user) = get_participant_object(ctx.author.id, usr_list)
+    if SantaBotHelper.user_is_participant(ctx.author.id, usr_list):
+        (index, user) = SantaBotHelper.get_participant_object(ctx.author.id, usr_list)
         try:
             await currAuthor.send("Current preference(s): {0}".format(user.preferences))
         except:
@@ -218,21 +222,20 @@ async def start(ctx):
         # select a random partner for each participant if all information is complete and there are enough people to do it
         if(all_fields_complete and (len(usr_list) > 1)):
             print("Proposing a partner list")
-            potential_list = propose_partner_list(usr_list)
-            while(not partners_are_valid(potential_list)):
+            potential_list = SantaBotHelper.propose_partner_list(usr_list)
+            while(not SantaBotHelper.partners_are_valid(potential_list)):
                 print("Proposing a partner list")
-                potential_list = propose_partner_list(usr_list)
+                potential_list = SantaBotHelper.propose_partner_list(usr_list)
             # save to config file
             print("Partner assignment successful")
             for user in potential_list:
-                (temp_index, temp_user) = get_participant_object(user.idstr, usr_list)
-                (index, partner) = get_participant_object(user.partnerid, potential_list)
+                (temp_index, temp_user) = SantaBotHelper.get_participant_object(user.idstr, usr_list)
+                (index, partner) = SantaBotHelper.get_participant_object(user.partnerid, potential_list)
                 temp_user.partnerid = user.partnerid
-                config['members'][str(user.usrnum)][idx_list.PARTNERID] = user.partnerid
+                config['members'][str(user.usrnum)][SantaBotConstants.PARTNERID] = user.partnerid
                 config.write()
                 # tell participants who their partner is
-                this_user = discord.User(name = user.name, discriminator = user.discriminator, id = user.idstr)
-                this_user = discord.User(name = partner.name, discriminator = partner.discriminator, id = partner.idstr)
+                this_user = ctx.guild.get_member(int(user.idstr))
                 message_pt1 = str(partner.name) + "#" + str(partner.discriminator) + " is your Secret Santa partner! Mosey on over to their wishlist URL(s) and pick out a gift! Remember to keep it in the $10-20 range.\n"
                 message_pt2 = "Their wishlist(s) can be found here: " + partner.wishlisturl + "\n"
                 message_pt3 = "And their gift preferences can be found here: " + partner.preferences + "\n"
@@ -281,7 +284,7 @@ async def restart(ctx):
                     await ctx.send("`Partner assignment cancelled: participant info incomplete.`")
                 except:
                     await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
-        list_changed = usr_list_changed_during_pause(usr_list, user_left_during_pause)
+        list_changed = SantaBotHelper.usr_list_changed_during_pause(usr_list, user_left_during_pause)
         if(list_changed):
             ctx.send("User list changed during the pause. Partners must be picked again with `{0}start`.".format(CONFIG.prefix))
         else:
@@ -322,7 +325,7 @@ async def join(ctx):
     global usr_list
     global highest_key
     # check if the exchange has already started
-    if user_is_participant(currAuthor.id, usr_list):
+    if SantaBotHelper.user_is_participant(currAuthor.id, usr_list):
         await ctx.send(BOT_ERROR.ALREADY_JOINED)
     else:
         # initialize instance of Participant for the author
@@ -350,8 +353,8 @@ async def leave(ctx):
     global usr_list
     global is_paused
     global user_left_during_pause
-    if(user_is_participant(currAuthor.id, usr_list)):
-        (index, user) = get_participant_object(currAuthor.id, usr_list)
+    if(SantaBotHelper.user_is_participant(currAuthor.id, usr_list)):
+        (index, user) = SantaBotHelper.get_participant_object(currAuthor.id, usr_list)
         usr_list.remove(user)
         popped_user = config['members'].pop(str(user.usrnum))
         config.write()
@@ -394,7 +397,7 @@ async def listparticipants(ctx):
         else:
             msg = '```The following people are signed up for the Secret Santa exchange:\n'
             for user in usr_list:
-                this_user = discord.User(user = user.name, id = user.idstr)
+                this_user = ctx.guild.get_member(user.idstr)
                 msg = msg + str(user.name) + "#" + str(user.discriminator) + "\n"
             msg = msg + "\nUse `{0}join` to enter the exchange.```".format(CONFIG.prefix)
     else:
@@ -419,10 +422,10 @@ async def partnerinfo(ctx):
     currAuthor = ctx.author
     global usr_list
     global exchange_started
-    authorIsParticipant = user_is_participant(currAuthor.id, usr_list)
+    authorIsParticipant = SantaBotHelper.user_is_participant(currAuthor.id, usr_list)
     if(exchange_started and authorIsParticipant):
-        (usr_index, user) = get_participant_object(currAuthor, usr_list)
-        (partner_index, partnerobj) = get_participant_object(user.partnerid, usr_list)
+        (usr_index, user) = SantaBotHelper.get_participant_object(currAuthor, usr_list)
+        (partner_index, partnerobj) = SantaBotHelper.get_participant_object(user.partnerid, usr_list)
         msg = "Your partner is " + partnerobj.name + "#" + partnerobj.discriminator + "\n"
         msg = msg + "Their wishlist(s) can be found here: " + partnerobj.wishlisturl + "\n"
         msg = msg + "And their gift preferences can be found here: " + partnerobj.preferences + "\n"

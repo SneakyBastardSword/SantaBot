@@ -5,3 +5,4 @@
 CONFIG.py
 /__pycache__
 Procfile
+*.code-workspace
