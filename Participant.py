@@ -10,7 +10,7 @@ class Participant(object):
         self.partnerid = partnerid         #string for id of partner
     
     def __repr__(self):
-        return f"User: {self.name}#{self.discriminator}, Key: {self.usrnum}"
+        return f"Participant(User: {self.name}#{self.discriminator}, Key: {self.usrnum}, wishlisturl={self.wishlisturl}, preferences={self.preferences}, partnerid={self.partnerid})"
 
     def __str__(self):
         return f"User: {self.name}#{self.discriminator}, Key: {self.usrnum}"
