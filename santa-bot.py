@@ -339,8 +339,8 @@ async def join(ctx):
         await ctx.send(currAuthor.mention + " has been added to the {0} Secret Santa exchange!".format(str(ctx.guild)) + "\nMore instructions have been DMd to you.")
         try:
             userPrompt = """Welcome to the __{0}__ Secret Santa! Please input your wishlist URL and preferences **(by DMing this bot)** so your Secret Santa can send you something.\n
-                Use `{1}setwishlisturl [wishlist urls separated by | ]` to set your wishlist URL (you may also add your mailing address).\n
-                Use `{2}setprefs [preferences separated by | ]` to set gift preferences for your Secret Santa. Put N/A if none.""".format(str(ctx.guild), CONFIG.prefix, CONFIG.prefix)
+                Use `{1}setwishlisturl [wishlist urls separated by a space ]` to set your wishlist URL (you may also add your mailing address).\n
+                Use `{2}setprefs [preferences separated by a space ]` to set gift preferences for your Secret Santa. Put N/A if none.""".format(str(ctx.guild), CONFIG.prefix, CONFIG.prefix)
             await currAuthor.send(userPrompt)
         except:
             ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
