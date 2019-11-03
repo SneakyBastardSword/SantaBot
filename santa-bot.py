@@ -450,4 +450,38 @@ async def invite(ctx):
     link = "https://discordapp.com/oauth2/authorize?client_id={0}&scope=bot&permissions=67185664".format(CONFIG.client_id)
     await ctx.send_message("Bot invite link: {0}".format(link))
 
+ROLE_CHANNEL = 640410764007440404
+async def manage_reactions(payload, add):
+    message_id = payload.message_id
+    channel_id = payload.channel_id
+    emoji = payload.emoji
+    guild = bot.get_guild(payload.guild_id)
+    user = guild.get_member(payload.user_id)
+ 
+    if channel_id == ROLE_CHANNEL:
+        channel = discord.utils.get(bot.get_all_channels(), id=channel_id)
+        async for message in channel.history(limit=200):
+            if message.id == message_id:
+                break
+ 
+        content = message.content.split("\n")
+        for line in content:
+            l = line.split(" ")
+            for c, word in enumerate(l):
+                if word == "for" and c > 0 and l[c-1] == str(emoji):
+                    role_id = l[c+1][3:-1]
+                    role = guild.get_role(int(role_id))
+                    if add:
+                        await user.add_roles(role)
+                    else:
+                        await user.remove_roles(role)
+
+@bot.event
+async def on_raw_reaction_add(payload):
+    await manage_reactions(payload, True)
+ 
+@bot.event
+async def on_raw_reaction_remove(payload):
+    await manage_reactions(payload, False)
+
 bot.run(CONFIG.discord_token, reconnect = True)
