@@ -450,7 +450,7 @@ async def invite(ctx):
     link = "https://discordapp.com/oauth2/authorize?client_id={0}&scope=bot&permissions=67185664".format(CONFIG.client_id)
     await ctx.send_message("Bot invite link: {0}".format(link))
 
-ROLE_CHANNEL = 640410764007440404
+ROLE_CHANNEL = 461740709062377473
 async def manage_reactions(payload, add):
     message_id = payload.message_id
     channel_id = payload.channel_id
