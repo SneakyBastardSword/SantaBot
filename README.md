@@ -3,7 +3,7 @@
 A Discord bot to organize secret santa gift exchanges using the discord.py Python library
 
 ### Requirements
-- python 3.5 or later (can be installed [here](https://www.python.org/downloads/))
+- python 3.5.3 or later (can be installed [here](https://www.python.org/downloads/))
 - pip3
 
 ### Steps to run:
