@@ -69,7 +69,7 @@ async def on_ready():
     print('------')
 
 @bot.command()
-async def ping(ctx):
+async def ping(ctx: commands.Context):
     '''
     = Basic ping command
     '''
@@ -77,11 +77,11 @@ async def ping(ctx):
     await ctx.send("{0} milliseconds".format(round(latency, 4)*1000))
 
 @bot.command()
-async def ding(ctx):
+async def ding(ctx: commands.Context):
     await ctx.send("dong")
 
 @bot.command()
-async def echo(ctx, *content:str):
+async def echo(ctx: commands.Context, *content:str):
     '''
     [content] = echos back the [content]
     '''
@@ -91,7 +91,7 @@ async def echo(ctx, *content:str):
         await ctx.send(' '.join(content))
 
 @bot.command()
-async def setwishlisturl(ctx, *destination:str):
+async def setwishlisturl(ctx: commands.Context, *destination:str):
     '''
     [Any number of wishlist URLs or mailing addresses] = set wishlist destinations or mailing address. Surround mailing address with quotation marks and separate EACH wishlist destination with a space (eg. amazon.com "P. Sherman 42 Wallaby Way, Sydney" http://rightstufanime.com/).
     '''
@@ -128,7 +128,7 @@ async def setwishlisturl(ctx, *destination:str):
     return
     
 @bot.command()
-async def getwishlisturl(ctx):
+async def getwishlisturl(ctx: commands.Context):
     '''
     Get current wishlist
     '''
@@ -145,7 +145,7 @@ async def getwishlisturl(ctx):
     return
 
 @bot.command()
-async def setprefs(ctx, *preferences:str):
+async def setprefs(ctx: commands.Context, *preferences:str):
     '''
     Set new preferences
     '''
@@ -182,7 +182,7 @@ async def setprefs(ctx, *preferences:str):
     return
 
 @bot.command()
-async def getprefs(ctx):
+async def getprefs(ctx: commands.Context):
     '''
     Get current preferences
     '''
@@ -199,7 +199,7 @@ async def getprefs(ctx):
     return
 
 @bot.command()
-async def start(ctx):
+async def start(ctx: commands.Context):
     # TODO: add help menu instruction
     currAuthor = ctx.author
     global usr_list
@@ -264,7 +264,7 @@ async def start(ctx):
     return
 
 @bot.command()
-async def restart(ctx):
+async def restart(ctx: commands.Context):
     # TODO: add help menu instruction
     currAuthor = ctx.author
     global usr_list
@@ -302,7 +302,7 @@ async def restart(ctx):
     return
 
 @bot.command()
-async def pause(ctx):
+async def pause(ctx: commands.Context):
     # TODO: add help menu instruction
     global exchange_started
     global is_paused
@@ -317,7 +317,7 @@ async def pause(ctx):
     return
 
 @bot.command()
-async def join(ctx):
+async def join(ctx: commands.Context):
     '''
     Join Secret Santa if it has not started. Contact the Secret Santa admin if you wish to join.
     '''
@@ -347,7 +347,7 @@ async def join(ctx):
     return
 
 @bot.command()
-async def leave(ctx):
+async def leave(ctx: commands.Context):
     # TODO: add help menu instruction
     currAuthor = ctx.author
     global usr_list
@@ -366,7 +366,7 @@ async def leave(ctx):
     return
 
 @bot.command()
-async def end(ctx):
+async def end(ctx: commands.Context):
     # TODO: add help menu instruction
     global usr_list
     global highest_key
@@ -387,7 +387,7 @@ async def end(ctx):
     return
 
 @bot.command()
-async def listparticipants(ctx):
+async def listparticipants(ctx: commands.Context):
     # TODO: add help menu instruction
     global usr_list
     global highest_key
@@ -405,7 +405,7 @@ async def listparticipants(ctx):
     return
 
 @bot.command()
-async def totalparticipants(ctx):
+async def totalparticipants(ctx: commands.Context):
     # TODO: add help menu instruction
     global highest_key
     if highest_key == 0:
@@ -417,7 +417,7 @@ async def totalparticipants(ctx):
     return
 
 @bot.command()
-async def partnerinfo(ctx):
+async def partnerinfo(ctx: commands.Context):
     # TODO: add help menu instruction
     currAuthor = ctx.author
     global usr_list
@@ -446,7 +446,7 @@ async def partnerinfo(ctx):
     return
 
 @bot.command()
-async def invite(ctx):
+async def invite(ctx: commands.Context):
     link = "https://discordapp.com/oauth2/authorize?client_id={0}&scope=bot&permissions=67185664".format(CONFIG.client_id)
     await ctx.send_message("Bot invite link: {0}".format(link))
 
