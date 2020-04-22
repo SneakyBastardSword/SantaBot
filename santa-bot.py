@@ -456,7 +456,7 @@ async def archive_pins(ctx: commands.Context, channel_to_archive: int, channel_t
     dest_id = channel_to_message
     src_channel = bot.get_channel(src_id)
     dest_channel = bot.get_channel(dest_id)
-    ctx.send(content=f"Attempting to archive <#{src_id}> in <#{dest_id}>")
+    await ctx.send(content=f"Attempting to archive pinned messages in <#{src_id}> in <#{dest_id}>")
     pins_to_archive = await src_channel.pins()
     pins_to_archive.reverse()
 
@@ -472,12 +472,24 @@ async def archive_pins(ctx: commands.Context, channel_to_archive: int, channel_t
         pin_content = pin.content
         output_str = (
             f"-**(from `{pin_author}` on {pin_datetime})** {pin_content}\n"
-            f"QotD link: {pin_url}"
+            f"QotD link: <{pin_url}>\n"
             f"Attachment links: {attachment_str}"
         )
         await dest_channel.send(content=output_str)
-        #await pin.unpin()
+    
+    await ctx.send(content=f"Pinned message are archived in <#{dest_id}>. Please use {CONFIG.prefix}unpin_all to remove the pins in <#{src_id}>")
 
+@bot.command()
+@has_permissions(manage_roles=True, ban_members=True)
+async def unpin_all(ctx: commands.Context):
+    '''
+    Unpins all the pinned messages in the channel. Called to clean up after archive_pins.
+    '''
+    await ctx.send(content=f"Attempting to remove all pinned messages.")
+    pins_to_remove = await ctx.pins()
+    for pin in pins_to_remove:
+        await pin.unpin()
+    await ctx.send(content=f"All pinned messages removed.")
 
 @bot.command()
 async def invite(ctx: commands.Context):
