@@ -7,7 +7,7 @@ import copy
 import discord
 from configobj import ConfigObj
 from discord.ext import commands
-from discord.ext.commands import has_permissions, MissingPermissions
+from discord.ext.commands import has_permissions, MissingPermissions, MissingRequiredArgument
 
 import BOT_ERROR
 import CONFIG
@@ -525,6 +525,18 @@ async def manage_reactions(payload, add):
                         await user.add_roles(role)
                     else:
                         await user.remove_roles(role)
+
+@unpin_all.error
+@archive_pins.error
+async def pin_archive_error(error, ctx):
+    if isinstance(error, MissingPermissions):
+        text = BOT_ERROR.NO_PERMISSION("mod")
+        await ctx.send(content=text)
+    elif isinstance(error, MissingRequiredArgument):
+        await ctx.send(content=BOT_ERROR.MISSING_ARGUMENTS)
+    else:
+        await ctx.send(content="Error: undetermined please contact <@224949031514800128>")
+
 
 @bot.event
 async def on_raw_reaction_add(payload):

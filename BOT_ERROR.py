@@ -13,3 +13,4 @@ def HAS_NOT_SUBMITTED(usrname):
     return "`Error: " + usrname + " has not submitted either a mailing wishlist URL or gift preferences.`"
 UNREACHABLE = "`Error: this shouldn't happen`"
 NOT_ENOUGH_SIGNUPS = "`Error: Secret santa not started. Need more people.`"
+MISSING_ARGUMENTS = "`Error: command usage is missing arguments.`"
