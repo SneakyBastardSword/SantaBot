@@ -1,13 +1,12 @@
 import asyncio
 import datetime as DT
 import logging
-import os
+import os.path
 import copy
 
 import discord
 from configobj import ConfigObj
 from discord.ext import commands
-from discord.ext.commands import has_permissions, MissingPermissions
 
 import BOT_ERROR
 import CONFIG
@@ -445,35 +444,6 @@ async def partnerinfo(ctx: commands.Context):
     else:
         await ctx.send(BOT_ERROR.UNREACHABLE)
     return
-
-@bot.command()
-@has_permissions(manage_roles=True, ban_members=True)
-async def archive_pins(ctx: commands.Context, channel_to_archive: int, channel_to_message: int):
-    src_id = channel_to_archive
-    dest_id = channel_to_message
-    src_channel = bot.get_channel(src_id)
-    dest_channel = bot.get_channel(dest_id)
-    ctx.send(content=f"Attempting to archive <#{src_id}> in <#{dest_id}>")
-    pins_to_archive = await src_channel.pins()
-    pins_to_archive.reverse()
-
-    for pin in pins_to_archive:
-        attachments = pin.attachments
-        attachment_str = ""
-        for attachment in attachments:
-            attachment_str += f"{attachment.url}\n" # add link to attachments
-
-        pin_author = pin.author.name
-        pin_datetime = pin.created_at.strftime("%B %d, %Y")
-        pin_url = pin.jump_url
-        pin_content = pin.content
-        output_str = (
-            f"-**(from `{pin_author}` on {pin_datetime})** {pin_content}\n"
-            f"QotD link: {pin_url}"
-            f"Attachment links: {attachment_str}"
-        )
-        await dest_channel.send(content=output_str)
-
 
 @bot.command()
 async def invite(ctx: commands.Context):
