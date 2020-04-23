@@ -456,7 +456,7 @@ async def archive_pins(ctx: commands.Context, channel_to_archive: int, channel_t
     dest_id = channel_to_message
     src_channel = bot.get_channel(src_id)
     dest_channel = bot.get_channel(dest_id)
-    start_message = f"Attempting to archive pinned messages in <#{src_id}> in <#{dest_id}>"
+    start_message = "Attempting to archive pinned messages in <#{0}> in <#{1}>".format(src_id, dest_id)
     await ctx.send(content=start_message)
     pins_to_archive = await src_channel.pins()
     pins_to_archive.reverse()
@@ -465,20 +465,18 @@ async def archive_pins(ctx: commands.Context, channel_to_archive: int, channel_t
         attachments = pin.attachments
         attachment_str = ""
         for attachment in attachments:
-            attachment_str += f"{attachment.url}\n" # add link to attachments
+            attachment_str += "{0}\n".format(attachment.url) # add link to attachments
 
         pin_author = pin.author.name
         pin_datetime = pin.created_at.strftime("%B %d, %Y")
         pin_url = pin.jump_url
         pin_content = pin.content
-        output_str = (
-            f"-**(from `{pin_author}` on {pin_datetime})** {pin_content}\n"
-            f"QotD link: <{pin_url}>\n"
-            f"Attachment links: {attachment_str}"
-        )
+        output_str = "-**(from `{0}` on {1})** {2}\n".format(pin_author, pin_datetime, pin_content)
+        output_str += "QotD link: <{0}>\n".format(pin_url)
+        output_str += "Attachment links: {0}".format(attachment_str)
         await dest_channel.send(content=output_str)
     
-    end_message = f"Pinned message are archived in <#{dest_id}>. Please use {CONFIG.prefix}unpin_all to remove the pins in <#{src_id}>"
+    end_message = "Pinned message are archived in <#{0}>. Please use {1}unpin_all to remove the pins in <#{2}>".format(dest_id, CONFIG.prefix, src_id)
     await ctx.send(content=end_message)
 
 @bot.command()
@@ -487,12 +485,12 @@ async def unpin_all(ctx: commands.Context):
     '''
     Unpins all the pinned messages in the channel. Called to clean up after archive_pins.
     '''
-    start_message = f"Attempting to remove all pinned messages."
+    start_message = "Attempting to remove all pinned messages."
     await ctx.send(content=start_message)
     pins_to_remove = await ctx.pins()
     for pin in pins_to_remove:
         await pin.unpin()
-    end_message = f"All pinned messages removed."
+    end_message = "All pinned messages removed."
     await ctx.send(content=end_message)
 
 @bot.command()
