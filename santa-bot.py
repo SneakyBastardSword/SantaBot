@@ -488,6 +488,7 @@ async def archive_pins(ctx: commands.Context, channel_to_archive: int, channel_t
 async def unpin_all(ctx: commands.Context, channel_id_to_unpin: int = -1):
     '''
     Unpins all the pinned messages in the channel. Called to clean up after archive_pins.
+    Defaults to the channel in which it's called.
     '''
     if channel_id_to_unpin == -1:
         channel_id_to_unpin = ctx.channel.id
