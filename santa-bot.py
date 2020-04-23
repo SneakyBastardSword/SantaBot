@@ -480,7 +480,7 @@ async def archive_pins(ctx: commands.Context, channel_to_archive: int, channel_t
         else:
             await dest_channel.send(content=output_str)
     
-    end_message = "Pinned message are archived in <#{0}>. If the archive messages look good, use __{1}unpin_all__ to remove the pins in <#{2}>".format(dest_id, CONFIG.prefix, src_id)
+    end_message = "Pinned message are archived in <#{0}>. If the archive messages look good, use **{1}unpin_all** to remove the pins in <#{2}>".format(dest_id, CONFIG.prefix, src_id)
     await ctx.send(content=end_message)
 
 @bot.command()
