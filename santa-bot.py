@@ -473,8 +473,7 @@ async def archive_pins(ctx: commands.Context, channel_to_archive: int, channel_t
         pin_content = pin.content
         output_str = "-**(from `{0}` on {1})** {2}\n".format(pin_author, pin_datetime, pin_content)
         output_str += "Message link: <{0}>\n".format(pin_url)
-        if not attachment_str:
-            output_str += "Attachment links: {0}".format(attachment_str)
+        output_str += "Attachment links: {0}".format(attachment_str)
         if len(output_str) > 2000:
             await ctx.send(content=BOT_ERROR.ARCHIVE_ERROR_LENGTH(pin_url))
         else:
