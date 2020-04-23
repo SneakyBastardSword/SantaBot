@@ -456,7 +456,7 @@ async def archive_pins(ctx: commands.Context, channel_to_archive: int, channel_t
     dest_id = channel_to_message
     src_channel = bot.get_channel(src_id)
     dest_channel = bot.get_channel(dest_id)
-    start_message = "Attempting to archive pinned messages in <#{0}> in <#{1}>".format(src_id, dest_id)
+    start_message = "Attempting to archive pinned messages from <#{0}> to <#{1}>".format(src_id, dest_id)
     await ctx.send(content=start_message)
     pins_to_archive = await src_channel.pins()
     pins_to_archive.reverse()
@@ -472,11 +472,15 @@ async def archive_pins(ctx: commands.Context, channel_to_archive: int, channel_t
         pin_url = pin.jump_url
         pin_content = pin.content
         output_str = "-**(from `{0}` on {1})** {2}\n".format(pin_author, pin_datetime, pin_content)
-        output_str += "QotD link: <{0}>\n".format(pin_url)
-        output_str += "Attachment links: {0}".format(attachment_str)
-        await dest_channel.send(content=output_str)
+        output_str += "Message link: <{0}>\n".format(pin_url)
+        if not attachment_str:
+            output_str += "Attachment links: {0}".format(attachment_str)
+        if len(output_str) > 2000:
+            await ctx.send(content=BOT_ERROR.ARCHIVE_ERROR_LENGTH(pin_url))
+        else:
+            await dest_channel.send(content=output_str)
     
-    end_message = "Pinned message are archived in <#{0}>. Please use {1}unpin_all to remove the pins in <#{2}>".format(dest_id, CONFIG.prefix, src_id)
+    end_message = "Pinned message are archived in <#{0}>. If the archive messages look good, use __{1}unpin_all__ to remove the pins in <#{2}>".format(dest_id, CONFIG.prefix, src_id)
     await ctx.send(content=end_message)
 
 @bot.command()
