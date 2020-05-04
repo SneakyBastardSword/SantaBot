@@ -1,4 +1,4 @@
-class Participant(object):
+class SecretSantaParticipant(object):
     """class defining a participant and info associated with them"""
     def __init__(self, name, discriminator, idstr, usrnum, wishlisturl='', preferences='', partnerid=''):
         self.name = name                   #string containing name of user

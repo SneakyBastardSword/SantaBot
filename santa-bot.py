@@ -494,12 +494,12 @@ async def unpin_all(ctx: commands.Context, channel_id_to_unpin: int = -1):
         channel_id_to_unpin = ctx.channel.id
     
     remove_channel = bot.get_channel(channel_id_to_unpin)
-    start_message = "Attempting to remove all pinned messages from <#channel_id_to_unpin>."
+    start_message = "Attempting to remove all pinned messages from <#{0}>.".format(channel_id_to_unpin)
     await ctx.send(content=start_message)
     pins_to_remove = await remove_channel.pins()
     for pin in pins_to_remove:
         await pin.unpin()
-    end_message = "All pinned messages removed from <#channel_id_to_unpin>."
+    end_message = "All pinned messages removed from <#{0}>.".format(channel_id_to_unpin)
     await ctx.send(content=end_message)
 
 @bot.command()

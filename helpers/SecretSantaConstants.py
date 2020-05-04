@@ -1,4 +1,4 @@
-class SantaBotConstants():
+class SecretSantaConstants():
     NAME = 0
     DISCRIMINATOR = 1
     IDSTR = 2
