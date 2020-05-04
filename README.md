@@ -36,7 +36,7 @@ A Discord bot to organize secret santa gift exchanges using the discord.py Pytho
 #### Administrative Commands:
 - `s!assign_role_channel CHANNEL_ID` **(admin only)** = change the channel the bot looks at for reaction roles
 - `s!archive pins SRC_CHANNEL_ID DEST_CHANNEL_ID` **(admin only)** = archive all pins from the source channel to the destination channel as messages
-- `s!unpin_all CHANNEL_ID` **(admin only)** = unpin all messages in the indicated channel (defaults to the channel the command is called in)
+- `s!unpin_all [CHANNEL_ID]` **(admin only)** = unpin all messages in the indicated channel (defaults to the channel the command is called in)
 
 #### Miscellaneous Commands:
 
