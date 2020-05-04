@@ -120,7 +120,6 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
                         if word == "for" and c > 0 and l[c-1] == str(emoji):
                             role_id = l[c+1][3:-1]
                             role = guild.get_role(int(role_id))
-                            print(payload.event_type)
                             if payload.event_type == "REACTION_ADD":
                                 await user.add_roles(role)
                             else:
