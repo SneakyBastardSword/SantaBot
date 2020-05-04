@@ -9,10 +9,15 @@ import helpers.BOT_ERROR as BOT_ERROR
 class SantaAdministrative(commands.Cog, name='Administrative'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.ROLE_CHANNEL = -1
+        self.role_channel = CONFIG.role_channel
 
     @commands.command()
+    @has_permissions(manage_roles=True, ban_members=True)
     async def assign_role_channel(self, ctx: commands.Context, reaction_role_channel: int):
+        '''
+        Not recommended. Allows a reaction role channel to be assigned.
+        The recommended route is to set the role_channel variable in the bot's config file to the channel ID you want.
+        '''
         dest_channel = self.bot.get_channel(reaction_role_channel)
         self.ROLE_CHANNEL = reaction_role_channel
         if dest_channel != None:

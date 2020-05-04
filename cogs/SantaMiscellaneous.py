@@ -5,8 +5,11 @@ class SantaMiscellaneous(commands.Cog, name='Miscellaneous'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command()
+    # @commands.command() ### normally commented out because this bot is not meant to be sharded
     async def invite(self, ctx: commands.Context):
+        '''
+        Creates an invite for this bot
+        '''
         link = "https://discordapp.com/oauth2/authorize?client_id={0}&scope=bot&permissions=67185664".format(CONFIG.client_id)
         await ctx.send_message("Bot invite link: {0}".format(link))
 

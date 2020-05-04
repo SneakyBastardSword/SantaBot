@@ -11,20 +11,6 @@ from cogs.SecretSanta import SecretSanta
 from cogs.SantaAdministrative import SantaAdministrative
 from cogs.SantaMiscellaneous import SantaMiscellaneous
 
-#initialize config file
-try:
-    config = ConfigObj(CONFIG.cfg_path, file_error = True)
-except: 
-    try:
-        os.mkdir(CONFIG.bot_folder)
-    except:
-        pass
-    config = ConfigObj()
-    config.filename = CONFIG.cfg_path
-    config['programData'] = {'exchange_started': False}
-    config['members'] = {}
-    config.write()
-
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
 client_log.setLevel(logging.DEBUG)
@@ -46,6 +32,20 @@ async def on_ready():
     print('------')
 
 def start_santa_bot():
+    #initialize config file
+    try:
+        config = ConfigObj(CONFIG.cfg_path, file_error = True)
+    except: 
+        try:
+            os.mkdir(CONFIG.bot_folder)
+        except:
+            pass
+        config = ConfigObj()
+        config.filename = CONFIG.cfg_path
+        config['programData'] = {'exchange_started': False}
+        config['members'] = {}
+        config.write()
+
     bot.add_cog(SecretSanta(bot, config))
     bot.add_cog(SantaAdministrative(bot))
     bot.add_cog(SantaMiscellaneous(bot))
