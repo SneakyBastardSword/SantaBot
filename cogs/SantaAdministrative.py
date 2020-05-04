@@ -19,9 +19,9 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         The recommended route is to set the role_channel variable in the bot's config file to the channel ID you want.
         '''
         dest_channel = self.bot.get_channel(reaction_role_channel)
-        self.ROLE_CHANNEL = reaction_role_channel
+        self.role_channel = reaction_role_channel
         if dest_channel != None:
-            await ctx.send(content="Reaction role channel assigned to <#{0}>".format(self.ROLE_CHANNEL))
+            await ctx.send(content="Reaction role channel assigned to <#{0}>".format(self.role_channel))
         else:
             await ctx.send(content=BOT_ERROR.REACTION_ROLE_UNASSIGNED)
 
@@ -95,7 +95,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
     @commands.Cog.listener(name='on_raw_reaction_add')
     @commands.Cog.listener(name='on_raw_reaction_remove')
     async def manage_reactions(self, payload: RawReactionActionEvent):
-        if(self.ROLE_CHANNEL == -1):
+        if(self.role_channel == -1):
             print(BOT_ERROR.REACTION_ROLE_UNASSIGNED)
             return
 
@@ -105,8 +105,8 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         guild = self.bot.get_guild(payload.guild_id)
         user = guild.get_member(payload.user_id)
     
-        if channel_id == self.ROLE_CHANNEL:
-            channel = self.bot.get_channel(self.ROLE_CHANNEL)
+        if channel_id == self.role_channel:
+            channel = self.bot.get_channel(self.role_channel)
             message = None
             async for message in channel.history(limit=200):
                 if message.id == message_id:
