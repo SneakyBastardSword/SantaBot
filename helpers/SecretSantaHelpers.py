@@ -28,6 +28,7 @@ class SecretSantaHelpers():
         for (index, person) in enumerate(usrlist):
             if(int(person.idstr) == usrid):
                 return (index, person)
+        return (-1, None)
 
     def propose_partner_list(self, usrlist: list):
         """Generate a proposed partner list"""
