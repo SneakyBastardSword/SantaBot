@@ -3,13 +3,13 @@ import random
 from discord import Member
 from discord.abc import PrivateChannel
 import discord
-from Participant import Participant
+from helpers.SecretSantaParticipant import SecretSantaParticipant
 
-class SantaBotHelpers():
+class SecretSantaHelpers():
 
     def isListOfParticipants(self, usrlist: list):
         for usr in usrlist:
-            if(not isinstance(usr, Participant)):
+            if(not isinstance(usr, SecretSantaParticipant)):
                 return False
 
     def user_is_participant(self, usrid: discord.User.id, usrlist: list):
@@ -28,6 +28,7 @@ class SantaBotHelpers():
         for (index, person) in enumerate(usrlist):
             if(int(person.idstr) == usrid):
                 return (index, person)
+        return (-1, None)
 
     def propose_partner_list(self, usrlist: list):
         """Generate a proposed partner list"""
