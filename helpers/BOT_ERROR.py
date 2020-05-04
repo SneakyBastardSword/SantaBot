@@ -15,4 +15,5 @@ UNREACHABLE = "`Error: this shouldn't happen`"
 NOT_ENOUGH_SIGNUPS = "`Error: Secret santa not started. Need more people.`"
 MISSING_ARGUMENTS = "`Error: command usage is missing arguments.`"
 def ARCHIVE_ERROR_LENGTH(msg_url):
-    return "`ERROR: output message is too long pinned message {0} was not archived.`"
+    return "`ERROR: output message is too long pinned message {0} was not archived.`".format(msg_url)
+REACTION_ROLE_UNASSIGNED = "ERROR: no reaction role channel has been assigned"

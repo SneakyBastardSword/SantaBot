@@ -1,6 +1,5 @@
 import CONFIG
 from configobj import ConfigObj
-import os
 import copy
 
 from discord.ext import commands
@@ -10,9 +9,9 @@ from helpers.SecretSantaConstants import SecretSantaConstants
 from helpers.SecretSantaHelpers import SecretSantaHelpers
 from helpers.SecretSantaParticipant import SecretSantaParticipant
 
-class SecretSanta(commands.Cog):
+class SecretSanta(commands.Cog, name='Secret Santa'):
 
-    def __init__(self, bot : commands.Bot, config: ConfigObj):
+    def __init__(self, bot: commands.Bot, config: ConfigObj):
         self.bot = bot
         self.exchange_started = False
         self.server = ''
@@ -31,7 +30,7 @@ class SecretSanta(commands.Cog):
             self.usr_list.append(usr)
             self.highest_key = int(key)
 
-    @bot.command()
+    @commands.command()
     async def setwishlisturl(self, ctx: commands.Context, *destination:str):
         '''
         [Any number of wishlist URLs or mailing addresses] = set wishlist destinations or mailing address. Surround mailing address with quotation marks and separate EACH wishlist destination with a space (eg. amazon.com "P. Sherman 42 Wallaby Way, Sydney" http://rightstufanime.com/).
