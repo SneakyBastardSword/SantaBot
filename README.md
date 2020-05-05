@@ -1,6 +1,9 @@
 # SantaBot
 
-A Discord bot to organize secret santa gift exchanges using the discord.py Python library
+A Discord bot to organize secret santa gift exchanges using the discord.py Python library + some other admin-type stuff for my server
+
+- This bot code must be forked/pulled and run locally
+- If you don't want the admin-type stuff, just go in and comment out the add_cog(SantaAdministrative(...)) line
 
 ### Requirements
 - python 3.5.3 or later (can be installed [here](https://www.python.org/downloads/))
