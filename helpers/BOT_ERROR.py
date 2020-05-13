@@ -15,6 +15,8 @@ UNREACHABLE = "`ERROR: this shouldn't happen`"
 
 def ARCHIVE_ERROR_LENGTH(msg_url):
     return "`ERROR: output message is too long pinned message {0} was not archived.`".format(msg_url)
+def EXCHANGE_IN_PROGRESS_LEAVE(role):
+    return "`ERROR: The gift exchange is already in progress. Please contact <@224949031514800128> or {0} about leaving.`".format(role)
 def HAS_NOT_SUBMITTED(usrname):
     return "`ERROR: " + usrname + " has not submitted either a mailing wishlist URL or gift preferences.`"
 def NO_PERMISSION(role):

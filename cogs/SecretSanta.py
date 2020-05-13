@@ -136,7 +136,9 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
 
     @commands.command()
     async def start(self, ctx: commands.Context):
-        # TODO: add help menu instruction
+        '''
+        Begin the Secret Santa
+        '''
         currAuthor = ctx.author
         if(currAuthor.top_role == ctx.guild.roles[-1]):
             # first ensure all users have all info submitted
@@ -180,8 +182,8 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                         await currAuthor.send("Failed to send message to {0}#{1} about their partner. Harass them to turn on server DMs for Secret Santa stuff.".format(this_user.name, this_user.discriminator))
                 
                 # mark the exchange as in-progress
-                exchange_started = True
-                is_paused = False
+                self.exchange_started = True
+                self.is_paused = False
                 self.config['programData']['exchange_started'] = True
                 self.config.write()
                 usr_list = copy.deepcopy(potential_list)
@@ -198,7 +200,9 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
 
     @commands.command()
     async def restart(self, ctx: commands.Context):
-        # TODO: add help menu instruction
+        '''
+        Restart the Secret Santa after pause
+        '''
         currAuthor = ctx.author
         is_paused = True
         if((currAuthor.top_role == ctx.guild.roles[-1]) and is_paused):
@@ -218,7 +222,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             if(list_changed):
                 ctx.send("User list changed during the pause. Partners must be picked again with `{0}start`.".format(CONFIG.prefix))
             else:
-                exchange_started = True
+                self.exchange_started = True
                 is_paused = False
                 self.config['programData']['exchange_started'] = True
                 self.config.write()
@@ -233,12 +237,14 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
 
     @commands.command()
     async def pause(self, ctx: commands.Context):
-        # TODO: add help menu instruction
+        '''
+        Pause for people that want to join last-minute (reshuffles and matches upon restart)
+        '''
         if(ctx.author.top_role == ctx.guild.roles[-1]):
-            exchange_started = False
+            self.exchange_started = False
             self.config['programData']['exchange_started'] = False
             self.config.write()
-            is_paused = True
+            self.is_paused = True
             await ctx.send("Secret Santa has been paused. New people may now join.")
         else:
             await ctx.send(BOT_ERROR.NO_PERMISSION(ctx.guild.roles[-1]))
@@ -274,7 +280,13 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
 
     @commands.command()
     async def leave(self, ctx: commands.Context):
-        # TODO: add help menu instruction
+        '''
+        Leave the Secret Santa
+        '''
+        if(self.exchange_started):
+            await ctx.send(BOT_ERROR.EXCHANGE_IN_PROGRESS_LEAVE("a mod"))
+            return
+        
         currAuthor = ctx.author
         if(self.SecretSantaHelper.user_is_participant(currAuthor.id, self.usr_list)):
             (index, user) = self.SecretSantaHelper.get_participant_object(currAuthor.id, self.usr_list)
@@ -282,7 +294,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             popped_user = self.config['members'].pop(str(user.usrnum))
             self.config.write()
             if(self.is_paused):
-                user_left_during_pause = True
+                self.user_left_during_pause = True
             await ctx.send(currAuthor.mention + " has left the {0} Secret Santa exchange".format(str(ctx.guild)))
         else:
             await ctx.send(BOT_ERROR.UNJOINED)
@@ -290,12 +302,14 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
 
     @commands.command()
     async def end(self, ctx: commands.Context):
-        # TODO: add help menu instruction
+        '''
+        End the Secret Santa
+        '''
         if(ctx.author.top_role == ctx.guild.roles[-1]):
-            exchange_started = False
-            is_paused = False
+            self.exchange_started = False
+            self.is_paused = False
             self.config['programData']['exchange_started'] = False
-            highest_key = 0
+            self.highest_key = 0
             del self.usr_list[:]
             print(len(self.usr_list))
             self.config['members'].clear()
@@ -307,7 +321,9 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
 
     @commands.command()
     async def listparticipants(self, ctx: commands.Context):
-        # TODO: add help menu instruction
+        '''
+        List Secret Santa participants
+        '''
         if(ctx.author.top_role == ctx.guild.roles[-1]):
             if(self.highest_key == 0):
                 await ctx.send("Nobody has signed up for the secret Santa exchange yet. Use `{0}join` to enter the exchange.".format(CONFIG.prefix))
@@ -323,7 +339,9 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
 
     @commands.command()
     async def totalparticipants(self, ctx: commands.Context):
-        # TODO: add help menu instruction
+        '''
+        Find out how many people have joined the Secret Santa
+        '''
         if self.highest_key == 0:
             await ctx.send("Nobody has signed up for the Secret Santa exchange yet. Use `{0}join` to enter the exchange.".format(CONFIG.prefix))
         elif self.highest_key == 1:
@@ -334,7 +352,9 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
 
     @commands.command()
     async def partnerinfo(self, ctx: commands.Context):
-        # TODO: add help menu instruction
+        '''
+        Get your partner information via DM (partner name, wishlist, gift preference)
+        '''
         currAuthor = ctx.author
         authorIsParticipant = self.SecretSantaHelper.user_is_participant(currAuthor.id, self.usr_list)
         if(self.exchange_started and authorIsParticipant):
