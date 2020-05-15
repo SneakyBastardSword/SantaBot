@@ -1,9 +1,10 @@
-import CONFIG
-
+import datetime
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions, MissingRequiredArgument
 from discord import RawReactionActionEvent
+from discord import Game as discordGame
 
+import CONFIG
 import helpers.BOT_ERROR as BOT_ERROR
 
 class SantaAdministrative(commands.Cog, name='Administrative'):
@@ -90,7 +91,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         elif isinstance(error, MissingRequiredArgument):
             await ctx.send(content=BOT_ERROR.MISSING_ARGUMENTS)
         else:
-            await ctx.send(content="Error: undetermined please contact <@224949031514800128>")
+            await ctx.send(content=BOT_ERROR.UNDETERMINED_CONTACT_CODE_OWNER)
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     @commands.Cog.listener(name='on_raw_reaction_remove')
@@ -120,8 +121,19 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
                         if word == "for" and c > 0 and l[c-1] == str(emoji):
                             role_id = l[c+1][3:-1]
                             role = guild.get_role(int(role_id))
-                            print(payload.event_type)
                             if payload.event_type == "REACTION_ADD":
                                 await user.add_roles(role)
                             else:
                                 await user.remove_roles(role)
+
+    @commands.Cog.listener(name='on_ready')
+    async def nice_ready_print(self):
+        """print message when client is connected"""
+        currentDT = datetime.datetime.now()
+        print('------')
+        print (currentDT.strftime("%Y-%m-%d %H:%M:%S"))
+        print("Logged in as")
+        print(self.bot.user.name)
+        print(self.bot.user.id)
+        await self.bot.change_presence(activity = discordGame(name = CONFIG.prefix + "help"))
+        print('------')

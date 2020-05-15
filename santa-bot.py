@@ -1,8 +1,6 @@
-import datetime
 import logging
 import os
 
-import discord
 from configobj import ConfigObj
 from discord.ext import commands
 
@@ -18,18 +16,6 @@ client_handler = logging.FileHandler(filename=CONFIG.dbg_path, encoding='utf-8',
 client_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 client_log.addHandler(client_handler)
 bot = commands.Bot(command_prefix = CONFIG.prefix)
-
-@bot.event
-async def on_ready():
-    """print message when client is connected"""
-    currentDT = datetime.datetime.now()
-    print('------')
-    print (currentDT.strftime("%Y-%m-%d %H:%M:%S"))
-    print("Logged in as")
-    print(bot.user.name)
-    print(bot.user.id)
-    await bot.change_presence(activity = discord.Game(name = CONFIG.prefix + "help"))
-    print('------')
 
 def start_santa_bot():
     #initialize config file
