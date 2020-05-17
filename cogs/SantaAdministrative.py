@@ -23,7 +23,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         Not recommended. Allows a reaction role channel to be assigned.
         The recommended route is to set the role_channel variable in the bot's config file to the channel ID you want.
         '''
-        dest_channel = self.bot.get_channel(reaction_role_channel)
+        dest_channel = ctx.guild.get_channel(reaction_role_channel)
         self.role_channel = reaction_role_channel
         if dest_channel != None:
             await ctx.send(content="Reaction role channel assigned to <#{0}>".format(self.role_channel))
@@ -38,10 +38,14 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         '''
         src_id = channel_to_archive
         dest_id = channel_to_message
-        src_channel = self.bot.get_channel(src_id)
-        dest_channel = self.bot.get_channel(dest_id)
+        src_channel = ctx.guild.get_channel(src_id)
+        dest_channel = ctx.guild.get_channel(dest_id)
+
         start_message = "Attempting to archive pinned messages from <#{0}> to <#{1}>".format(src_id, dest_id)
         await ctx.send(content=start_message)
+        if((src_channel == None) or (dest_channel == None)):
+            await ctx.send(BOT_ERROR.INACCESSIBLE_CHANNEL)
+            return
         pins_to_archive = await src_channel.pins()
         pins_to_archive.reverse()
 
@@ -79,9 +83,12 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         if channel_id_to_unpin == -1:
             channel_id_to_unpin = ctx.channel.id
         
-        remove_channel = self.bot.get_channel(channel_id_to_unpin)
+        remove_channel = ctx.guild.get_channel(channel_id_to_unpin)
         start_message = "Attempting to remove all pinned messages from <#{0}>.".format(channel_id_to_unpin)
         await ctx.send(content=start_message)
+        if(remove_channel == None):
+            await ctx.send(BOT_ERROR.INACCESSIBLE_CHANNEL)
+            return
         pins_to_remove = await remove_channel.pins()
         for pin in pins_to_remove:
             await pin.unpin()
