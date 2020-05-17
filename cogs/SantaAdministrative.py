@@ -1,4 +1,5 @@
-import datetime
+import pendulum
+
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions, MissingRequiredArgument
 from discord import RawReactionActionEvent
@@ -6,11 +7,14 @@ from discord import Game as discordGame
 
 import CONFIG
 import helpers.BOT_ERROR as BOT_ERROR
+from helpers.SQLiteHelper import SQLiteHelper
 
 class SantaAdministrative(commands.Cog, name='Administrative'):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, sqlitehelper: SQLiteHelper):
         self.bot = bot
         self.role_channel = CONFIG.role_channel
+        self.sqlhelp = sqlitehelper
+        self.sqlhelp.create_table("Countdowns", "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, time TEXT NOT NULL, user_id INTEGER NOT NULL, UNIQUE(name))")
 
     @commands.command()
     @has_permissions(manage_roles=True, ban_members=True)
@@ -48,10 +52,12 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
                 attachment_str += "{0}\n".format(attachment.url) # add link to attachments
 
             pin_author = pin.author.name
-            pin_datetime = pin.created_at.strftime("%B %d, %Y")
+            pin_pendulum = pendulum.instance(pin.created_at)
+            pin_dt_str = pin_pendulum.format("MMMM DD, YYYY")
+
             pin_url = pin.jump_url
             pin_content = pin.content
-            output_str = "-**(from `{0}` on {1})** {2}\n".format(pin_author, pin_datetime, pin_content)
+            output_str = "-**(from `{0}` on {1})** {2}\n".format(pin_author, pin_dt_str, pin_content)
             output_str += "Message link: <{0}>\n".format(pin_url)
             output_str += "Attachment links: {0}".format(attachment_str)
             if len(output_str) > 2000:
@@ -81,6 +87,93 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             await pin.unpin()
         end_message = "All pinned messages removed from <#{0}>.".format(channel_id_to_unpin)
         await ctx.send(content=end_message)
+
+    @commands.command(aliases=['cd'])
+    async def countdown(self, ctx: commands.Context, command: str, *, arg=""):
+        expected_pend_format = "MM/D/YY [@] h:m A Z"
+        cd_table_name = "Countdowns"
+        args = arg.split(sep=" | ")
+        countdown_name = args[0]
+        countdown_time = ""
+        if(len(args) > 1):
+            countdown_time = args[1]
+        if(command == "set"):
+            try:
+                pend_test_convert = pendulum.from_format(countdown_time, expected_pend_format) # check that the format is correct
+                if(self.sqlhelp.insert_records(cd_table_name, "(name, time, user_id)", ["('{0}', '{1}', {2})".format(countdown_name, countdown_time, ctx.author.id)])):
+                    await ctx.send("{0} countdown set for {1} ({2})".format(countdown_name, countdown_time, pend_test_convert.diff_for_humans(pendulum.now())))
+            except ValueError as error:
+                expected = "ERROR: inputted time does not match expected format `month/day/year @ hour:minute AM/PM UTC_offset`\n"
+                error_str = expected + " ex. `5/17/20 @ 1:00 PM -06:00`"
+                print(error_str)
+                await ctx.send(error_str)
+                return
+        elif(command == "change"):
+            try:
+                pend_test_convert = pendulum.from_format(countdown_time, expected_pend_format) # check that the format is correct
+            except ValueError as error:
+                expected = "ERROR: inputted time does not match expected format `month/day/year @ hour:minute AM/PM UTC_offset`\n"
+                error_str = expected + " ex. `5/17/20 @ 1:00 PM -06:00`"
+                print(error_str)
+                await ctx.send(error_str)
+                return
+            
+            query_get_timer_by_name = "SELECT * FROM {0} WHERE name=\'{1}\';".format(cd_table_name, countdown_name)
+            query_result = self.sqlhelp.execute_read_query(query_get_timer_by_name)
+            if(query_result != None):
+                if(len(query_result) > 0):
+                    (query_id, query_name, query_time, query_user_id) = query_result[0]
+                    if(ctx.author.id == query_user_id):
+                        if(self.sqlhelp.execute_update_query(cd_table_name, "time=\'{0}\'".format(countdown_time), "id={0}".format(query_id))):
+                            await ctx.send("Updated countdown for {0}".format(countdown_name))
+                        else:
+                            await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_NAME(countdown_name))
+                    else:
+                        cd_owner = ctx.guild.get_member(query_user_id)
+                        await ctx.send(BOT_ERROR.CANNOT_CHANGE_COUNTDOWN(cd_owner.name))
+            else:
+                await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_NAME(countdown_name))
+        elif(command == "check"):
+            query_get_timer_by_name = "SELECT * FROM {0} WHERE name=\'{1}\';".format(cd_table_name, countdown_name)
+            query_result = self.sqlhelp.execute_read_query(query_get_timer_by_name)
+            if(query_result != None):
+                (query_id, query_name, query_time, query_user_id) = query_result[0]
+                cd_pend = pendulum.from_format(query_time, expected_pend_format)
+                now_dt = pendulum.now()
+                cd_diff = cd_pend.diff(now_dt)
+                output = "Time until {0}: {1} days, {2} hours, {3} minutes".format(countdown_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
+                await ctx.send(output)
+            else:
+                await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_NAME(countdown_name))
+        elif(command == "list"):
+            query_get_all_timers = "SELECT * FROM {0};".format(cd_table_name)
+            query_results = self.sqlhelp.execute_read_query(query_get_all_timers)
+            output = "Name | Time | Time Until\n"
+            if(query_results != None):
+                for (query_id, query_name, query_time, query_user_id) in query_results:
+                    cd_pend = pendulum.from_format(query_time, expected_pend_format)
+                    output += "{0} | {1} | {2} now\n".format(query_name, query_time, cd_pend.diff_for_humans(pendulum.now()))
+                    await ctx.send(output)
+        elif(command == "remove"):
+            query_get_timer_by_name = "SELECT * FROM {0} WHERE name=\'{1}\';".format(cd_table_name, countdown_name)
+            query_result = self.sqlhelp.execute_read_query(query_get_timer_by_name)
+            if(query_result != None):
+                (query_id, query_name, query_time, query_user_id) = query_result[0]
+                if(self.sqlhelp.execute_delete_query(cd_table_name, "id=query_user_id")):
+                    await ctx.send("Countdown timer removed.")
+                else:
+                    await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_NAME(countdown_name))
+            else:
+                await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_NAME(countdown_name))
+        elif(command == "clean"):
+            query_get_all_timers = "SELECT * FROM {0};".format(cd_table_name)
+            query_results = self.sqlhelp.execute_read_query(query_get_all_timers) # get all the countdowns
+            if(query_results != None):
+                for (query_id, query_name, query_time, query_user_id) in query_results:
+                    if(not pendulum.from_format(query_time, expected_pend_format).is_future()): # if the countdown as passed, delete
+                        self.sqlhelp.execute_delete_query(cd_table_name, "id = {0}".format(query_id))
+        else:
+            await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_COMMAND)
 
     @unpin_all.error
     @archive_pins.error
@@ -129,9 +222,9 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
     @commands.Cog.listener(name='on_ready')
     async def nice_ready_print(self):
         """print message when client is connected"""
-        currentDT = datetime.datetime.now()
+        currentDT = pendulum.now()
         print('------')
-        print (currentDT.strftime("%Y-%m-%d %H:%M:%S"))
+        print (currentDT.format("YYYY-MM-D H:mm:ss"))
         print("Logged in as")
         print(self.bot.user.name)
         print(self.bot.user.id)

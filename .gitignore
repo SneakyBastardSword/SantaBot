@@ -1,5 +1,6 @@
 *.log
 *.cfg
+*.sqlite
 /.vscode
 .pylintrc
 /__pycache__
