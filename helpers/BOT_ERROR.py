@@ -22,7 +22,7 @@ def EXCHANGE_IN_PROGRESS_LEAVE(role):
 def HAS_NOT_SUBMITTED(usrname):
     return "ERROR: " + usrname + " has not submitted either a mailing wishlist URL or gift preferences."
 def INVALID_COUNTDOWN_NAME(cd_name):
-    return "ERROR: countdown timer {0} does not exist. Use `s!countdown list` to list all countdown timers.".format(cd_name)
+    return "ERROR: countdown timer `{0}` does not exist. Use `s!countdown list` to list all countdown timers.".format(cd_name)
 def CANNOT_CHANGE_COUNTDOWN(author_name):
     return "ERROR: you do not have permission to change that countdown timer. Please contact {0}".format(author_name)
 def NO_PERMISSION(role):

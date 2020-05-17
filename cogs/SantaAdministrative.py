@@ -96,14 +96,31 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         await ctx.send(content=end_message)
 
     @commands.command(aliases=['cd'])
-    async def countdown(self, ctx: commands.Context, command: str, *, arg=""):
+    async def countdown(self, ctx: commands.Context, command: str="", *, arg=""):
+        '''
+        Add a countdown timer
+        '''
+        if(command == ""):
+            usage_guide = "Proper usage: {0}<countdown|cd> <set|change|check|list|remove|clean> <arguments>\n".format(CONFIG.prefix)
+            usage_guide += "Use each sub-command for more information on the necessary arguments"
+            await ctx.send(usage_guide)
+            return
+
         expected_pend_format = "MM/D/YY [@] h:m A Z"
         cd_table_name = "Countdowns"
         args = arg.split(sep=" | ")
-        countdown_name = args[0]
+        countdown_name = ""
         countdown_time = ""
+        if(len(args) > 0):
+            countdown_name = args[0]
         if(len(args) > 1):
             countdown_time = args[1]
+
+        cd_hints = self.find_countdown_hints(command, countdown_name, countdown_time)
+        if(cd_hints != ""):
+            await ctx.send(cd_hints)
+            return
+        
         if(command == "set"):
             try:
                 pend_test_convert = pendulum.from_format(countdown_time, expected_pend_format) # check that the format is correct
@@ -111,7 +128,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
                     await ctx.send("{0} countdown set for {1} ({2})".format(countdown_name, countdown_time, pend_test_convert.diff_for_humans(pendulum.now())))
             except ValueError as error:
                 expected = "ERROR: inputted time does not match expected format `month/day/year @ hour:minute AM/PM UTC_offset`\n"
-                error_str = expected + " ex. `5/17/20 @ 1:00 PM -06:00`"
+                error_str = expected + "ex. `5/17/20 @ 1:00 PM -06:00`"
                 print(error_str)
                 await ctx.send(error_str)
                 return
@@ -146,10 +163,9 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             if(query_result != None):
                 (query_id, query_name, query_time, query_user_id) = query_result[0]
                 cd_pend = pendulum.from_format(query_time, expected_pend_format)
-                now_dt = pendulum.now()
-                cd_diff = cd_pend.diff(now_dt)
-                output = "Time until {0}: {1} days, {2} hours, {3} minutes".format(countdown_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
-                await ctx.send(output)
+                cd_diff = cd_pend.diff(pendulum.now())
+                time_until_str = "Time until {0}: {1} days, {2} hours, {3} minutes".format(countdown_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
+                await ctx.send(time_until_str)
             else:
                 await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_NAME(countdown_name))
         elif(command == "list"):
@@ -159,7 +175,9 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             if(query_results != None):
                 for (query_id, query_name, query_time, query_user_id) in query_results:
                     cd_pend = pendulum.from_format(query_time, expected_pend_format)
-                    output += "{0} | {1} | {2} now\n".format(query_name, query_time, cd_pend.diff_for_humans(pendulum.now()))
+                    cd_diff = cd_pend.diff(pendulum.now())
+                    time_until_str = "Time until {0}: {1} days, {2} hours, {3} minutes".format(countdown_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
+                    output += "{0} | {1} | {2}\n".format(query_name, query_time, time_until_str)
                     await ctx.send(output)
         elif(command == "remove"):
             query_get_timer_by_name = "SELECT * FROM {0} WHERE name=\'{1}\';".format(cd_table_name, countdown_name)
@@ -181,6 +199,35 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
                         self.sqlhelp.execute_delete_query(cd_table_name, "id = {0}".format(query_id))
         else:
             await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_COMMAND)
+
+    def find_countdown_hints(self, cd_command: str, cd_name: str, cd_time: str):
+        '''
+        Get argument hints based on the command input and user input - only called from SantaAdministrative.countdown()
+        '''
+        argument_help = ""
+        if(cd_command == "set"):
+            if(cd_name == ""):
+                argument_help += "Missing arguments: <timer name> | <formatted time>\n"
+                argument_help += "formatted time ex. `5/17/20 @ 1:00 PM -06:00`"
+            elif(cd_time == ""):
+                argument_help += "Missing formatted time ex. `5/17/20 @ 1:00 PM -06:00`"
+        elif(cd_command == "change"):
+            if(cd_name == ""):
+                argument_help += "Missing arguments: <timer name> | <formatted time>\n"
+                argument_help += "formatted time ex. `5/17/20 @ 1:00 PM -06:00`"
+            elif(cd_time == ""):
+                argument_help += "Missing formatted time ex. `5/17/20 @ 1:00 PM -06:00`"
+        elif(cd_command == "check"):
+            if(cd_name == ""):
+                argument_help += "Missing argument: <timer name>\n"
+        elif(cd_command == "list"):
+            pass
+        elif(cd_command == "remove"):
+            if(cd_name == ""):
+                argument_help += "Missing arguments: <timer name>"
+        elif(cd_command == "clean"):
+            pass
+        return argument_help
 
     @unpin_all.error
     @archive_pins.error
