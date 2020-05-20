@@ -18,16 +18,21 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
 
     @commands.command()
     @has_permissions(manage_roles=True, ban_members=True)
-    async def assign_role_channel(self, ctx: commands.Context, reaction_role_channel: discord.TextChannel=None):
+    async def assign_role_channel(self, ctx: commands.Context, reaction_role_channel: discord.TextChannel = None):
         '''
         Not recommended. Allows a reaction role channel to be assigned.
         The recommended route is to set the role_channel variable in the bot's config file to the channel ID you want.
         '''
         if reaction_role_channel != None:
-            self.role_channel = reaction_role_channel
-            await ctx.send(content="Reaction role channel assigned to <#{0}>".format(self.role_channel))
+            self.role_channel = reaction_role_channel # use given channel
         else:
-            await ctx.send(content=BOT_ERROR.REACTION_ROLE_UNASSIGNED)
+            if(isinstance(ctx.channel, discord.PrivateChannel)):
+                await ctx.send(content=BOT_ERROR.REACTION_ROLE_UNASSIGNED)
+            else:
+                self.role_channel = ctx.channel # use current channel
+        
+        if(self.role_channel != None):
+            await ctx.send(content="Reaction role channel assigned to {0}".format(self.role_channel.mention))
 
     @commands.command()
     @has_permissions(manage_roles=True, ban_members=True)
