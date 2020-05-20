@@ -1,8 +1,8 @@
 import pendulum
 
+import discord
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions, MissingRequiredArgument
-from discord import RawReactionActionEvent
 from discord import Game as discordGame
 
 import CONFIG
@@ -12,41 +12,34 @@ from helpers.SQLiteHelper import SQLiteHelper
 class SantaAdministrative(commands.Cog, name='Administrative'):
     def __init__(self, bot: commands.Bot, sqlitehelper: SQLiteHelper):
         self.bot = bot
-        self.role_channel = CONFIG.role_channel
+        self.role_channel = bot.get_channel(CONFIG.role_channel) if CONFIG.role_channel != -1 else None
         self.sqlhelp = sqlitehelper
         self.sqlhelp.create_table("Countdowns", "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, time TEXT NOT NULL, user_id INTEGER NOT NULL, UNIQUE(name))")
 
     @commands.command()
     @has_permissions(manage_roles=True, ban_members=True)
-    async def assign_role_channel(self, ctx: commands.Context, reaction_role_channel: int):
+    async def assign_role_channel(self, ctx: commands.Context, reaction_role_channel: discord.TextChannel=None):
         '''
         Not recommended. Allows a reaction role channel to be assigned.
         The recommended route is to set the role_channel variable in the bot's config file to the channel ID you want.
         '''
-        dest_channel = ctx.guild.get_channel(reaction_role_channel)
-        self.role_channel = reaction_role_channel
-        if dest_channel != None:
+        if reaction_role_channel != None:
+            self.role_channel = reaction_role_channel
             await ctx.send(content="Reaction role channel assigned to <#{0}>".format(self.role_channel))
         else:
             await ctx.send(content=BOT_ERROR.REACTION_ROLE_UNASSIGNED)
 
     @commands.command()
     @has_permissions(manage_roles=True, ban_members=True)
-    async def archive_pins(self, ctx: commands.Context, channel_to_archive: int, channel_to_message: int):
+    async def archive_pins(self, ctx: commands.Context, channel_to_archive: discord.TextChannel, channel_to_message: discord.TextChannel):
         '''
         Archive the pins in one channel to another channel as messages
         '''
-        src_id = channel_to_archive
-        dest_id = channel_to_message
-        src_channel = ctx.guild.get_channel(src_id)
-        dest_channel = ctx.guild.get_channel(dest_id)
 
-        start_message = "Attempting to archive pinned messages from <#{0}> to <#{1}>".format(src_id, dest_id)
+        start_message = "Attempting to archive pinned messages from {0} to {1}".format(channel_to_archive.mention, channel_to_message.mention)
         await ctx.send(content=start_message)
-        if((src_channel == None) or (dest_channel == None)):
-            await ctx.send(BOT_ERROR.INACCESSIBLE_CHANNEL)
-            return
-        pins_to_archive = await src_channel.pins()
+
+        pins_to_archive = await channel_to_archive.pins()
         pins_to_archive.reverse()
 
         for pin in pins_to_archive:
@@ -67,32 +60,30 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             if len(output_str) > 2000:
                 await ctx.send(content=BOT_ERROR.ARCHIVE_ERROR_LENGTH(pin_url))
             else:
-                await dest_channel.send(content=output_str)
+                await channel_to_message.send(content=output_str)
         
-        end_message = "Pinned message are archived in <#{0}>. If the archive messages look good, use **{1}unpin_all** to remove the pins in <#{2}>".format(dest_id, CONFIG.prefix, src_id)
+        end_message = "Pinned message are archived in {0}. If the archive messages look good, use **{1}unpin_all** to remove the pins in {2}".format(channel_to_message.mention, CONFIG.prefix, channel_to_archive.mention)
         await ctx.send(content=end_message)
 
     @commands.command()
     @has_permissions(manage_roles=True, ban_members=True)
-    async def unpin_all(self, ctx: commands.Context, channel_id_to_unpin: int = -1):
+    async def unpin_all(self, ctx: commands.Context, channel_to_unpin: discord.TextChannel = None):
         '''
         Unpins all the pinned messages in the channel. Called to clean up after archive_pins.
         Defaults to the channel in which it's called.
         '''
-        print(channel_id_to_unpin)
-        if channel_id_to_unpin == -1:
-            channel_id_to_unpin = ctx.channel.id
+        if(channel_to_unpin == None):
+            channel_to_unpin = ctx.channel()
         
-        remove_channel = ctx.guild.get_channel(channel_id_to_unpin)
-        start_message = "Attempting to remove all pinned messages from <#{0}>.".format(channel_id_to_unpin)
+        start_message = "Attempting to remove all pinned messages from {0}.".format(channel_to_unpin.mention)
         await ctx.send(content=start_message)
-        if(remove_channel == None):
+        if(channel_to_unpin == None):
             await ctx.send(BOT_ERROR.INACCESSIBLE_CHANNEL)
             return
-        pins_to_remove = await remove_channel.pins()
+        pins_to_remove = await channel_to_unpin.pins()
         for pin in pins_to_remove:
             await pin.unpin()
-        end_message = "All pinned messages removed from <#{0}>.".format(channel_id_to_unpin)
+        end_message = "All pinned messages removed from {0}.".format(channel_to_unpin.mention)
         await ctx.send(content=end_message)
 
     @commands.command(aliases=['cd'])
@@ -121,84 +112,114 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             await ctx.send(cd_hints)
             return
         
+        relay_message = ""
         if(command == "set"):
-            try:
-                pend_test_convert = pendulum.from_format(countdown_time, expected_pend_format) # check that the format is correct
-                if(self.sqlhelp.insert_records(cd_table_name, "(name, time, user_id)", ["('{0}', '{1}', {2})".format(countdown_name, countdown_time, ctx.author.id)])):
-                    await ctx.send("{0} countdown set for {1} ({2})".format(countdown_name, countdown_time, pend_test_convert.diff_for_humans(pendulum.now())))
-            except ValueError as error:
-                expected = "ERROR: inputted time does not match expected format `month/day/year @ hour:minute AM/PM UTC_offset`\n"
-                error_str = expected + "ex. `5/17/20 @ 1:00 PM -06:00`"
-                print(error_str)
-                await ctx.send(error_str)
-                return
+            relay_message = self.countdown_cmd_set(ctx, expected_pend_format, cd_table_name, countdown_name, countdown_time)
         elif(command == "change"):
-            try:
-                pend_test_convert = pendulum.from_format(countdown_time, expected_pend_format) # check that the format is correct
-            except ValueError as error:
-                expected = "ERROR: inputted time does not match expected format `month/day/year @ hour:minute AM/PM UTC_offset`\n"
-                error_str = expected + " ex. `5/17/20 @ 1:00 PM -06:00`"
-                print(error_str)
-                await ctx.send(error_str)
-                return
-            
-            query_get_timer_by_name = "SELECT * FROM {0} WHERE name=\'{1}\';".format(cd_table_name, countdown_name)
-            query_result = self.sqlhelp.execute_read_query(query_get_timer_by_name)
-            if(query_result != None):
-                if(len(query_result) > 0):
-                    (query_id, query_name, query_time, query_user_id) = query_result[0]
-                    if(ctx.author.id == query_user_id):
-                        if(self.sqlhelp.execute_update_query(cd_table_name, "time=\'{0}\'".format(countdown_time), "id={0}".format(query_id))):
-                            await ctx.send("Updated countdown for {0}".format(countdown_name))
-                        else:
-                            await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_NAME(countdown_name))
-                    else:
-                        cd_owner = ctx.guild.get_member(query_user_id)
-                        await ctx.send(BOT_ERROR.CANNOT_CHANGE_COUNTDOWN(cd_owner.name))
-            else:
-                await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_NAME(countdown_name))
+            relay_message = self.countdown_cmd_change(ctx, expected_pend_format, cd_table_name, countdown_name, countdown_time)
         elif(command == "check"):
-            query_get_timer_by_name = "SELECT * FROM {0} WHERE name=\'{1}\';".format(cd_table_name, countdown_name)
-            query_result = self.sqlhelp.execute_read_query(query_get_timer_by_name)
-            if(query_result != None):
-                (query_id, query_name, query_time, query_user_id) = query_result[0]
-                cd_pend = pendulum.from_format(query_time, expected_pend_format)
-                cd_diff = cd_pend.diff(pendulum.now())
-                time_until_str = "Time until {0}: {1} days, {2} hours, {3} minutes".format(countdown_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
-                await ctx.send(time_until_str)
-            else:
-                await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_NAME(countdown_name))
+            relay_message = self.countdown_cmd_check(expected_pend_format, cd_table_name, countdown_name)
         elif(command == "list"):
-            query_get_all_timers = "SELECT * FROM {0};".format(cd_table_name)
-            query_results = self.sqlhelp.execute_read_query(query_get_all_timers)
-            output = "Name | Time | Time Until\n"
-            if(query_results != None):
-                for (query_id, query_name, query_time, query_user_id) in query_results:
-                    cd_pend = pendulum.from_format(query_time, expected_pend_format)
-                    cd_diff = cd_pend.diff(pendulum.now())
-                    time_until_str = "Time until {0}: {1} days, {2} hours, {3} minutes".format(countdown_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
-                    output += "{0} | {1} | {2}\n".format(query_name, query_time, time_until_str)
-                    await ctx.send(output)
+            relay_message = self.countdown_cmd_list(expected_pend_format, cd_table_name, countdown_name)
         elif(command == "remove"):
-            query_get_timer_by_name = "SELECT * FROM {0} WHERE name=\'{1}\';".format(cd_table_name, countdown_name)
-            query_result = self.sqlhelp.execute_read_query(query_get_timer_by_name)
-            if(query_result != None):
-                (query_id, query_name, query_time, query_user_id) = query_result[0]
-                if(self.sqlhelp.execute_delete_query(cd_table_name, "id=query_user_id")):
-                    await ctx.send("Countdown timer removed.")
-                else:
-                    await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_NAME(countdown_name))
-            else:
-                await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_NAME(countdown_name))
+            relay_message = self.countdown_cmd_remove(expected_pend_format, cd_table_name, countdown_name)
         elif(command == "clean"):
-            query_get_all_timers = "SELECT * FROM {0};".format(cd_table_name)
-            query_results = self.sqlhelp.execute_read_query(query_get_all_timers) # get all the countdowns
-            if(query_results != None):
-                for (query_id, query_name, query_time, query_user_id) in query_results:
-                    if(not pendulum.from_format(query_time, expected_pend_format).is_future()): # if the countdown as passed, delete
-                        self.sqlhelp.execute_delete_query(cd_table_name, "id = {0}".format(query_id))
+            relay_message = self.countdown_cmd_clean(expected_pend_format, cd_table_name)
         else:
-            await ctx.send(BOT_ERROR.INVALID_COUNTDOWN_COMMAND)
+            relay_message = BOT_ERROR.INVALID_COUNTDOWN_COMMAND
+
+        await ctx.send(content=relay_message)
+
+    def countdown_cmd_set(self, ctx: commands.Context, pend_format: str, cd_table_name: str, cd_name: str, cd_time: str):
+        result_str = ""
+        try:
+            pend_test_convert = pendulum.from_format(cd_time, pend_format) # check that the format is correct
+            if(self.sqlhelp.insert_records(cd_table_name, "(name, time, user_id)", ["('{0}', '{1}', {2})".format(cd_name, cd_time, ctx.author.id)])):
+                result_str = "{0} countdown set for {1} ({2})".format(cd_name, cd_time, pend_test_convert.diff_for_humans(pendulum.now()))
+        except ValueError as error:
+            expected = "ERROR: inputted time does not match expected format `month/day/year @ hour:minute AM/PM UTC_offset`\n"
+            result_str = expected + "ex. `5/17/20 @ 1:00 PM -06:00`"
+            print(result_str)
+        finally:
+            return result_str
+    
+    def countdown_cmd_change(self, ctx: commands.Context, pend_format: str, cd_table_name: str, cd_name: str, cd_time: str):
+        result_str = ""
+        try:
+            pend_test_convert = pendulum.from_format(cd_time, pend_format) # check that the format is correct
+        except ValueError as error:
+            expected = "ERROR: inputted time does not match expected format `month/day/year @ hour:minute AM/PM UTC_offset`\n"
+            result_str = expected + " ex. `5/17/20 @ 1:00 PM -06:00`"
+            print(result_str)
+            return result_str
+        
+        query_get_timer_by_name = "SELECT * FROM {0} WHERE name=\'{1}\';".format(cd_table_name, cd_name)
+        query_result = self.sqlhelp.execute_read_query(query_get_timer_by_name)
+        if(query_result != None):
+            if(len(query_result) > 0):
+                (query_id, query_name, query_time, query_user_id) = query_result[0]
+                if(ctx.author.id == query_user_id):
+                    if(self.sqlhelp.execute_update_query(cd_table_name, "time=\'{0}\'".format(cd_time), "id={0}".format(query_id))):
+                        result_str = "Updated countdown for {0}".format(cd_name)
+                    else:
+                        result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
+                else:
+                    cd_owner = ctx.guild.get_member(query_user_id)
+                    result_str = BOT_ERROR.CANNOT_CHANGE_COUNTDOWN(cd_owner.name)
+        else:
+            result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
+
+        return result_str
+
+    def countdown_cmd_check(self, pend_format: str, cd_table_name: str, cd_name: str):
+        result_str = ""
+        query_get_timer_by_name = "SELECT * FROM {0} WHERE name=\'{1}\';".format(cd_table_name, cd_name)
+        query_result = self.sqlhelp.execute_read_query(query_get_timer_by_name)
+        if(query_result != None):
+            (query_id, query_name, query_time, query_user_id) = query_result[0]
+            cd_pend = pendulum.from_format(query_time, pend_format)
+            cd_diff = cd_pend.diff(pendulum.now())
+            result_str = "Time until {0}: {1} days, {2} hours, {3} minutes".format(cd_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
+        else:
+            result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
+        return result_str
+
+    def countdown_cmd_list(self, pend_format: str, cd_table_name: str, cd_name:str):
+        result_str = ""
+        query_get_all_timers = "SELECT * FROM {0};".format(cd_table_name)
+        query_results = self.sqlhelp.execute_read_query(query_get_all_timers)
+        result_str = "Name | Time | Time Until\n"
+        if(query_results != None):
+            for (query_id, query_name, query_time, query_user_id) in query_results:
+                cd_pend = pendulum.from_format(query_time, pend_format)
+                cd_diff = cd_pend.diff(pendulum.now())
+                time_until_str = "Time until {0}: {1} days, {2} hours, {3} minutes".format(cd_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
+                result_str += "{0} | {1} | {2}\n".format(query_name, query_time, time_until_str)
+        return result_str
+
+    def countdown_cmd_remove(self, pend_format: str, cd_table_name: str, cd_name: str):
+        result_str = ""
+        query_get_timer_by_name = "SELECT * FROM {0} WHERE name=\'{1}\';".format(cd_table_name, cd_name)
+        query_result = self.sqlhelp.execute_read_query(query_get_timer_by_name)
+        if(query_result != None):
+            (query_id, query_name, query_time, query_user_id) = query_result[0]
+            if(self.sqlhelp.execute_delete_query(cd_table_name, "id=query_user_id")):
+                result_str = "Countdown timer removed."
+            else:
+                result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
+        else:
+            result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
+        return result_str
+
+    def countdown_cmd_clean(self, pend_format: str, cd_table_name: str):
+        result_str = ""
+        query_get_all_timers = "SELECT * FROM {0};".format(cd_table_name)
+        query_results = self.sqlhelp.execute_read_query(query_get_all_timers) # get all the countdowns
+        if(query_results != None):
+            for (query_id, query_name, query_time, query_user_id) in query_results:
+                if(not pendulum.from_format(query_time, pend_format).is_future()): # if the countdown has passed, delete
+                    result_str += "{0} has passed. Deleting {1} countdown.\n".format(query_time, query_name)
+                    self.sqlhelp.execute_delete_query(cd_table_name, "id = {0}".format(query_id))
 
     def find_countdown_hints(self, cd_command: str, cd_name: str, cd_time: str):
         '''
@@ -237,13 +258,15 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             await ctx.send(content=text)
         elif isinstance(error, MissingRequiredArgument):
             await ctx.send(content=BOT_ERROR.MISSING_ARGUMENTS)
+        elif isinstance(error, commands.CommandError):
+            await ctx.send(content=error)
         else:
             await ctx.send(content=BOT_ERROR.UNDETERMINED_CONTACT_CODE_OWNER)
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     @commands.Cog.listener(name='on_raw_reaction_remove')
-    async def manage_reactions(self, payload: RawReactionActionEvent):
-        if(self.role_channel == -1):
+    async def manage_reactions(self, payload: discord.RawReactionActionEvent):
+        if(self.role_channel == None):
             print(BOT_ERROR.REACTION_ROLE_UNASSIGNED)
             return
 
