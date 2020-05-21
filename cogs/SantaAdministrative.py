@@ -97,8 +97,8 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         Add a countdown timer
         '''
         if(command == ""):
-            usage_guide = "Proper usage: {0}<countdown|cd> <set|change|check|list|remove|clean> <arguments>\n".format(CONFIG.prefix)
-            usage_guide += "Use each sub-command for more information on the necessary arguments"
+            usage_guide = "Proper usage: `{0}<countdown|cd> <set|change|check|list|remove|clean> <arguments>`\n".format(CONFIG.prefix)
+            usage_guide += "Use each sub-command (`{0}<countdown|cd> <set|change|check|list|remove|clean>`) for more information on the necessary arguments".format(CONFIG.prefix)
             await ctx.send(usage_guide)
             return
 
