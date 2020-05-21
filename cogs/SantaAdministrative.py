@@ -12,7 +12,7 @@ from helpers.SQLiteHelper import SQLiteHelper
 class SantaAdministrative(commands.Cog, name='Administrative'):
     def __init__(self, bot: commands.Bot, sqlitehelper: SQLiteHelper):
         self.bot = bot
-        self.role_channel = bot.get_channel(CONFIG.role_channel) if CONFIG.role_channel != -1 else None
+        self.role_channel = bot.get_channel(CONFIG.role_channel) if (CONFIG.role_channel != -1) else None
         self.sqlhelp = sqlitehelper
         self.sqlhelp.create_table("Countdowns", "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, time TEXT NOT NULL, user_id INTEGER NOT NULL, UNIQUE(name))")
 
@@ -298,9 +298,15 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
     @commands.Cog.listener(name='on_raw_reaction_add')
     @commands.Cog.listener(name='on_raw_reaction_remove')
     async def manage_reactions(self, payload: discord.RawReactionActionEvent):
-        if(self.role_channel == None):
-            print(BOT_ERROR.REACTION_ROLE_UNASSIGNED)
-            return
+        if(self.role_channel == None): # if no role channel assigned,
+            self.role_channel = self.bot.get_channel(CONFIG.role_channel) if (CONFIG.role_channel != -1) else None # attempt to get role channel
+            if(self.role_channel == None): # if that fails (CONFIG.role_channel == -1 or get_channel fails)
+                print(BOT_ERROR.REACTION_ROLE_UNASSIGNED) # throw failure message
+                return # end command
+            else:
+                pass # reassignment of role_channel worked
+        else:
+            pass # role_channel is assigned
 
         message_id = payload.message_id
         channel_id = payload.channel_id
@@ -308,7 +314,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         guild = self.bot.get_guild(payload.guild_id)
         user = guild.get_member(payload.user_id)
     
-        if channel_id == self.role_channel:
+        if channel_id == self.role_channel.id:
             channel = self.bot.get_channel(self.role_channel)
             message = None
             async for message in channel.history(limit=200):
