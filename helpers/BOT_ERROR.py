@@ -1,4 +1,5 @@
 ALREADY_JOINED = "ERROR: You have already joined."
+COUNTDOWN_NAME_TAKEN = "ERROR: That countdown name is already in use."
 DM_FAILED = "ERROR: DM with information failed to send. Please turn on server DMs to receive important Secret Santa-related messages."
 EXCHANGE_IN_PROGRESS = "ERROR: The gift exchange is already in progress."
 EXCHANGE_STARTED_UNJOINED = "ERROR: The exchange is already in progress. Please contact an admin about pausing the exchange before using s!join."

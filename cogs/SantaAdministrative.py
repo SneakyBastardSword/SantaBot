@@ -125,7 +125,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         elif(command == "check"):
             relay_message = self.countdown_cmd_check(expected_pend_format, cd_table_name, countdown_name)
         elif(command == "remove"):
-            relay_message = self.countdown_cmd_remove(expected_pend_format, cd_table_name, countdown_name)
+            relay_message = self.countdown_cmd_remove(ctx, expected_pend_format, cd_table_name, countdown_name)
         elif(command == "list"):
             relay_message = self.countdown_cmd_list(expected_pend_format, cd_table_name)
         elif(command == "clean"):
@@ -141,6 +141,8 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             pend_test_convert = pendulum.from_format(cd_time, pend_format) # check that the format is correct
             if(self.sqlhelp.insert_records(cd_table_name, "(name, time, user_id)", ["('{0}', '{1}', {2})".format(cd_name, cd_time, ctx.author.id)])):
                 result_str = "{0} countdown set for {1} ({2})".format(cd_name, cd_time, pend_test_convert.diff_for_humans(pendulum.now()))
+            else:
+                result_str = BOT_ERROR.COUNTDOWN_NAME_TAKEN
         except ValueError as error:
             expected = "ERROR: inputted time does not match expected format `month/day/year @ hour:minute AM/PM UTC_offset`\n"
             result_str = expected + "ex. `5/17/20 @ 1:00 PM -06:00`"
@@ -189,16 +191,20 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
         return result_str
 
-    def countdown_cmd_remove(self, pend_format: str, cd_table_name: str, cd_name: str):
+    def countdown_cmd_remove(self, ctx: commands.Context, pend_format: str, cd_table_name: str, cd_name: str):
         result_str = ""
         query_get_timer_by_name = "SELECT * FROM {0} WHERE name=\'{1}\';".format(cd_table_name, cd_name)
         query_result = self.sqlhelp.execute_read_query(query_get_timer_by_name)
         if(query_result != None):
             (query_id, query_name, query_time, query_user_id) = query_result[0]
-            if(self.sqlhelp.execute_delete_query(cd_table_name, "id=query_user_id")):
-                result_str = "Countdown timer removed."
+            if(query_user_id == ctx.author.id):
+                if(self.sqlhelp.execute_delete_query(cd_table_name, "id={0}".format(query_id))):
+                    result_str = "Countdown timer `{0}` removed.".format(query_name)
+                else:
+                    result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
             else:
-                result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
+                cd_owner = ctx.guild.get_member(query_user_id)
+                result_str = BOT_ERROR.CANNOT_CHANGE_COUNTDOWN(cd_owner.name)
         else:
             result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
         return result_str
