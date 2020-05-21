@@ -95,6 +95,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
     async def countdown(self, ctx: commands.Context, command: str="", *, arg=""):
         '''
         Add a countdown timer
+        Commands: set, change, check, list, remove, clean
         '''
         if(command == ""):
             usage_guide = "Proper usage: `{0}<countdown|cd> <set|change|check|list|remove|clean> <arguments>`\n".format(CONFIG.prefix)
