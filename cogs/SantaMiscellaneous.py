@@ -14,14 +14,11 @@ class SantaMiscellaneous(commands.Cog, name='Miscellaneous'):
         await ctx.send_message("Bot invite link: {0}".format(link))
 
     @commands.command()
-    async def echo(self, ctx: commands.Context, *content:str):
+    async def echo(self, ctx: commands.Context, *, content:str):
         '''
         [content] = echos back the [content]
         '''
-        if(len(content) == 0):
-            pass
-        else:
-            await ctx.send(' '.join(content))
+        await ctx.send(content)
 
     @commands.command()
     async def ding(self, ctx: commands.Context):

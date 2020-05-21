@@ -8,6 +8,7 @@ import CONFIG
 from cogs.SecretSanta import SecretSanta
 from cogs.SantaAdministrative import SantaAdministrative
 from cogs.SantaMiscellaneous import SantaMiscellaneous
+from helpers.SQLiteHelper import SQLiteHelper
 
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
@@ -19,6 +20,7 @@ bot = commands.Bot(command_prefix = CONFIG.prefix)
 
 def start_santa_bot():
     #initialize config file
+    config = None
     try:
         config = ConfigObj(CONFIG.cfg_path, file_error = True)
     except: 
@@ -32,8 +34,12 @@ def start_santa_bot():
         config['members'] = {}
         config.write()
 
+    # initialize the SQLite db
+    sqlitehelper = SQLiteHelper(CONFIG.sqlite_path)
+    sqlitehelper.create_connection()
+
     bot.add_cog(SecretSanta(bot, config))
-    bot.add_cog(SantaAdministrative(bot))
+    bot.add_cog(SantaAdministrative(bot, sqlitehelper))
     bot.add_cog(SantaMiscellaneous(bot))
     bot.run(CONFIG.discord_token, reconnect = True)
 
