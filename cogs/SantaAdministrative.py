@@ -104,13 +104,13 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
 
         expected_pend_format = "MM/D/YY [@] h:m A Z"
         cd_table_name = "Countdowns"
-        args = arg.split(sep=" | ")
+        args = arg.split(sep="|") # minimum separator if the user misses a space somewhere (spaces stripped in next few lines)
         countdown_name = ""
         countdown_time = ""
         if(len(args) > 0):
-            countdown_name = args[0]
+            countdown_name = args[0].strip()
         if(len(args) > 1):
-            countdown_time = args[1]
+            countdown_time = args[1].strip()
 
         cd_hints = self.find_countdown_hints(command, countdown_name, countdown_time)
         if(cd_hints != ""):
@@ -124,10 +124,10 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             relay_message = self.countdown_cmd_change(ctx, expected_pend_format, cd_table_name, countdown_name, countdown_time)
         elif(command == "check"):
             relay_message = self.countdown_cmd_check(expected_pend_format, cd_table_name, countdown_name)
-        elif(command == "list"):
-            relay_message = self.countdown_cmd_list(expected_pend_format, cd_table_name, countdown_name)
         elif(command == "remove"):
             relay_message = self.countdown_cmd_remove(expected_pend_format, cd_table_name, countdown_name)
+        elif(command == "list"):
+            relay_message = self.countdown_cmd_list(expected_pend_format, cd_table_name)
         elif(command == "clean"):
             relay_message = self.countdown_cmd_clean(expected_pend_format, cd_table_name)
         else:
@@ -189,19 +189,6 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
         return result_str
 
-    def countdown_cmd_list(self, pend_format: str, cd_table_name: str, cd_name:str):
-        result_str = ""
-        query_get_all_timers = "SELECT * FROM {0};".format(cd_table_name)
-        query_results = self.sqlhelp.execute_read_query(query_get_all_timers)
-        result_str = "Name | Time | Time Until\n"
-        if(query_results != None):
-            for (query_id, query_name, query_time, query_user_id) in query_results:
-                cd_pend = pendulum.from_format(query_time, pend_format)
-                cd_diff = cd_pend.diff(pendulum.now())
-                time_until_str = "Time until {0}: {1} days, {2} hours, {3} minutes".format(cd_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
-                result_str += "{0} | {1} | {2}\n".format(query_name, query_time, time_until_str)
-        return result_str
-
     def countdown_cmd_remove(self, pend_format: str, cd_table_name: str, cd_name: str):
         result_str = ""
         query_get_timer_by_name = "SELECT * FROM {0} WHERE name=\'{1}\';".format(cd_table_name, cd_name)
@@ -214,6 +201,19 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
                 result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
         else:
             result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
+        return result_str
+
+    def countdown_cmd_list(self, pend_format: str, cd_table_name: str):
+        result_str = ""
+        query_get_all_timers = "SELECT * FROM {0};".format(cd_table_name)
+        query_results = self.sqlhelp.execute_read_query(query_get_all_timers)
+        result_str = "Countdown Name | Time | Time Until\n"
+        if(query_results != None):
+            for (query_id, query_name, query_time, query_user_id) in query_results:
+                cd_pend = pendulum.from_format(query_time, pend_format)
+                cd_diff = cd_pend.diff(pendulum.now())
+                time_until_str = "Time until {0}: {1} days, {2} hours, {3} minutes".format(query_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
+                result_str += "{0} | {1} | {2}\n".format(query_name, query_time, time_until_str)
         return result_str
 
     def countdown_cmd_clean(self, pend_format: str, cd_table_name: str):
@@ -230,27 +230,36 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         '''
         Get argument hints based on the command input and user input - only called from SantaAdministrative.countdown()
         '''
+        missing_args_str = "Missing argument(s):"
+        missing_name_str = "<timer name>"
+        missing_time_str = "<formatted time>"
+        missing_time_hint = "Formatted time ex. `5/17/20 @ 1:00 PM -06:00`"
+        complete_command_str = "Complete command: `{0}countdown {1}".format(CONFIG.prefix, cd_command)
         argument_help = ""
         if(cd_command == "set"):
             if(cd_name == ""):
-                argument_help += "Missing arguments: <timer name> | <formatted time>\n"
-                argument_help += "formatted time ex. `5/17/20 @ 1:00 PM -06:00`"
+                argument_help = "{0} {1} | {2}\n{3}\n".format(missing_args_str, missing_name_str, missing_time_str, missing_time_hint)
+                argument_help += "{0} {1} | {2}`".format(complete_command_str, missing_name_str, missing_time_str)
             elif(cd_time == ""):
-                argument_help += "Missing formatted time ex. `5/17/20 @ 1:00 PM -06:00`"
+                argument_help = "{0} {1}\n{2}".format(missing_args_str, missing_time_str, missing_time_hint)
+                argument_help += "{0} {1} | {2}`".format(complete_command_str, cd_name, missing_time_str)
         elif(cd_command == "change"):
             if(cd_name == ""):
-                argument_help += "Missing arguments: <timer name> | <formatted time>\n"
-                argument_help += "formatted time ex. `5/17/20 @ 1:00 PM -06:00`"
+                argument_help = "{0} {1} | {2}\n{3}\n".format(missing_args_str, missing_name_str, missing_time_str, missing_time_hint)
+                argument_help += "{0} {1} | {2}`".format(complete_command_str, missing_name_str, missing_time_str)
             elif(cd_time == ""):
-                argument_help += "Missing formatted time ex. `5/17/20 @ 1:00 PM -06:00`"
+                argument_help = "{0} {1}\n{2}".format(missing_args_str, missing_time_str, missing_time_hint)
+                argument_help += "{0} {1} | {2}`".format(complete_command_str, cd_name, missing_time_str)
         elif(cd_command == "check"):
             if(cd_name == ""):
-                argument_help += "Missing argument: <timer name>\n"
-        elif(cd_command == "list"):
-            pass
+                argument_help = "{0} {1}".format(missing_args_str, missing_name_str)
+                argument_help += "{0} {1}`".format(complete_command_str, missing_name_str)
         elif(cd_command == "remove"):
             if(cd_name == ""):
-                argument_help += "Missing arguments: <timer name>"
+                argument_help = "{0} {1}".format(missing_args_str, missing_name_str)
+                argument_help += "{0} {1}`".format(complete_command_str, missing_name_str)
+        elif(cd_command == "list"):
+            pass
         elif(cd_command == "clean"):
             pass
         return argument_help
