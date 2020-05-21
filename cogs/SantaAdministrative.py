@@ -128,7 +128,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         elif(command == "remove"):
             relay_message = self.countdown_cmd_remove(ctx, expected_pend_format, cd_table_name, countdown_name)
         elif(command == "list"):
-            relay_message = self.countdown_cmd_list(expected_pend_format, cd_table_name)
+            relay_message = self.countdown_cmd_list(ctx, expected_pend_format, cd_table_name)
         elif(command == "clean"):
             relay_message = self.countdown_cmd_clean(expected_pend_format, cd_table_name)
         else:
@@ -141,8 +141,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         try:
             pend_test_convert = pendulum.from_format(cd_time, pend_format) # check that the format is correct
             if(self.sqlhelp.insert_records(cd_table_name, "(name, time, user_id)", ["('{0}', '{1}', {2})".format(cd_name, cd_time, ctx.author.id)])):
-                cd_diff = pend_test_convert.diff(pendulum.now())
-                diff_str = "{1} days, {2} hours, {3} minutes from now".format(cd_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
+                diff_str = self.find_pend_diff_str(pend_test_convert)
                 result_str = "{0} countdown set for {1} ({2})".format(cd_name, cd_time, diff_str)
             else:
                 result_str = BOT_ERROR.COUNTDOWN_NAME_TAKEN
@@ -170,7 +169,8 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
                 (query_id, query_name, query_time, query_user_id) = query_result[0]
                 if(ctx.author.id == query_user_id):
                     if(self.sqlhelp.execute_update_query(cd_table_name, "time=\'{0}\'".format(cd_time), "id={0}".format(query_id))):
-                        result_str = "Updated countdown for {0}".format(cd_name)
+                        diff_str = self.find_pend_diff_str(pend_test_convert)
+                        result_str = "Updated countdown for {0}. Now set for {1}".format(cd_name, diff_str)
                     else:
                         result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
                 else:
@@ -188,8 +188,8 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         if(query_result != None):
             (query_id, query_name, query_time, query_user_id) = query_result[0]
             cd_pend = pendulum.from_format(query_time, pend_format)
-            cd_diff = cd_pend.diff(pendulum.now())
-            result_str = "Time until {0}: {1} days, {2} hours, {3} minutes".format(cd_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
+            diff_str = self.find_pend_diff_str(cd_pend)
+            result_str = "Time until {0}: {1}".format(cd_name, diff_str)
         else:
             result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
         return result_str
@@ -212,17 +212,18 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             result_str = BOT_ERROR.INVALID_COUNTDOWN_NAME(cd_name)
         return result_str
 
-    def countdown_cmd_list(self, pend_format: str, cd_table_name: str):
+    def countdown_cmd_list(self, ctx: commands.Context, pend_format: str, cd_table_name: str):
         result_str = ""
         query_get_all_timers = "SELECT * FROM {0};".format(cd_table_name)
         query_results = self.sqlhelp.execute_read_query(query_get_all_timers)
-        result_str = "Countdown Name | Time | Time Until\n"
+        result_str = "Countdown Name | Owner | Time | Time Until\n"
         if(query_results != None):
             for (query_id, query_name, query_time, query_user_id) in query_results:
-                cd_pend = pendulum.from_format(query_time, pend_format)
-                cd_diff = cd_pend.diff(pendulum.now())
-                time_until_str = "Time until {0}: {1} days, {2} hours, {3} minutes".format(query_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
-                result_str += "{0} | {1} | {2}\n".format(query_name, query_time, time_until_str)
+                cd_pend = pendulum.from_format(query_time, pend_format) # convert to pendulum
+                diff_str = self.find_pend_diff_str(cd_pend)
+                time_until_str = "Time until {0}: {1}".format(query_name, diff_str)
+                cd_owner = ctx.guild.get_member(query_user_id).name
+                result_str += "{0} | {1} | {2} | {3}\n".format(query_name, cd_owner, query_time, time_until_str)
         return result_str
 
     def countdown_cmd_clean(self, pend_format: str, cd_table_name: str):
@@ -272,6 +273,14 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         elif(cd_command == "clean"):
             pass
         return argument_help
+
+    def find_pend_diff_str(self, pend: pendulum.DateTime):
+        cd_diff = pend.diff(pendulum.now())
+        (diff_days, diff_hours, diff_minutes) = (cd_diff.days, cd_diff.hours, cd_diff.minutes)
+        if(not pend.is_future()):
+            (diff_days, diff_hours, diff_minutes) = (-diff_days, -diff_hours, -diff_minutes)
+        diff_str = "{0} days, {1} hours, {2} minutes from now".format(diff_days, diff_hours, diff_minutes)
+        return diff_str
 
     @unpin_all.error
     @archive_pins.error
