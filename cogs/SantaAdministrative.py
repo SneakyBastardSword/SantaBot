@@ -141,7 +141,9 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         try:
             pend_test_convert = pendulum.from_format(cd_time, pend_format) # check that the format is correct
             if(self.sqlhelp.insert_records(cd_table_name, "(name, time, user_id)", ["('{0}', '{1}', {2})".format(cd_name, cd_time, ctx.author.id)])):
-                result_str = "{0} countdown set for {1} ({2})".format(cd_name, cd_time, pend_test_convert.diff_for_humans(pendulum.now()))
+                cd_diff = pend_test_convert.diff(pendulum.now())
+                diff_str = "{1} days, {2} hours, {3} minutes from now".format(cd_name, cd_diff.days, cd_diff.hours, cd_diff.minutes)
+                result_str = "{0} countdown set for {1} ({2})".format(cd_name, cd_time, diff_str)
             else:
                 result_str = BOT_ERROR.COUNTDOWN_NAME_TAKEN
         except ValueError as error:
