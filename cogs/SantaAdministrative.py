@@ -315,9 +315,8 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         user = guild.get_member(payload.user_id)
     
         if channel_id == self.role_channel.id:
-            channel = self.bot.get_channel(self.role_channel)
             message = None
-            async for message in channel.history(limit=200):
+            async for message in self.role_channel.history(limit=200):
                 if message.id == message_id:
                     break
     
