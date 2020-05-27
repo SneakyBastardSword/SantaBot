@@ -235,6 +235,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
                 if(not pendulum.from_format(query_time, pend_format).is_future()): # if the countdown has passed, delete
                     result_str += "{0} has passed. Deleting {1} countdown.\n".format(query_time, query_name)
                     self.sqlhelp.execute_delete_query(cd_table_name, "id = {0}".format(query_id))
+        return result_str
 
     def find_countdown_hints(self, cd_command: str, cd_name: str, cd_time: str):
         '''
