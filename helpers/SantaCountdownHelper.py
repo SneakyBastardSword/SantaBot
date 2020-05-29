@@ -175,7 +175,7 @@ class SantaCountdownHelper():
             elif(cd_command == "clean"):
                 output = self.__countdown_cmd_clean()
             else:
-                output = BOT_ERROR.INVALID_COUNTDOWN_COMMAND
-                output += "\nCountdown options/sub-commands: set, change, check , remove, list, clean."
+                output = BOT_ERROR.INVALID_COUNTDOWN_COMMAND(cd_command)
+                output += "\nCountdown options/sub-commands: `set`, `change`, `check` , `remove`, `list`, `clean`."
 
         return output
