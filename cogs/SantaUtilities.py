@@ -33,3 +33,18 @@ class SantaUtilities(commands.Cog, name='Utilities'):
 
         await ctx.send(content=relay_message)
         return
+
+    @commands.command()
+    async def emote(self, ctx: commands.Context, *emotes: str):
+        '''
+        Get the URL to emotes without needing to open the link.
+        '''
+        output = ""
+        for passed_emote in emotes:
+            emote_parts = passed_emote.split(sep=":")
+            emote_name = emote_parts[1]
+            emote_id = (emote_parts[2])[:-1]
+            print("Name={0}, ID={1}".format(emote_name, emote_id))
+            output = "https://cdn.discordapp.com/emojis/{0}.png\n".format(str(emote_id))
+            await ctx.send(content=output)
+        return
