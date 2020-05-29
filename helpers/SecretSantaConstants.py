@@ -1,4 +1,6 @@
-class SecretSantaConstants():
+from enum import Enum
+
+class SecretSantaConstants(Enum):
     NAME = 0
     DISCRIMINATOR = 1
     IDSTR = 2
