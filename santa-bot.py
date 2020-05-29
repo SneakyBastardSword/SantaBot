@@ -8,7 +8,9 @@ import CONFIG
 from cogs.SecretSanta import SecretSanta
 from cogs.SantaAdministrative import SantaAdministrative
 from cogs.SantaMiscellaneous import SantaMiscellaneous
+from cogs.SantaUtilities import SantaUtilities
 from helpers.SQLiteHelper import SQLiteHelper
+from helpers.SantaCountdownHelper import SantaCountdownHelper
 
 #set up discord connection debug logging
 client_log = logging.getLogger('discord')
@@ -38,9 +40,13 @@ def start_santa_bot():
     sqlitehelper = SQLiteHelper(CONFIG.sqlite_path)
     sqlitehelper.create_connection()
 
-    bot.add_cog(SecretSanta(bot, config))
-    bot.add_cog(SantaAdministrative(bot, sqlitehelper))
+    # add the cogs
+    bot.add_cog(SantaAdministrative(bot))
     bot.add_cog(SantaMiscellaneous(bot))
+    bot.add_cog(SantaUtilities(bot, sqlitehelper))
+    bot.add_cog(SecretSanta(bot, config))
+
+    # kick off the bot
     bot.run(CONFIG.discord_token, reconnect = True)
 
 if __name__ == '__main__':
