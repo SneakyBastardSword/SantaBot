@@ -5,7 +5,6 @@ EXCHANGE_IN_PROGRESS = "ERROR: The gift exchange is already in progress."
 EXCHANGE_STARTED_UNJOINED = "ERROR: The exchange is already in progress. Please contact an admin about pausing the exchange before using s!join."
 INACCESSIBLE_CHANNEL = "ERROR: the channel specified is not accessible to this bot."
 INVALID_INPUT = "ERROR: invalid input."
-INVALID_COUNTDOWN_COMMAND = "ERROR: invalid countdown option."
 MISSING_ARGUMENTS = "ERROR: command usage is missing arguments."
 NOT_ENOUGH_SIGNUPS = "ERROR: Secret santa not started. Need more people."
 NOT_PAUSED = "ERROR: Secret Santa is not paused"
@@ -22,6 +21,8 @@ def EXCHANGE_IN_PROGRESS_LEAVE(role):
     return "ERROR: The gift exchange is already in progress. Please contact <@224949031514800128> or {0} about leaving.".format(role)
 def HAS_NOT_SUBMITTED(usrname):
     return "ERROR: " + usrname + " has not submitted either a mailing wishlist URL or gift preferences."
+def INVALID_COUNTDOWN_COMMAND(attempted_command):
+    return "ERROR: invalid countdown option `{0}`.".format(attempted_command)
 def INVALID_COUNTDOWN_NAME(cd_name):
     return "ERROR: countdown timer `{0}` does not exist. Use `s!countdown list` to list all countdown timers.".format(cd_name)
 def CANNOT_CHANGE_COUNTDOWN(author_name):

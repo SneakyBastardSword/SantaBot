@@ -14,6 +14,6 @@ role_channel = -1
 ###############################################
 ###           DO NOT CHANGE BELOW           ###
 ###############################################
-cfg_path = os.path.join(pathlib.Path(__file__).parent, bot_folder, cfg_name)
-sqlite_path = os.path.join(pathlib.Path(__file__).parent, bot_folder, sqlite_name)
-dbg_path = os.path.join(pathlib.Path(__file__).parent, bot_folder, dbg_name)
+cfg_path = os.path.join(str(pathlib.Path(__file__).parent), bot_folder, cfg_name)
+sqlite_path = os.path.join(str(pathlib.Path(__file__).parent), bot_folder, sqlite_name)
+dbg_path = os.path.join(str(pathlib.Path(__file__).parent), bot_folder, dbg_name)
