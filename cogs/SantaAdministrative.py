@@ -139,6 +139,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
                                 await user.add_roles(role)
                             else:
                                 await user.remove_roles(role)
+                            return
 
     @commands.Cog.listener(name='on_ready')
     async def nice_ready_print(self):
