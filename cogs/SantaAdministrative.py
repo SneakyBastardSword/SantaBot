@@ -129,15 +129,17 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             if message != None:
                 content = message.content.split("\n")
                 for line in content:
-                    l = line.split(" ")
-                    for c, word in enumerate(l):
-                        if word == "for" and c > 0 and l[c-1] == str(emoji):
-                            role_id = l[c+1][3:-1]
+                    line_tokens = line.split(" ")
+                    line_tokens = [i for i in line_tokens if i] # remove empty strings for quality of life (doesn't break with extra spaces)
+                    for (idx, token) in enumerate(line_tokens):
+                        if token == "for" and idx > 0 and line_tokens[idx-1] == str(emoji):
+                            role_id = line_tokens[idx+1][3:-1]
                             role = guild.get_role(int(role_id))
                             if payload.event_type == "REACTION_ADD":
                                 await user.add_roles(role)
                             else:
                                 await user.remove_roles(role)
+                            return
 
     @commands.Cog.listener(name='on_ready')
     async def nice_ready_print(self):
