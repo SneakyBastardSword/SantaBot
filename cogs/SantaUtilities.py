@@ -1,5 +1,4 @@
 import urllib3
-import bs4
 
 from discord.ext import commands
 
