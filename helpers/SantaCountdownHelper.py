@@ -7,7 +7,7 @@ import CONFIG
 
 class SantaCountdownHelper():
     def __init__(self, sqlitehelper: SQLiteHelper):
-        self.pend_format = "MM/D/YY [@] h:m A Z"
+        self.pend_format = "M/D/YY [@] h:m A Z"
         self.cd_table_name = "Countdowns"
         self.sqlhelp = sqlitehelper
         self.sqlhelp.create_table(self.cd_table_name, "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, time TEXT NOT NULL, user_id INTEGER NOT NULL, UNIQUE(name))")
