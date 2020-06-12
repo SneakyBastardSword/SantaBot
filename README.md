@@ -38,9 +38,13 @@ A Discord bot to organize secret santa gift exchanges using the discord.py Pytho
 - `s!end` **(admin only)** = end Secret Santa
 
 #### Administrative Commands:
-- `s!assign_role_channel CHANNEL_ID` **(admin only)** = change the channel the bot looks at for reaction roles
-- `s!archive pins SRC_CHANNEL_ID DEST_CHANNEL_ID` **(admin only)** = archive all pins from the source channel to the destination channel as messages
+- `s!assign_role_channel CHANNEL` **(admin only)** = change the channel the bot looks at for reaction roles
+- `s!archive pins SRC_CHANNEL DEST_CHANNEL` **(admin only)** = archive all pins from the source channel to the destination channel as messages
 - `s!unpin_all [CHANNEL_ID]` **(admin only)** = unpin all messages in the indicated channel (defaults to the channel the command is called in)
+
+#### Utility Commands:
+- `s!emote [any number of emotes]` = returns the URL of the emote image/gif for convenience
+- `s![countdown|cd]` = set/check a countdown (global for the server, e.g. time until a Manga Club event) - help text is returns as needed
 
 #### Miscellaneous Commands:
 
