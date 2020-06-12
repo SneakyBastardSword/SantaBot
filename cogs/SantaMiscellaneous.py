@@ -10,8 +10,8 @@ class SantaMiscellaneous(commands.Cog, name='Miscellaneous'):
         '''
         Creates an invite for this bot
         '''
-        link = "https://discordapp.com/oauth2/authorize?client_id={0}&scope=bot&permissions=67185664".format(CONFIG.client_id)
-        await ctx.send_message("Bot invite link: {0}".format(link))
+        link = f"https://discordapp.com/oauth2/authorize?client_id={CONFIG.client_id}&scope=bot&permissions=67185664"
+        await ctx.send_message(f"Bot invite link: {link}")
 
     @commands.command()
     async def echo(self, ctx: commands.Context, *, content:str):
@@ -30,4 +30,4 @@ class SantaMiscellaneous(commands.Cog, name='Miscellaneous'):
         = Basic ping command
         '''
         latency = self.bot.latency
-        await ctx.send("{0} milliseconds".format(round(latency, 4)*1000))
+        await ctx.send(f"{str(round(latency, 4)*1000)} milliseconds")

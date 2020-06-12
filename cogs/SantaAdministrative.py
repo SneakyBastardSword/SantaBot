@@ -29,7 +29,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
                 self.role_channel = ctx.channel # use current channel
         
         if(self.role_channel != None):
-            await ctx.send(content="Reaction role channel assigned to {0}".format(self.role_channel.mention))
+            await ctx.send(content=f"Reaction role channel assigned to {reaction_role_channel.name}")
 
     @commands.command()
     @has_permissions(manage_roles=True, ban_members=True)
@@ -38,7 +38,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         Archive the pins in one channel to another channel as messages
         '''
 
-        start_message = "Attempting to archive pinned messages from {0} to {1}".format(channel_to_archive.mention, channel_to_message.mention)
+        start_message = f"Attempting to archive pinned messages from {channel_to_archive.mention} to {channel_to_message.mention}"
         await ctx.send(content=start_message)
 
         pins_to_archive = await channel_to_archive.pins()
@@ -48,7 +48,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             attachments = pin.attachments
             attachment_str = ""
             for attachment in attachments:
-                attachment_str += "{0}\n".format(attachment.url) # add link to attachments
+                attachment_str += f"{attachment.url}\n" # add link to attachments
 
             pin_author = pin.author.name
             pin_pendulum = pendulum.instance(pin.created_at)
@@ -56,15 +56,15 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
 
             pin_url = pin.jump_url
             pin_content = pin.content
-            output_str = "-**(from `{0}` on {1})** {2}\n".format(pin_author, pin_dt_str, pin_content)
-            output_str += "Message link: <{0}>\n".format(pin_url)
-            output_str += "Attachment links: {0}".format(attachment_str)
+            output_str = f"-**(from `{pin_author}` on {pin_dt_str})** {pin_content}\n"
+            output_str += f"Message link: <{pin_url}>\n"
+            output_str += f"Attachment links: {attachment_str}"
             if len(output_str) > 2000:
                 await ctx.send(content=BOT_ERROR.ARCHIVE_ERROR_LENGTH(pin_url))
             else:
                 await channel_to_message.send(content=output_str)
         
-        end_message = "Pinned message are archived in {0}. If the archive messages look good, use **{1}unpin_all** to remove the pins in {2}".format(channel_to_message.mention, CONFIG.prefix, channel_to_archive.mention)
+        end_message = f"Pinned message are archived in {channel_to_message.mention}. If the archive messages look good, use **{CONFIG.prefix}unpin_all** to remove the pins in {channel_to_archive.mention}"
         await ctx.send(content=end_message)
 
     @commands.command()
@@ -77,7 +77,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         if(channel_to_unpin == None):
             channel_to_unpin = ctx.channel()
         
-        start_message = "Attempting to remove all pinned messages from {0}.".format(channel_to_unpin.mention)
+        start_message = f"Attempting to remove all pinned messages from {channel_to_unpin.mention}."
         await ctx.send(content=start_message)
         if(channel_to_unpin == None):
             await ctx.send(BOT_ERROR.INACCESSIBLE_CHANNEL)
@@ -85,7 +85,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         pins_to_remove = await channel_to_unpin.pins()
         for pin in pins_to_remove:
             await pin.unpin()
-        end_message = "All pinned messages removed from {0}.".format(channel_to_unpin.mention)
+        end_message = f"All pinned messages removed from {channel_to_unpin.mention}."
         await ctx.send(content=end_message)
 
     @unpin_all.error

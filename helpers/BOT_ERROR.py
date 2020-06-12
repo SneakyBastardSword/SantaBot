@@ -16,16 +16,16 @@ UNJOINED = "ERROR: you have not yet joined the Secret Santa exchange. Use s!join
 UNREACHABLE = "ERROR: this shouldn't happen."
 
 def ARCHIVE_ERROR_LENGTH(msg_url):
-    return "ERROR: output message is too long pinned message {0} was not archived.".format(msg_url)
+    return f"ERROR: output message is too long pinned message {msg_url} was not archived."
 def EXCHANGE_IN_PROGRESS_LEAVE(role):
-    return "ERROR: The gift exchange is already in progress. Please contact <@224949031514800128> or {0} about leaving.".format(role)
+    return f"ERROR: The gift exchange is already in progress. Please contact <@224949031514800128> or {role} about leaving."
 def HAS_NOT_SUBMITTED(usrname):
-    return "ERROR: " + usrname + " has not submitted either a mailing wishlist URL or gift preferences."
+    return f"ERROR: {usrname} has not submitted either a mailing wishlist URL or gift preferences."
 def INVALID_COUNTDOWN_COMMAND(attempted_command):
-    return "ERROR: invalid countdown option `{0}`.".format(attempted_command)
+    return f"ERROR: invalid countdown option `{attempted_command}`."
 def INVALID_COUNTDOWN_NAME(cd_name):
-    return "ERROR: countdown timer `{0}` does not exist. Use `s!countdown list` to list all countdown timers.".format(cd_name)
+    return f"ERROR: countdown timer `{cd_name}` does not exist. Use `s!countdown list` to list all countdown timers."
 def CANNOT_CHANGE_COUNTDOWN(author_name):
-    return "ERROR: you do not have permission to change that countdown timer. Please contact {0}".format(author_name)
+    return f"ERROR: you do not have permission to change that countdown timer. Please contact {author_name}"
 def NO_PERMISSION(role):
-    return "ERROR: you do not have permissions to do this.\nYou need the {0} role for that.".format(role)
+    return f"ERROR: you do not have permissions to do this.\nYou need the {role} role for that."

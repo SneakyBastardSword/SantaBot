@@ -12,7 +12,7 @@ class SQLiteHelper():
                 self.__connection = sqlite3.connect(self.__connection_path)
             print("Connection to SQLite DB successful")
         except Error as e:
-            print("The error '{0}' occurred".format(e))
+            print(f"The error '{e}' occurred")
 
     def execute_query(self, query):
         if(self.__connection == None):
@@ -25,7 +25,7 @@ class SQLiteHelper():
             print("Query executed successfully")
             return True
         except Error as e:
-            print("The error '{0}' occurred".format(e.with_traceback))
+            print(f"The error '{e.with_traceback}' occurred")
             return False
 
     def create_table(self, table_name: str, table_format: str):
@@ -58,9 +58,9 @@ class SQLiteHelper():
 
         );
         '''
-        table_query = """
-        CREATE TABLE IF NOT EXISTS {0} {1};
-        """.format(table_name, table_format)
+        table_query = f"""
+        CREATE TABLE IF NOT EXISTS {table_name} {table_format};
+        """
         return self.execute_query(table_query)
 
 
@@ -85,12 +85,12 @@ class SQLiteHelper():
             ('Leila', 32, 'female', 'France');
         '''
         value_str = ",".join(values)
-        table_query = """
+        table_query = f"""
         INSERT INTO
-            {0} {1}
+            {table_name} {column_list}
         VALUES
-            {2};
-        """.format(table_name, column_list, value_str)
+            {value_str};
+        """
 
         return self.execute_query(table_query)
 
@@ -102,19 +102,19 @@ class SQLiteHelper():
             result = cursor.fetchall()
             return result
         except Error as e:
-            print("Problem reading - the error '{0}' occurred".format(e))
+            print(f"Problem reading - the error '{e}' occurred")
 
     def execute_delete_query(self, table_name: str, conditions: str):
-        delete_query = "DELETE FROM {0} WHERE {1}".format(table_name, conditions)
+        delete_query = f"DELETE FROM {table_name} WHERE {conditions}"
         return self.execute_query(delete_query)
 
     def execute_update_query(self, table_name: str, new_column_data: str, conditions: str):
-        update_query = """
+        update_query = f"""
         UPDATE
-            {0}
+            {table_name}
         SET
-            {1}
+            {new_column_data}
         WHERE
-            {2}
-        """.format(table_name, new_column_data, conditions)
+            {conditions}
+        """
         return self.execute_query(update_query)

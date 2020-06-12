@@ -54,7 +54,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                 # add the input to the value in the user's class instance
                 user.wishlisturl = new_wishlist
                 try:
-                    await currAuthor.send("New wishlist URL: {0}".format(new_wishlist))
+                    await currAuthor.send(f"New wishlist URL: {new_wishlist}")
                 except:
                     await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
             except:
@@ -75,7 +75,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
         if self.SecretSantaHelper.user_is_participant(ctx.author.id, self.usr_list):
             (index, user) = self.SecretSantaHelper.get_participant_object(ctx.author.id, self.usr_list)
             try:
-                await currAuthor.send("Current wishlist destination(s): {0}".format(user.wishlisturl))
+                await currAuthor.send(f"Current wishlist destination(s): {user.wishlisturl}")
             except:
                 await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
         else:
@@ -106,7 +106,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                 #add the input to the value in the user's class instance
                 user.preferences = new_prefs
                 try:
-                    await currAuthor.send("New preferences: {0}".format(new_prefs))
+                    await currAuthor.send(f"New preferences: {new_prefs}")
                 except:
                     await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
             except:
@@ -127,7 +127,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
         if self.SecretSantaHelper.user_is_participant(ctx.author.id, self.usr_list):
             (index, user) = self.SecretSantaHelper.get_participant_object(ctx.author.id, self.usr_list)
             try:
-                await currAuthor.send("Current preference(s): {0}".format(user.preferences))
+                await currAuthor.send(f"Current preference(s): {user.preferences}")
             except:
                 await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
         else:
@@ -179,7 +179,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                     try:
                         await this_user.send(santa_message)
                     except:
-                        await currAuthor.send("Failed to send message to {0}#{1} about their partner. Harass them to turn on server DMs for Secret Santa stuff.".format(this_user.name, this_user.discriminator))
+                        await currAuthor.send(f"Failed to send message to {this_user.name}#{this_user.discriminator} about their partner. Harass them to turn on server DMs for Secret Santa stuff.")
                 
                 # mark the exchange as in-progress
                 self.exchange_started = True
@@ -220,7 +220,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                         await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
             list_changed = self.SecretSantaHelper.usr_list_changed_during_pause(self.usr_list, self.user_left_during_pause)
             if(list_changed):
-                ctx.send("User list changed during the pause. Partners must be picked again with `{0}start`.".format(CONFIG.prefix))
+                ctx.send(f"User list changed during the pause. Partners must be picked again with `{CONFIG.prefix}start`.")
             else:
                 self.exchange_started = True
                 is_paused = False
@@ -268,11 +268,11 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             self.config.write()
 
             # prompt user about inputting info
-            await ctx.send(currAuthor.mention + " has been added to the {0} Secret Santa exchange!".format(str(ctx.guild)) + "\nMore instructions have been DMd to you.")
+            await ctx.send(currAuthor.mention + f" has been added to the {str(ctx.guild)} Secret Santa exchange!" + "\nMore instructions have been DMd to you.")
             try:
-                userPrompt = """Welcome to the __{0}__ Secret Santa! Please input your wishlist URL and preferences **(by DMing this bot)** so your Secret Santa can send you something.\n
-                    Use `{1}setwishlisturl [wishlist urls separated by a space ]` to set your wishlist URL (you may also add your mailing address).\n
-                    Use `{2}setprefs [preferences separated by a space ]` to set gift preferences for your Secret Santa. Put N/A if none.""".format(str(ctx.guild), CONFIG.prefix, CONFIG.prefix)
+                userPrompt = f"""Welcome to the __{str(ctx.guild)}__ Secret Santa! Please input your wishlist URL and preferences **(by DMing this bot)** so your Secret Santa can send you something.\n
+                    Use `{CONFIG.prefix}setwishlisturl [wishlist urls separated by a space ]` to set your wishlist URL (you may also add your mailing address).\n
+                    Use `{CONFIG.prefix}setprefs [preferences separated by a space ]` to set gift preferences for your Secret Santa. Put N/A if none."""
                 await currAuthor.send(userPrompt)
             except:
                 ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
@@ -295,7 +295,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             self.config.write()
             if(self.is_paused):
                 self.user_left_during_pause = True
-            await ctx.send(currAuthor.mention + " has left the {0} Secret Santa exchange".format(str(ctx.guild)))
+            await ctx.send(currAuthor.mention + f" has left the {str(ctx.guild)} Secret Santa exchange")
         else:
             await ctx.send(BOT_ERROR.UNJOINED)
         return
@@ -326,13 +326,13 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
         '''
         if(ctx.author.top_role == ctx.guild.roles[-1]):
             if(self.highest_key == 0):
-                await ctx.send("Nobody has signed up for the secret Santa exchange yet. Use `{0}join` to enter the exchange.".format(CONFIG.prefix))
+                await ctx.send(f"Nobody has signed up for the secret Santa exchange yet. Use `{CONFIG.prefix}join` to enter the exchange.")
             else:
                 msg = '```The following people are signed up for the Secret Santa exchange:\n'
                 for user in self.usr_list:
                     this_user = ctx.guild.get_member(user.idstr)
                     msg = msg + str(user.name) + "#" + str(user.discriminator) + "\n"
-                msg = msg + "\nUse `{0}join` to enter the exchange.```".format(CONFIG.prefix)
+                msg = msg + f"\nUse `{CONFIG.prefix}join` to enter the exchange.```"
         else:
             await ctx.send(BOT_ERROR.NO_PERMISSION(ctx.guild.roles[-1]))
         return
@@ -343,11 +343,11 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
         Find out how many people have joined the Secret Santa
         '''
         if self.highest_key == 0:
-            await ctx.send("Nobody has signed up for the Secret Santa exchange yet. Use `{0}join` to enter the exchange.".format(CONFIG.prefix))
+            await ctx.send(f"Nobody has signed up for the Secret Santa exchange yet. Use `{CONFIG.prefix}join` to enter the exchange.")
         elif self.highest_key == 1:
-            await ctx.send("1 person has signed up for the Secret Santa exchange. Use `{0}join` to enter the exchange.".format(CONFIG.prefix))
+            await ctx.send(f"1 person has signed up for the Secret Santa exchange. Use `{CONFIG.prefix}join` to enter the exchange.")
         else:
-            await ctx.send("{0} people have joined the Secret Santa exchange so far. Use `{1}join` to enter the exchange.".format(str(len(self.usr_list)), CONFIG.prefix))
+            await ctx.send(f"{str(len(self.usr_list))} people have joined the Secret Santa exchange so far. Use `{CONFIG.prefix}join` to enter the exchange.")
         return
 
     @commands.command()

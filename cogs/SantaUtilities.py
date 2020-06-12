@@ -18,8 +18,8 @@ class SantaUtilities(commands.Cog, name='Utilities'):
         Commands: set, change, check, list, remove, clean
         '''
         if(command == ""):
-            usage_guide = "Proper usage: `{0}<countdown|cd> <set|change|check|list|remove|clean> <arguments>`\n".format(CONFIG.prefix)
-            usage_guide += "Use each sub-command (`{0}<countdown|cd> <set|change|check|list|remove|clean>`) for more information on the necessary arguments".format(CONFIG.prefix)
+            usage_guide = f"Proper usage: `{CONFIG.prefix}<countdown|cd> <set|change|check|list|remove|clean> <arguments>`\n"
+            usage_guide += f"Use each sub-command (`{CONFIG.prefix}<countdown|cd> <set|change|check|list|remove|clean>`) for more information on the necessary arguments"
             await ctx.send(usage_guide)
             return
 
@@ -46,7 +46,7 @@ class SantaUtilities(commands.Cog, name='Utilities'):
             # Create the base URL of the emote
             emote_parts = passed_emote.split(sep=":")
             (emote_name, emote_id) = (emote_parts[1], (emote_parts[2])[:-1])
-            base_url = "https://cdn.discordapp.com/emojis/{0}".format(str(emote_id))
+            base_url = f"https://cdn.discordapp.com/emojis/{str(emote_id)}"
 
             # http request to find the appropriate extension
             response = http.urlopen('GET', url=base_url)
@@ -55,7 +55,7 @@ class SantaUtilities(commands.Cog, name='Utilities'):
             http.clear()
 
             # output
-            emote_url = "{0}.{1}".format(base_url, img_ext)
-            print("Name={0}, ID={1}, IMG_TYPE={2}".format(emote_name, emote_id, img_type))
+            emote_url = f"{base_url}.{img_ext}"
+            print(f"Name={emote_name}, ID={emote_id}, IMG_TYPE={img_type}")
             await ctx.send(content=emote_url)
         return
