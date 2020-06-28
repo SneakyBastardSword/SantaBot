@@ -14,9 +14,22 @@ class SQLiteHelper():
         except Error as e:
             print(f"The error '{e}' occurred")
 
+    def if_table_exists(self, table_name):
+        if(self.__connection == None):
+            print("Connection has not been created")
+            return False
+
+        cursor = self.__connection.cursor()
+        cursor.execute(f''' SELECT count(name) FROM sqlite_master WHERE type='table' AND name='{table_name}' ''')
+        #if the count is 1, then table exists
+        if cursor.fetchone()[0]==1 : 
+            return True
+        return False
+
     def execute_query(self, query):
         if(self.__connection == None):
             print("Connection has not been created")
+            return False
         
         cursor = self.__connection.cursor()
         try:
