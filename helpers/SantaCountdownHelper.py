@@ -111,7 +111,7 @@ class SantaCountdownHelper():
         if(query_results != None):
             for (query_id, query_name, query_time, query_user_id) in query_results:
                 if(not pendulum.from_format(query_time, self.pend_format).is_future()): # if the countdown has passed, delete
-                    result_str += "{query_time} has passed. Deleting {query_name} countdown.\n"
+                    result_str += f"{query_time} has passed. Deleting {query_name} countdown.\n"
                     self.sqlhelp.execute_delete_query(self.__get_cd_table_name(ctx.guild.id), f"id = {query_id}")
         return result_str
 
