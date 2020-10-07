@@ -1,5 +1,4 @@
 discord.py
 configobj
-# keep back due to pendulum 2.0.4+ failing to build on Windows (2.1.0 installs on Linux) - see https://github.com/sdispater/pendulum/issues/457
-pendulum==2.1.0
+pendulum
 urllib3
