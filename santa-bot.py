@@ -1,5 +1,6 @@
 import logging
 import os
+from traceback import print_exc
 
 from configobj import ConfigObj
 from discord.ext import commands
@@ -17,10 +18,12 @@ def start_santa_bot():
     config = None
     try:
         config = ConfigObj(CONFIG.cfg_path, file_error = True)
-    except: 
+    except Exception as e:
+        print_exc(e)
         try:
             os.mkdir(CONFIG.bot_folder)
-        except:
+        except Exception as e:
+            print_exc(e)
             pass
         config = ConfigObj()
         config.filename = CONFIG.cfg_path
