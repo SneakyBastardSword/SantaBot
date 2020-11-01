@@ -284,7 +284,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             try:
                 userPrompt = f"""Welcome to the __{str(ctx.guild)}__ Secret Santa! Please input your wishlist URL and preferences **(by DMing this bot)** so your Secret Santa can send you something.\n
                     Use `{CONFIG.prefix}setwishlisturl [wishlist urls separated by a space (e.g. \"{CONFIG.prefix}setwishlisturl abc.com xyz.com\")]` to set your wishlist URL (you may also add your mailing address).\n
-                    Use `{CONFIG.prefix}setprefs [preferences separated by a space (e.g. \"{CONFIG.prefix}setprefs dog "stuffed rabbit" cat"\")]` to set gift preferences for your Secret Santa. Put N/A if none."""
+                    Use `{CONFIG.prefix}setprefs [preferences separated by a space (e.g. \"{CONFIG.prefix}setprefs dog "stuffed rabbit" cat\")]` to set gift preferences for your Secret Santa. Put N/A if none."""
                 await currAuthor.send(userPrompt)
             except Exception as e:
                 print_exc(e)
