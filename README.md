@@ -12,8 +12,10 @@ A Discord bot to organize secret santa gift exchanges using the discord.py Pytho
 ### Steps to run:
 1. Run `pip3 install -r requirements.txt`
 2. Once all of the dependencies are installed, create a Discord bot token following the instructions [here](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token).
-3. Replace variables in CONFIG.py
-  3a.  Replace `discord_token` and `client_id` in CONFIG.py with your bot token - these two are REQUIRED for all functionality and for the bot to even start
+3. Replace variables in CONFIG.py (I have provided CONFIG.py.example as an example)
+
+  3a. Replace `discord_token` and `client_id` in CONFIG.py with your bot token - these two are REQUIRED for all functionality and for the bot to even start
+  
   3b. Replace other variables as you want
       - `role_channel` is REQUIRED for using reaction roles - but will throw an error if unassigned
       - `bot_folder` this is where the .cfg for the Secret Santa participants, the debug log, and the SQLite database files are stored
