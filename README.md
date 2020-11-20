@@ -6,7 +6,7 @@ A Discord bot to organize secret santa gift exchanges using the discord.py Pytho
 - If you don't want the admin-type stuff, just go in and comment out the add_cog(SantaAdministrative(...)) line
 
 ### Requirements
-- python 3.5.3 or later (can be installed [here](https://www.python.org/downloads/))
+- python 3.6 or later (can be installed [here](https://www.python.org/downloads/))
 - pip3
 
 ### Steps to run:
