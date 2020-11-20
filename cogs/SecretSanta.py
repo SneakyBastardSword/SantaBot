@@ -31,7 +31,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             self.usr_list.append(usr)
             self.highest_key = int(key)
 
-    @commands.command(aliases=["setwlurl"])
+    @commands.command(aliases=["swlurl"])
     async def setwishlisturl(self, ctx: commands.Context, *destination:str):
         '''
         [Any number of wishlist URLs or mailing addresses] = set wishlist destinations or mailing address. Surround mailing address with quotation marks and separate EACH wishlist destination with a space (eg. amazon.com "P. Sherman 42 Wallaby Way, Sydney" http://rightstufanime.com/).
@@ -87,7 +87,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             await ctx.send(BOT_ERROR.UNJOINED)
         return
 
-    @commands.command(aliases=["sp"])
+    @commands.command(aliases=["sprefs"])
     async def setprefs(self, ctx: commands.Context, *preferences:str):
         '''
         Set new preferences
@@ -126,7 +126,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             await ctx.send(BOT_ERROR.UNJOINED)
         return
 
-    @commands.command(aliases=["gp"])
+    @commands.command(aliases=["gprefs"])
     async def getprefs(self, ctx: commands.Context):
         '''
         Get current preferences
