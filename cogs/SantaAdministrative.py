@@ -36,6 +36,8 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
     async def archive_pins(self, ctx: commands.Context, channel_to_archive: discord.TextChannel, channel_to_message: discord.TextChannel):
         '''
         Archive the pins in one channel to another channel as messages
+
+        ex. `s!archive_pins #general #archive`
         '''
 
         start_message = f"Attempting to archive pinned messages from {channel_to_archive.mention} to {channel_to_message.mention}"

@@ -31,9 +31,9 @@ A Discord bot to organize secret santa gift exchanges using the discord.py Pytho
 
 - `s!join` = join the Secret Santa
 - `s!leave` = leave the Secret Santa
-- `s![setwishlisturl|swlurl] [wishlist URL]` = set your wishlist URL (replaces current). You may also add your mailing address. __This field required__.
+- `s![setwishlisturl|swlurl] [wishlist URL]` = set your wishlist URL (replaces current). You may also add your mailing address. __wishlist URL is required__.
 - `s![getwishlisturl|gwlurl]` = bot will PM you your current wishlist
-- `s![setprefs|sprefs] [specific preferences, the things you like]` = set preferences (replaces current). Put N/A if none. __This field required__.
+- `s![setprefs|sprefs] [specific preferences, the things you like]` = set preferences (replaces current). Put N/A if none. __preferences are required__.
 - `s![getprefs|gprefs]` = bot will PM you your current preferences
 - `s![listparticipants|lp]` **(admin only)** = get the current participants
 - `s![totalparticipants|tp]` = get the total number of participants
@@ -45,7 +45,7 @@ A Discord bot to organize secret santa gift exchanges using the discord.py Pytho
 
 #### Administrative Commands:
 - `s!assign_role_channel CHANNEL` **(admin only)** = change the channel the bot looks at for reaction roles
-- `s!archive_pins SRC_CHANNEL DEST_CHANNEL` **(admin only)** = archive all pins from the source channel to the destination channel as messages (ex. s!archive_pins #general #archive)
+- `s!archive_pins SRC_CHANNEL DEST_CHANNEL` **(admin only)** = archive all pins from the source channel to the destination channel as messages (ex. `s!archive_pins #general #archive`)
 - `s!unpin_all [CHANNEL_ID]` **(admin only)** = unpin all messages in the indicated channel (defaults to the channel the command is called in)
 
 #### Utility Commands:
