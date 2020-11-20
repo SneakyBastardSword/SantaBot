@@ -31,7 +31,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             self.usr_list.append(usr)
             self.highest_key = int(key)
 
-    @commands.command()
+    @commands.command(aliases=["setwlurl"])
     async def setwishlisturl(self, ctx: commands.Context, *destination:str):
         '''
         [Any number of wishlist URLs or mailing addresses] = set wishlist destinations or mailing address. Surround mailing address with quotation marks and separate EACH wishlist destination with a space (eg. amazon.com "P. Sherman 42 Wallaby Way, Sydney" http://rightstufanime.com/).
@@ -70,7 +70,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             await ctx.send(BOT_ERROR.UNJOINED)
         return
 
-    @commands.command()
+    @commands.command(aliases=["gwlurl"])
     async def getwishlisturl(self, ctx: commands.Context):
         '''
         Get current wishlist
@@ -87,7 +87,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             await ctx.send(BOT_ERROR.UNJOINED)
         return
 
-    @commands.command()
+    @commands.command(aliases=["sp"])
     async def setprefs(self, ctx: commands.Context, *preferences:str):
         '''
         Set new preferences
@@ -126,7 +126,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             await ctx.send(BOT_ERROR.UNJOINED)
         return
 
-    @commands.command()
+    @commands.command(aliases=["gp"])
     async def getprefs(self, ctx: commands.Context):
         '''
         Get current preferences
@@ -332,25 +332,26 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             await ctx.send(BOT_ERROR.NO_PERMISSION(ctx.guild.roles[-1]))
         return
 
-    @commands.command()
+    @commands.command(aliases=["lp"])
     async def listparticipants(self, ctx: commands.Context):
         '''
         List Secret Santa participants
         '''
         if(ctx.author.top_role == ctx.guild.roles[-1]):
             if(self.highest_key == 0):
-                await ctx.send(f"Nobody has signed up for the secret Santa exchange yet. Use `{CONFIG.prefix}join` to enter the exchange.")
+                await ctx.send(f"```Nobody has signed up for the secret Santa exchange yet. Use `{CONFIG.prefix}join` to enter the exchange.```")
             else:
                 msg = '```The following people are signed up for the Secret Santa exchange:\n'
                 for user in self.usr_list:
                     this_user = ctx.guild.get_member(user.idstr)
                     msg = msg + str(user.name) + "#" + str(user.discriminator) + "\n"
                 msg = msg + f"\nUse `{CONFIG.prefix}join` to enter the exchange.```"
+                await ctx.send(msg)
         else:
             await ctx.send(BOT_ERROR.NO_PERMISSION(ctx.guild.roles[-1]))
         return
 
-    @commands.command()
+    @commands.command(aliases=["tp"])
     async def totalparticipants(self, ctx: commands.Context):
         '''
         Find out how many people have joined the Secret Santa
