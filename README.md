@@ -15,16 +15,18 @@ A Discord bot to organize secret santa gift exchanges using the discord.py Pytho
 3. Replace variables in CONFIG.py (I have provided CONFIG.py.example as an example)
 
    3a. Replace `discord_token` and `client_id` in CONFIG.py with your bot token - these two are REQUIRED for all functionality and for the bot to even start
-   
+
    3b. Replace other variables as you want
-   
-       - `role_channel` is REQUIRED for using reaction roles - but will throw an error if unassigned
-       
-       - `bot_folder` this is where the .cfg for the Secret Santa participants, the debug log, and the SQLite database files are stored
-       
+
+       - `role_channel` is REQUIRED for using reaction roles - will print an error in the console if left as -1
+
        - `prefix` change it to whatever you want otherwise commands default to YOUR_PREFIX_HEREjoin, YOUR_PREFIX_HEREunpin_all, etc.
-       
+
+       - `bot_folder` this is where the .cfg for the Secret Santa participants, the debug log, and the SQLite database files are stored
+
        - `cfg_name`, `dbg_name`, `sqlite_name` don't *need* to do anything here unless you want to
+
+       - `min_budget`, `max_budget` are used for the Secret Santa functionality and can be changed depending on what your Discord server agrees upon.
 4. Run `python3 santa-bot.py`
 
 ### Add a Systemd Service for SantaBot to Autostart on Reboot
@@ -67,6 +69,12 @@ To keep SantaBot running even after restart you can create a service.
 6. When done using the bot for the season, disable using
 
 - sudo systemctl disable santabot.service
+
+#### FAQ:
+1. What if my wishlist URL or preference is multiple words?
+   - The bot supports that, just surround it with quotation marks. (e.g. `s!setprefs dog "stuffed rabbit" cat`)
+2. Does the wishlist *have* to be a URL? What if one of the Secret Santas prefers sending handmade gifts?
+   - No that field is really about having a destination for users to send their gifts. Feel free to use addresses instead of URLs if you so desire. Keep in mind that addresses will need to follow question #1 of this FAQ (e.g. `s!setwishlisturl amazonurl/123 "P Sherman 42 Wallaby Way" rightstufanime`)
 
 #### Secret Santa Commands:
 

@@ -1,6 +1,7 @@
 from enum import IntEnum
 
 class SecretSantaConstants(IntEnum):
+    """Constants for indexing into each Secret Santa participant's field when parsing the .cfg file"""
     NAME = 0
     DISCRIMINATOR = 1
     IDSTR = 2

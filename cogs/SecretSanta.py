@@ -34,7 +34,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
     @commands.command(aliases=["swlurl"])
     async def setwishlisturl(self, ctx: commands.Context, *destination:str):
         '''
-        [Any number of wishlist URLs or mailing addresses] = set wishlist destinations or mailing address. Surround mailing address with quotation marks and separate EACH wishlist destination with a space (eg. amazon.com "P. Sherman 42 Wallaby Way, Sydney" http://rightstufanime.com/).
+        [Any number of wishlist URLs or mailing addresses] = set wishlist destinations or mailing address. Surround mailing address with quotation marks and separate EACH wishlist destination with a space (eg. amazonurl/123 "Sesame Street" http://rightstufanime.com/).
         '''
         currAuthor = ctx.author
         if self.SecretSantaHelper.user_is_participant(currAuthor.id, self.usr_list):
@@ -55,7 +55,13 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                 # add the input to the value in the user's class instance
                 user.wishlisturl = new_wishlist
                 try:
-                    await currAuthor.send(f"New wishlist URL: {new_wishlist}")
+                    await currAuthor.send(f"New wishlist URL(s): {new_wishlist}")
+                    if(not user.pref_is_set()):
+                        userPrompt = f"Great! Now please specify what your preferences for your wishlist might be. Use `{CONFIG.prefix}setprefs [preferences separated by a space]` (e.g. `{CONFIG.prefix}setprefs hippopotamus \"stuffed rabbit\" dog`). Defaults to N/A if not entered."
+                        await currAuthor.send(userPrompt)
+                    if(user.wishlisturl_is_set() and user.pref_is_set()):
+                        signup_complete_msg = f"Congrats, you're now officially enrolled in the Secret Santa! You may change your wishlist URL or preferences with `{CONFIG.prefix}!setwishlisturl` or `{CONFIG.prefix}!setprefs` any time before the admin begins the Secret Santa."
+                        await currAuthor.send(signup_complete_msg)
                 except Exception as e:
                     print_exc(e)
                     await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
@@ -112,6 +118,12 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                 user.preferences = new_prefs
                 try:
                     await currAuthor.send(f"New preferences: {new_prefs}")
+                    if(not user.wishlisturl_is_set()):
+                        userPrompt = f"Great! Now please specify what your wishlist URL or mailing address. Use `{CONFIG.prefix}setwishlisturl [wishlist urls separated by a space]` (e.g. `{CONFIG.prefix}setwishlisturl amazonurl/123 \"sesame street\"`) to set your wishlist URL."
+                        await currAuthor.send(userPrompt)
+                    if(user.wishlisturl_is_set() and user.pref_is_set()):
+                        signup_complete_msg = f"Congrats, you're now officially enrolled in the Secret Santa! You may change your wishlist URL or preferences with `{CONFIG.prefix}!setwishlisturl` or `{CONFIG.prefix}!setprefs` any time before the admin begins the Secret Santa."
+                        await currAuthor.send(signup_complete_msg)
                 except Exception as e:
                     print_exc(e)
                     await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
@@ -181,9 +193,9 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                     self.config.write()
                     # tell participants who their partner is
                     this_user = ctx.guild.get_member(int(user.idstr))
-                    message_pt1 = str(partner.name) + "#" + str(partner.discriminator) + " is your Secret Santa partner! Mosey on over to their wishlist URL(s) and pick out a gift! Remember to keep it in the $10-20 range.\n"
-                    message_pt2 = "Their wishlist(s) can be found here: " + partner.wishlisturl + "\n"
-                    message_pt3 = "And their gift preferences can be found here: " + partner.preferences + "\n"
+                    message_pt1 = f"{str(partner.name)}#{str(partner.discriminator)} is your Secret Santa partner! Mosey on over to their wishlist URL(s) and pick out a gift! Remember to keep it in the ${CONFIG.min_budget}-{CONFIG.max_budget} range.\n"
+                    message_pt2 = f"Their wishlist(s) can be found here: {partner.wishlisturl}\n"
+                    message_pt3 = f"And their gift preferences can be found here: {partner.preferences}\n"
                     message_pt4 = "If you have trouble accessing your partner's wishlist, please contact an admin to get in touch with your partner. This is a *secret* santa, after all!"
                     santa_message = message_pt1 + message_pt2 + message_pt3 + message_pt4
                     try:
@@ -276,15 +288,15 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             self.highest_key = self.highest_key + 1
             self.usr_list.append(SecretSantaParticipant(currAuthor.name, currAuthor.discriminator, currAuthor.id, self.highest_key))
             # write details of the class instance to config and increment total_users
-            self.config['members'][str(self.highest_key)] = [currAuthor.name, currAuthor.discriminator, currAuthor.id, self.highest_key, "", "", ""]
+            self.config['members'][str(self.highest_key)] = [currAuthor.name, currAuthor.discriminator, currAuthor.id, self.highest_key, "", "N/A", ""]
             self.config.write()
 
             # prompt user about inputting info
             await ctx.send(currAuthor.mention + f" has been added to the {str(ctx.guild)} Secret Santa exchange!" + "\nMore instructions have been DMd to you.")
             try:
-                userPrompt = f"""Welcome to the __{str(ctx.guild)}__ Secret Santa! Please input your wishlist URL and preferences **(by DMing this bot)** so your Secret Santa can send you something.\n
-                    Use `{CONFIG.prefix}setwishlisturl [wishlist urls separated by a space (e.g. \"{CONFIG.prefix}setwishlisturl abc.com xyz.com\")]` to set your wishlist URL (you may also add your mailing address).\n
-                    Use `{CONFIG.prefix}setprefs [preferences separated by a space (e.g. \"{CONFIG.prefix}setprefs dog "stuffed rabbit" cat\")]` to set gift preferences for your Secret Santa. Put N/A if none."""
+                userPrompt = f"Welcome to the __{str(ctx.guild)}__ Secret Santa! To complete your enrollment you'll need to input your wishlist URL and preferences (by DMing this bot) so your Secret Santa can send you something\n"
+                await currAuthor.send(userPrompt)
+                userPrompt = f".\nFirst we need your wishlist (or the destination for sending gifts). Please use `{CONFIG.prefix}setwishlisturl [wishlist urls separated by a space]` (e.g. `{CONFIG.prefix}setwishlisturl amazonurl/123 \"sesame street\"`) to set your wishlist URL (you may also add your mailing address)."
                 await currAuthor.send(userPrompt)
             except Exception as e:
                 print_exc(e)
