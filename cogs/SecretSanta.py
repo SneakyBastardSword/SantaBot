@@ -60,7 +60,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                         userPrompt = f"Great! Now please specify what your preferences for your wishlist might be. Use `{CONFIG.prefix}setprefs [preferences separated by a space]` (e.g. `{CONFIG.prefix}setprefs hippopotamus \"stuffed rabbit\" dog`). Defaults to N/A if not entered."
                         await currAuthor.send(userPrompt)
                     if(user.wishlisturl_is_set() and user.pref_is_set()):
-                        signup_complete_msg = f"Congrats, you're now officially enrolled in the Secret Santa! You may change your wishlist URL or preferences with `{CONFIG.prefix}!setwishlisturl` or `{CONFIG.prefix}!setprefs` any time before the admin begins the Secret Santa."
+                        signup_complete_msg = f"Congrats, you're now officially enrolled in the Secret Santa! You may change your wishlist URL or preferences with `{CONFIG.prefix}setwishlisturl` or `{CONFIG.prefix}setprefs` any time before the admin begins the Secret Santa."
                         await currAuthor.send(signup_complete_msg)
                 except Exception as e:
                     print_exc(e)
@@ -122,7 +122,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                         userPrompt = f"Great! Now please specify what your wishlist URL or mailing address. Use `{CONFIG.prefix}setwishlisturl [wishlist urls separated by a space]` (e.g. `{CONFIG.prefix}setwishlisturl amazonurl/123 \"sesame street\"`) to set your wishlist URL."
                         await currAuthor.send(userPrompt)
                     if(user.wishlisturl_is_set() and user.pref_is_set()):
-                        signup_complete_msg = f"Congrats, you're now officially enrolled in the Secret Santa! You may change your wishlist URL or preferences with `{CONFIG.prefix}!setwishlisturl` or `{CONFIG.prefix}!setprefs` any time before the admin begins the Secret Santa."
+                        signup_complete_msg = f"Congrats, you're now officially enrolled in the Secret Santa! You may change your wishlist URL or preferences with `{CONFIG.prefix}setwishlisturl` or `{CONFIG.prefix}setprefs` any time before the admin begins the Secret Santa."
                         await currAuthor.send(signup_complete_msg)
                 except Exception as e:
                     print_exc(e)

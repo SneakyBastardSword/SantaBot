@@ -3,6 +3,7 @@ import os
 
 from configobj import ConfigObj
 from discord.ext import commands
+from discord import Intents
 
 import CONFIG
 from cogs.SecretSanta import SecretSanta
@@ -40,7 +41,9 @@ def start_santa_bot():
     client_log.addHandler(client_handler)
 
     # add the cogs
-    bot = commands.Bot(command_prefix = CONFIG.prefix)
+    intents = Intents.default()
+    intents.members = True
+    bot = commands.Bot(command_prefix = CONFIG.prefix, intents=intents)
     bot.add_cog(SantaAdministrative(bot))
     bot.add_cog(SantaMiscellaneous(bot))
     bot.add_cog(SantaUtilities(bot, sqlitehelper))
