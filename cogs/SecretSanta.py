@@ -186,7 +186,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                 # save to config file
                 print("Partner assignment successful")
                 for user in potential_list:
-                    (temp_index, temp_user) = self.SecretSantaHelper.get_participant_object(user.idstr, self.usr_list)
+                    (temp_index, temp_user) = self.SecretSantaHelper.get_participant_object(int(user.idstr), self.usr_list)
                     (index, partner) = self.SecretSantaHelper.get_participant_object(user.partnerid, potential_list)
                     temp_user.partnerid = user.partnerid
                     self.config['members'][str(user.usrnum)][SecretSantaConstants.PARTNERID] = user.partnerid
@@ -384,7 +384,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
         currAuthor = ctx.author
         authorIsParticipant = self.SecretSantaHelper.user_is_participant(currAuthor.id, self.usr_list)
         if(self.exchange_started and authorIsParticipant):
-            (usr_index, user) = self.SecretSantaHelper.get_participant_object(currAuthor, self.usr_list)
+            (usr_index, user) = self.SecretSantaHelper.get_participant_object(currAuthor.id, self.usr_list)
             (partner_index, partnerobj) = self.SecretSantaHelper.get_participant_object(user.partnerid, self.usr_list)
             msg = "Your partner is " + partnerobj.name + "#" + partnerobj.discriminator + "\n"
             msg = msg + "Their wishlist(s) can be found here: " + partnerobj.wishlisturl + "\n"

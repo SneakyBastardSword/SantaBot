@@ -21,12 +21,12 @@ class SecretSantaHelpers():
                 return True
         return False
 
-    def get_participant_object(self, usrid: str, usrlist: list):
+    def get_participant_object(self, usrid: int, usrlist: list):
         """takes a discord user ID string and list of
         participant objects, and returns the first
         participant object with matching id."""
         for (index, person) in enumerate(usrlist):
-            if(person.idstr == usrid):
+            if(int(person.idstr) == usrid):
                 return (index, person)
         return (-1, None)
 
