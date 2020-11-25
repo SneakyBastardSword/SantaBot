@@ -1,7 +1,7 @@
 import copy
 import random
 from discord import Member
-from discord.abc import PrivateChannel
+from discord.abc import GuildChannel, PrivateChannel
 import discord
 from helpers.SecretSantaParticipant import SecretSantaParticipant
 
@@ -15,19 +15,23 @@ class SecretSantaHelpers():
     def user_is_participant(self, usrid: discord.User.id, usrlist: list):
         """Takes a discord user ID string and returns whether
         a user with that ID is in usr_list"""
-        print(usrlist)
         for person in usrlist:
             if int(person.idstr) == usrid:
                 return True
         return False
 
-    def get_participant_object(self, usrid: int, usrlist: list):
+    def get_participant_object(self, usrid: int, usrlist: list, id_is_partner=False):
         """takes a discord user ID string and list of
         participant objects, and returns the first
         participant object with matching id."""
         for (index, person) in enumerate(usrlist):
-            if(int(person.idstr) == usrid):
-                return (index, person)
+            if(id_is_partner):
+                if(person.partnerid != ""):
+                    if(int(person.partnerid) == usrid):
+                        return (index, person)
+            else:
+                if(int(person.idstr) == usrid):
+                    return (index, person)
         return (-1, None)
 
     def propose_partner_list(self, usrlist: list):
@@ -75,6 +79,9 @@ class SecretSantaHelpers():
 
     def channelIsPrivate(self, channel):
         return isinstance(channel, PrivateChannel)
+
+    def channel_is_guild(self, channel):
+        return isinstance(channel, GuildChannel)
 
     def member_is_mod(self, person: discord.Member, mod_list: list):
         """Checks that a given member is in the mod list

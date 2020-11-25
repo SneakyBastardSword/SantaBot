@@ -38,10 +38,8 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
         '''
         currAuthor = ctx.author
         if self.SecretSantaHelper.user_is_participant(currAuthor.id, self.usr_list):
-            if(self.SecretSantaHelper.channelIsPrivate(ctx.channel)):
-                pass
-            else:
-                await ctx.message.delete()
+            if(self.SecretSantaHelper.channel_is_guild(ctx.channel)):
+                await ctx.message.delete() # delete the message before people can see
             (index, user) = self.SecretSantaHelper.get_participant_object(currAuthor.id, self.usr_list)
             new_wishlist = "None"
             if(len(destination) == 0):
@@ -100,10 +98,8 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
         '''
         currAuthor = ctx.author
         if self.SecretSantaHelper.user_is_participant(currAuthor.id, self.usr_list):
-            if(self.SecretSantaHelper.channelIsPrivate(ctx.channel)):
-                pass
-            else:
-                await ctx.message.delete()
+            if(self.SecretSantaHelper.channel_is_guild(ctx.channel)):
+                await ctx.message.delete() # delete the message before people can see
             (index, user) = self.SecretSantaHelper.get_participant_object(currAuthor.id, self.usr_list)
             new_prefs = "None"
             if(len(preferences) == 0):
@@ -404,6 +400,64 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             await ctx.send(BOT_ERROR.UNJOINED)
         else:
             await ctx.send(BOT_ERROR.UNREACHABLE)
+        return
+
+    @commands.command()
+    async def dmpartner(self, ctx: commands.Context, *, message:str):
+        '''
+        DM your Secret Santa partner anonymously (the person you have) via the bot
+        '''
+        if(self.SecretSantaHelper.channel_is_guild(ctx.channel)):
+            await ctx.message.delete() # delete the message before people can see
+        (curr_idx, curr_user) = self.SecretSantaHelper.get_participant_object(ctx.author.id, self.usr_list)
+        if((curr_idx != -1) and self.exchange_started): # user has joined and the exchange has started
+            partner = self.bot.get_user(int(curr_user.partnerid))
+            try:
+                msg = "You have a message from your secret santa\n"
+                msg += f"```{message}```"
+                await partner.send(msg)
+                print(f"{ctx.author.name}#{ctx.author.discriminator} DMd {partner.name}#{partner.discriminator}: {message}")
+                return
+            except Exception as e:
+                print_exc(e)
+                await ctx.author.send(f"Failed to send message to {partner.name}#{partner.discriminator} about their partner. Harass them to turn on server DMs for Secret Santa stuff.")
+        elif(curr_idx == -1): # user has not joined
+            msg = BOT_ERROR.UNJOINED
+            await ctx.author.send(msg)
+        elif(not self.exchange_started): # exchange hasn't started (there are no partners)
+            msg = BOT_ERROR.NOT_STARTED
+            await ctx.author.send(msg)
+        else:
+            await ctx.send(BOT_ERROR.UNDETERMINED_CONTACT_CODE_OWNER)
+        return
+
+    @commands.command()
+    async def dmsanta(self, ctx: commands.Context, *, message:str):
+        '''
+        DM your Secret Santa (the person that has you) via the bot
+        '''
+        if(self.SecretSantaHelper.channel_is_guild(ctx.channel)):
+            await ctx.message.delete() # delete the message before people can see
+        (santa_idx, santa_user) = self.SecretSantaHelper.get_participant_object(ctx.author.id, self.usr_list, id_is_partner=True)
+        if((santa_idx != -1) and self.exchange_started): # user has joined and the exchange has started
+            santa = self.bot.get_user(int(santa_user.idstr))
+            try:
+                msg = "You have a message from your secret santa partner\n"
+                msg += f"```{message}```"
+                await santa.send(msg)
+                print(f"{ctx.author.name}#{ctx.author.discriminator} DMd {santa.name}#{santa.discriminator}: {message}")
+                return
+            except Exception as e:
+                print_exc(e)
+                await ctx.author.send(f"Failed to send the message to your secret santa. Their DMs may be off. Please ask your Secret Santa admin.")
+        elif(santa_idx == -1): # user has not joined
+            msg = BOT_ERROR.UNJOINED
+            await ctx.author.send(msg)
+        elif(not self.exchange_started): # exchange hasn't started (there are no partners)
+            msg = BOT_ERROR.NOT_STARTED
+            await ctx.author.send(msg)
+        else:
+            await ctx.send(BOT_ERROR.UNDETERMINED_CONTACT_CODE_OWNER)
         return
 
     @start.error
