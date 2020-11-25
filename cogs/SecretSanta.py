@@ -183,8 +183,8 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                 # save to config file
                 print("Partner assignment successful")
                 for user in potential_list:
-                    (temp_index, temp_user) = self.SecretSantaHelper.get_participant_object(int(user.idstr), self.usr_list)
-                    (index, partner) = self.SecretSantaHelper.get_participant_object(user.partnerid, potential_list)
+                    (temp_index, temp_user) = self.SecretSantaHelper.get_participant_object(int(user.idstr), self.usr_list) # get the current user
+                    (index, partner) = self.SecretSantaHelper.get_participant_object(int(user.partnerid), potential_list) # get their partner
                     temp_user.partnerid = user.partnerid
                     self.config['members'][str(user.usrnum)][SecretSantaConstants.PARTNERID] = user.partnerid
                     self.config.write()
@@ -468,5 +468,6 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
         if(isinstance(error, commands.NoPrivateMessage)):
             await ctx.send(BOT_ERROR.DM_ERROR)
         else:
+            print_exc(error)
             await ctx.send(BOT_ERROR.UNDETERMINED_CONTACT_CODE_OWNER)
         return
