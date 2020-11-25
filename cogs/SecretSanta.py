@@ -155,6 +155,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             await ctx.send(BOT_ERROR.UNJOINED)
         return
 
+    @commands.guild_only()
     @commands.command()
     async def start(self, ctx: commands.Context):
         '''
@@ -221,6 +222,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             await ctx.send(BOT_ERROR.NO_PERMISSION(ctx.guild.roles[-1]))
         return
 
+    @commands.guild_only()
     @commands.command()
     async def restart(self, ctx: commands.Context):
         '''
@@ -259,6 +261,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             await ctx.send(BOT_ERROR.UNREACHABLE)
         return
 
+    @commands.guild_only()
     @commands.command()
     async def pause(self, ctx: commands.Context):
         '''
@@ -325,6 +328,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             await ctx.send(BOT_ERROR.UNJOINED)
         return
 
+    @commands.guild_only()
     @commands.command()
     async def end(self, ctx: commands.Context):
         '''
@@ -349,18 +353,14 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
         '''
         List Secret Santa participants
         '''
-        if(ctx.author.top_role == ctx.guild.roles[-1]):
-            if(self.highest_key == 0):
-                await ctx.send(f"```Nobody has signed up for the secret Santa exchange yet. Use `{CONFIG.prefix}join` to enter the exchange.```")
-            else:
-                msg = '```The following people are signed up for the Secret Santa exchange:\n'
-                for user in self.usr_list:
-                    this_user = ctx.guild.get_member(user.idstr)
-                    msg = msg + str(user.name) + "#" + str(user.discriminator) + "\n"
-                msg = msg + f"\nUse `{CONFIG.prefix}join` to enter the exchange.```"
-                await ctx.send(msg)
+        if(self.highest_key == 0):
+            await ctx.send(f"```Nobody has signed up for the secret Santa exchange yet. Use `{CONFIG.prefix}join` to enter the exchange.```")
         else:
-            await ctx.send(BOT_ERROR.NO_PERMISSION(ctx.guild.roles[-1]))
+            msg = '```The following people are signed up for the Secret Santa exchange:\n'
+            for user in self.usr_list:
+                msg = msg + str(user.name) + "#" + str(user.discriminator) + "\n"
+            msg = msg + f"\nUse `{CONFIG.prefix}join` to enter the exchange.```"
+            await ctx.send(msg)
         return
 
     @commands.command(aliases=["tp"])
@@ -404,4 +404,15 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             await ctx.send(BOT_ERROR.UNJOINED)
         else:
             await ctx.send(BOT_ERROR.UNREACHABLE)
+        return
+
+    @start.error
+    @restart.error
+    @pause.error
+    @end.error
+    async def dm_error(self, ctx: commands.Context, error):
+        if(isinstance(error, commands.NoPrivateMessage)):
+            await ctx.send(BOT_ERROR.DM_ERROR)
+        else:
+            await ctx.send(BOT_ERROR.UNDETERMINED_CONTACT_CODE_OWNER)
         return
