@@ -1,7 +1,7 @@
 import CONFIG
 from configobj import ConfigObj
 import copy
-from traceback import print_exc
+from traceback import print_exc, TracebackException
 
 from discord.ext import commands
 
@@ -183,8 +183,8 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                 # save to config file
                 print("Partner assignment successful")
                 for user in potential_list:
-                    (temp_index, temp_user) = self.SecretSantaHelper.get_participant_object(int(user.idstr), self.usr_list) # get the current user
-                    (index, partner) = self.SecretSantaHelper.get_participant_object(int(user.partnerid), potential_list) # get their partner
+                    (temp_index, temp_user) = self.SecretSantaHelper.get_participant_object(int(user.idstr), self.usr_list) # get the user's object in usr_list
+                    (index, partner) = self.SecretSantaHelper.get_participant_object(int(user.partnerid), self.usr_list) # get their partner
                     temp_user.partnerid = user.partnerid
                     self.config['members'][str(user.usrnum)][SecretSantaConstants.PARTNERID] = user.partnerid
                     self.config.write()
@@ -193,13 +193,13 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                     message_pt1 = f"{str(partner.name)}#{str(partner.discriminator)} is your Secret Santa partner! Mosey on over to their wishlist URL(s) and pick out a gift! Remember to keep it in the ${CONFIG.min_budget}-{CONFIG.max_budget} range.\n"
                     message_pt2 = f"Their wishlist(s) can be found here: {partner.wishlisturl}\n"
                     message_pt3 = f"And their gift preferences can be found here: {partner.preferences}\n"
-                    message_pt4 = "If you have trouble accessing your partner's wishlist, please contact an admin to get in touch with your partner. This is a *secret* santa, after all!"
+                    message_pt4 = f"If you have trouble accessing your partner's wishlist, try `{CONFIG.prefix}dmpartner` or contact an admin to get in touch with them. This is a *secret* santa, after all!"
                     santa_message = message_pt1 + message_pt2 + message_pt3 + message_pt4
                     try:
                         await this_user.send(santa_message)
                     except Exception as e:
                         print_exc(e)
-                        await currAuthor.send(f"Failed to send message to {this_user.name}#{this_user.discriminator} about their partner. Harass them to turn on server DMs for Secret Santa stuff.")
+                        await currAuthor.send(f"Failed to send message to {this_user.name}#{this_user.discriminator} about their partner. Ask them to turn on server DMs for Secret Santa stuff.")
                 
                 # mark the exchange as in-progress
                 self.exchange_started = True
@@ -468,6 +468,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
         if(isinstance(error, commands.NoPrivateMessage)):
             await ctx.send(BOT_ERROR.DM_ERROR)
         else:
-            print_exc(error)
+            tb = TracebackException.from_exception(error)
+            await ctx.send(tb)
             await ctx.send(BOT_ERROR.UNDETERMINED_CONTACT_CODE_OWNER)
         return

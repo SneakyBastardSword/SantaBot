@@ -23,7 +23,13 @@ class SecretSantaHelpers():
     def get_participant_object(self, usrid: int, usrlist: list, id_is_partner=False):
         """takes a discord user ID string and list of
         participant objects, and returns the first
-        participant object with matching id."""
+        participant object with matching id.
+
+            Parameters:
+                usrid (int): the ID of the user you're looking for
+                usrlist (list): the list the user resides in
+                id_is_partner (bool): if True, this function will find the SecretSantaParticipant in usrlist with the usrid as its partner
+        """
         for (index, person) in enumerate(usrlist):
             if(id_is_partner):
                 if(person.partnerid != ""):
