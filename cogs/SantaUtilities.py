@@ -60,6 +60,6 @@ class SantaUtilities(commands.Cog, name='Utilities'):
 
             # output
             emote_url = f"{base_url}.{img_ext}"
-            BOT_ERROR.output_info(f"Name={emote_name}, ID={emote_id}, IMG_TYPE={img_type}, url={emote_url}")
+            BOT_ERROR.output_info(f"Name={emote_name}, ID={emote_id}, IMG_TYPE={img_type}, url={emote_url}", self.logger)
             await ctx.send(content=emote_url)
         return
