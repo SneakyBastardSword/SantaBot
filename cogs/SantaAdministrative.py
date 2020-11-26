@@ -1,4 +1,5 @@
 import pendulum
+import logging
 
 import discord
 from discord.ext import commands
@@ -12,6 +13,8 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.role_channel = bot.get_channel(CONFIG.role_channel) if (CONFIG.role_channel != -1) else None
+        self.logger = logging.getLogger(name="SantaBot.SantaAdministrative")
+        self.logger.info("Creating cog")
 
     @commands.command()
     @has_permissions(manage_roles=True, ban_members=True)
@@ -109,7 +112,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
         if(self.role_channel == None): # if no role channel assigned,
             self.role_channel = self.bot.get_channel(CONFIG.role_channel) if (CONFIG.role_channel != -1) else None # attempt to get role channel
             if(self.role_channel == None): # if that fails (CONFIG.role_channel == -1 or get_channel fails)
-                print(BOT_ERROR.REACTION_ROLE_UNASSIGNED) # throw failure message
+                BOT_ERROR.output_error(BOT_ERROR.REACTION_ROLE_UNASSIGNED, self.logger)
                 return # end command
             else:
                 pass # reassignment of role_channel worked

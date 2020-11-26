@@ -1,4 +1,6 @@
+import logging
 import pendulum
+
 from discord.ext import commands
 
 import helpers.BOT_ERROR as BOT_ERROR
@@ -10,6 +12,8 @@ class SantaCountdownHelper():
         self.pend_format = "M/D/YY [@] h:m A Z"
         self.cd_table_name = "Countdowns"
         self.sqlhelp = sqlitehelper
+        self.logger = logging.getLogger('SantaBot.SantaCountdownHelper')
+        self.logger.info("Creating SantaCountdownHelper")
 
     def __get_cd_table_name(self, guild_id: str):
         return f"{self.cd_table_name}_{guild_id}"
@@ -26,7 +30,7 @@ class SantaCountdownHelper():
         except ValueError as error:
             expected = "ERROR: inputted time does not match expected format `month/day/year @ hour:minute AM/PM UTC_offset`\n"
             result_str = expected + "ex. `5/17/20 @ 1:00 PM -06:00`"
-            print(result_str)
+            BOT_ERROR.output_debug(result_str, self.logger)
         finally:
             return result_str
 
@@ -37,7 +41,7 @@ class SantaCountdownHelper():
         except ValueError as error:
             expected = "ERROR: inputted time does not match expected format `month/day/year @ hour:minute AM/PM UTC_offset`\n"
             result_str = expected + " ex. `5/17/20 @ 1:00 PM -06:00`"
-            print(result_str)
+            BOT_ERROR.output_debug(result_str, self.logger)
             return result_str
         
         query_get_timer_by_name = f"SELECT * FROM {self.__get_cd_table_name(ctx.guild.id)} WHERE name=\'{cd_name}\';"

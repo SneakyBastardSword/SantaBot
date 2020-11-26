@@ -1,8 +1,10 @@
 import urllib3
+import logging
 
 from discord.ext import commands
 
 import CONFIG
+import helpers.BOT_ERROR as BOT_ERROR
 from helpers.SantaCountdownHelper import SantaCountdownHelper
 from helpers.SQLiteHelper import SQLiteHelper
 
@@ -10,6 +12,8 @@ class SantaUtilities(commands.Cog, name='Utilities'):
     def __init__(self, bot: commands.Bot, sqlitehelper: SQLiteHelper):
         self.bot = bot
         self.cd_helper = SantaCountdownHelper(sqlitehelper)
+        self.logger = logging.getLogger(name="SantaBot.SantaUtilities")
+        self.logger.info("Creating cog")
 
     @commands.command(aliases=['cd'])
     async def countdown(self, ctx: commands.Context, command: str="", *, arg=""):
@@ -56,6 +60,6 @@ class SantaUtilities(commands.Cog, name='Utilities'):
 
             # output
             emote_url = f"{base_url}.{img_ext}"
-            print(f"Name={emote_name}, ID={emote_id}, IMG_TYPE={img_type}")
+            BOT_ERROR.output_info(f"Name={emote_name}, ID={emote_id}, IMG_TYPE={img_type}, url={emote_url}")
             await ctx.send(content=emote_url)
         return

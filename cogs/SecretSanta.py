@@ -1,10 +1,11 @@
-import CONFIG
+from traceback import TracebackException
 from configobj import ConfigObj
 import copy
-from traceback import print_exc, TracebackException
+import logging
 
 from discord.ext import commands
 
+import CONFIG
 import helpers.BOT_ERROR as BOT_ERROR
 from helpers.SecretSantaConstants import SecretSantaConstants
 from helpers.SecretSantaHelpers import SecretSantaHelpers
@@ -22,8 +23,11 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
         self.is_paused = False
         self.SecretSantaHelper = SecretSantaHelpers()
         self.config = config
+        self.logger = logging.getLogger(name="SantaBot.SecretSanta")
+        self.logger.info("Creating cog")
 
         # retrieve data from config file
+        self.logger.info(f"Reading and loading Secret Santa participants from {CONFIG.cfg_name}")
         self.exchange_started = self.config['programData'].as_bool('exchange_started')
         for key in self.config['members']:
             data = self.config['members'][str(key)]
@@ -61,15 +65,17 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                         signup_complete_msg = f"Congrats, you're now officially enrolled in the Secret Santa! You may change your wishlist URL or preferences with `{CONFIG.prefix}setwishlisturl` or `{CONFIG.prefix}setprefs` any time before the admin begins the Secret Santa."
                         await currAuthor.send(signup_complete_msg)
                 except Exception as e:
-                    print_exc(e)
+                    BOT_ERROR.output_exception(e, self.logger)
                     await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+                    BOT_ERROR.output_error(currAuthor.mention + BOT_ERROR.DM_FAILED, self.logger)
             except Exception as e:
-                print_exc(e)
+                BOT_ERROR.output_exception(e, self.logger)
                 try:
                     await currAuthor.send(BOT_ERROR.INVALID_INPUT)
                 except Exception as e:
-                    print_exc(e)
+                    BOT_ERROR.output_exception(e, self.logger)
                     await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+                    BOT_ERROR.output_error(currAuthor.mention + BOT_ERROR.DM_FAILED, self.logger)
         else:
             await ctx.send(BOT_ERROR.UNJOINED)
         return
@@ -85,8 +91,9 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             try:
                 await currAuthor.send(f"Current wishlist destination(s): {user.wishlisturl}")
             except Exception as e:
-                print_exc(e)
+                BOT_ERROR.output_exception(e, self.logger)
                 await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+                BOT_ERROR.output_error(currAuthor.mention + BOT_ERROR.DM_FAILED, self.logger)
         else:
             await ctx.send(BOT_ERROR.UNJOINED)
         return
@@ -121,15 +128,17 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                         signup_complete_msg = f"Congrats, you're now officially enrolled in the Secret Santa! You may change your wishlist URL or preferences with `{CONFIG.prefix}setwishlisturl` or `{CONFIG.prefix}setprefs` any time before the admin begins the Secret Santa."
                         await currAuthor.send(signup_complete_msg)
                 except Exception as e:
-                    print_exc(e)
+                    BOT_ERROR.output_exception(e, self.logger)
                     await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+                    BOT_ERROR.output_error(currAuthor.mention + BOT_ERROR.DM_FAILED, self.logger)
             except Exception as e:
-                print_exc(e)
+                BOT_ERROR.output_exception(e, self.logger)
                 try:
                     await currAuthor.send(BOT_ERROR.INVALID_INPUT)
                 except Exception as e:
-                    print_exc(e)
+                    BOT_ERROR.output_exception(e, self.logger)
                     await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+                    BOT_ERROR.output_error(currAuthor.mention + BOT_ERROR.DM_FAILED, self.logger)
         else:
             await ctx.send(BOT_ERROR.UNJOINED)
         return
@@ -145,8 +154,9 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             try:
                 await currAuthor.send(f"Current preference(s): {user.preferences}")
             except Exception as e:
-                print_exc(e)
+                BOT_ERROR.output_exception(e, self.logger)
                 await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+                BOT_ERROR.output_error(currAuthor.mention + BOT_ERROR.DM_FAILED, self.logger)
         else:
             await ctx.send(BOT_ERROR.UNJOINED)
         return
@@ -170,18 +180,19 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                         await currAuthor.send(BOT_ERROR.HAS_NOT_SUBMITTED(user.name))
                         await ctx.send("`Partner assignment cancelled: participant info incomplete.`")
                     except Exception as e:
-                        print_exc(e)
+                        BOT_ERROR.output_exception(e, self.logger)
                         await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+                        BOT_ERROR.output_error(currAuthor.mention + BOT_ERROR.DM_FAILED, self.logger)
             
             # select a random partner for each participant if all information is complete and there are enough people to do it
             if(all_fields_complete and (len(self.usr_list) > 1)):
-                print("Proposing a partner list")
+                BOT_ERROR.output_info("Proposing a partner list", self.logger)
                 potential_list = self.SecretSantaHelper.propose_partner_list(self.usr_list)
                 while(not self.SecretSantaHelper.partners_are_valid(potential_list)):
-                    print("Proposing a partner list")
+                    BOT_ERROR.output_info("Proposing a partner list", self.logger)
                     potential_list = self.SecretSantaHelper.propose_partner_list(self.usr_list)
                 # save to config file
-                print("Partner assignment successful")
+                BOT_ERROR.output_info("Partner assignment successful", self.logger)
                 for user in potential_list:
                     (temp_index, temp_user) = self.SecretSantaHelper.get_participant_object(int(user.idstr), self.usr_list) # get the user's object in usr_list
                     (index, partner) = self.SecretSantaHelper.get_participant_object(int(user.partnerid), self.usr_list) # get their partner
@@ -198,7 +209,7 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                     try:
                         await this_user.send(santa_message)
                     except Exception as e:
-                        print_exc(e)
+                        BOT_ERROR.output_exception(e, self.logger)
                         await currAuthor.send(f"Failed to send message to {this_user.name}#{this_user.discriminator} about their partner. Ask them to turn on server DMs for Secret Santa stuff.")
                 
                 # mark the exchange as in-progress
@@ -238,8 +249,9 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                         await currAuthor.send(BOT_ERROR.HAS_NOT_SUBMITTED(user.name))
                         await ctx.send("`Partner assignment cancelled: participant info incomplete.`")
                     except Exception as e:
-                        print_exc(e)
+                        BOT_ERROR.output_exception(e, self.logger)
                         await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+                        BOT_ERROR.output_error(currAuthor.mention + BOT_ERROR.DM_FAILED, self.logger)
             list_changed = self.SecretSantaHelper.usr_list_changed_during_pause(self.usr_list, self.user_left_during_pause)
             if(list_changed):
                 ctx.send(f"User list changed during the pause. Partners must be picked again with `{CONFIG.prefix}start`.")
@@ -298,8 +310,9 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                 userPrompt = f".\nFirst we need your wishlist (or the destination for sending gifts). Please use `{CONFIG.prefix}setwishlisturl [wishlist urls separated by a space]` (e.g. `{CONFIG.prefix}setwishlisturl amazonurl/123 \"sesame street\"`) to set your wishlist URL (you may also add your mailing address)."
                 await currAuthor.send(userPrompt)
             except Exception as e:
-                print_exc(e)
-                ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+                BOT_ERROR.output_exception(e, self.logger)
+                await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+                BOT_ERROR.output_error(currAuthor.mention + BOT_ERROR.DM_FAILED, self.logger)
         return
 
     @commands.command()
@@ -336,7 +349,6 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
             self.config['programData']['exchange_started'] = False
             self.highest_key = 0
             del self.usr_list[:]
-            print(len(self.usr_list))
             self.config['members'].clear()
             self.config.write()
             await ctx.send("Secret Santa ended")
@@ -390,8 +402,9 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                 await currAuthor.send(msg)
                 await ctx.send("The information has been sent to your DMs.")
             except Exception as e:
-                print_exc(e)
+                BOT_ERROR.output_exception(e, self.logger)
                 await ctx.send(currAuthor.mention + BOT_ERROR.DM_FAILED)
+                BOT_ERROR.output_error(currAuthor.mention + BOT_ERROR.DM_FAILED, self.logger)
         elif((not self.exchange_started) and authorIsParticipant):
             await ctx.send(BOT_ERROR.NOT_STARTED)
         elif(self.exchange_started and (not authorIsParticipant)):
@@ -416,10 +429,10 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                 msg = "You have a message from your secret santa\n"
                 msg += f"```{message}```"
                 await partner.send(msg)
-                print(f"{ctx.author.name}#{ctx.author.discriminator} DMd {partner.name}#{partner.discriminator}: {message}")
+                BOT_ERROR.output_info(f"{ctx.author.name}#{ctx.author.discriminator} DMd {partner.name}#{partner.discriminator}: {message}", self.logger)
                 return
             except Exception as e:
-                print_exc(e)
+                BOT_ERROR.output_exception(e, self.logger)
                 await ctx.author.send(f"Failed to send message to {partner.name}#{partner.discriminator} about their partner. Harass them to turn on server DMs for Secret Santa stuff.")
         elif(curr_idx == -1): # user has not joined
             msg = BOT_ERROR.UNJOINED
@@ -445,10 +458,10 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                 msg = "You have a message from your secret santa partner\n"
                 msg += f"```{message}```"
                 await santa.send(msg)
-                print(f"{ctx.author.name}#{ctx.author.discriminator} DMd {santa.name}#{santa.discriminator}: {message}")
+                BOT_ERROR.output_info(f"{ctx.author.name}#{ctx.author.discriminator} DMd {santa.name}#{santa.discriminator}: {message}", self.logger)
                 return
             except Exception as e:
-                print_exc(e)
+                BOT_ERROR.output_exception(e, self.logger)
                 await ctx.author.send(f"Failed to send the message to your secret santa. Their DMs may be off. Please ask your Secret Santa admin.")
         elif(santa_idx == -1): # user has not joined
             msg = BOT_ERROR.UNJOINED
@@ -468,7 +481,6 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
         if(isinstance(error, commands.NoPrivateMessage)):
             await ctx.send(BOT_ERROR.DM_ERROR)
         else:
-            tb = TracebackException.from_exception(error)
-            await ctx.send(tb)
+            BOT_ERROR.output_exception(error, self.logger)
             await ctx.send(BOT_ERROR.UNDETERMINED_CONTACT_CODE_OWNER)
         return
