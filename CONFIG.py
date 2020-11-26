@@ -9,6 +9,8 @@ cfg_name = "botdata.cfg"
 sqlite_name = "santabotdb.sqlite"
 dbg_name = "debug.log"
 role_channel = -1
+min_budget = 10
+max_budget = 20
 
 
 ###############################################
