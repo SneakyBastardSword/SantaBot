@@ -33,11 +33,24 @@ A Discord bot to organize secret santa gift exchanges using the discord.py Pytho
 ### Add a Systemd Service for SantaBot to Autostart on Reboot
 To keep SantaBot running even after restart you can create a service.
 
-1. Copy the 'run_santa.sh' to '/usr/local/bin/' directory
+1. Copy the `run_santa.sh` to `/usr/local/bin/` directory
 
 - sudo cp run_santa.sh /usr/local/bin/
 
-2. Create a service file or edit the included 'santabot.service' using your favorite text editor and add the default user name to 'User=' and the Group they belong to in 'Group='. To find out what default group a user belongs use 'id -gn usernamehere'
+2. Edit `run_santa.sh` in `/usr/local/bin` with your favorite editor to include the absolute path to the santa-bot.py script. For example `/home/pi/Santabot/santa-bot.py`. If you're not sure the absolute, in the Santabot directory type `pwd`
+
+- pwd
+  /home/pi/Santabot
+- sudo nano /usr/local/bin/run_santa.sh
+
+		- while true
+		- do
+    		-    python3 /home/pi/Santabot/santa-bot.py
+		-    sleep 10
+		- done
+
+
+3. Create a service file or edit the included `santabot.service` using your favorite text editor and add the default user name to `User=` and the Group they belong to in `Group=`. To find out what default group a user belongs use `id -gn usernamehere`
 
 - nano santabot.service
 
@@ -54,22 +67,23 @@ To keep SantaBot running even after restart you can create a service.
 		- [Install]
 		- WantedBy=multi-user.target
 
-3. Copy the santabot.service to '/lib/systemd/system/' 
+4. Copy the santabot.service to `/lib/systemd/system/`
 
 - sudo cp santabot.service /lib/systemd/system/
 
-4. Enable the service so it will autostart on reboot, then start it.
+5. Enable the service so it will autostart on reboot, then start with the commands:
 
 - sudo systemctl enable santabot.service
 - sudo systemctl start santabot.service
 
-5. Then check the status
+6. Then check the status
 
 - sudo systemctl status santabot.service
 
-6. When done using the bot for the season, disable using
+7. When done using the bot for the season, to disable use both commands:
 
 - sudo systemctl disable santabot.service
+- sudo systemctl stop santabot.service
 
 #### FAQ:
 1. What if my wishlist URL or preference is multiple words?
