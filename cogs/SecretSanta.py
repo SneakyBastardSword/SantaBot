@@ -430,6 +430,9 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                 msg += f"```{message}```"
                 await partner.send(msg)
                 BOT_ERROR.output_info(f"{ctx.author.name}#{ctx.author.discriminator} DMd {partner.name}#{partner.discriminator}: {message}", self.logger)
+                author_msg = "Message sent to your Secret Santa partner\n"
+                author_msg += f"```{message}```"
+                await ctx.author.send(author_msg)
                 return
             except Exception as e:
                 BOT_ERROR.output_exception(e, self.logger)
@@ -459,6 +462,9 @@ class SecretSanta(commands.Cog, name='Secret Santa'):
                 msg += f"```{message}```"
                 await santa.send(msg)
                 BOT_ERROR.output_info(f"{ctx.author.name}#{ctx.author.discriminator} DMd {santa.name}#{santa.discriminator}: {message}", self.logger)
+                author_msg = "Message sent to your Secret Santa\n"
+                author_msg += f"```{message}```"
+                await ctx.author.send(author_msg)
                 return
             except Exception as e:
                 BOT_ERROR.output_exception(e, self.logger)
