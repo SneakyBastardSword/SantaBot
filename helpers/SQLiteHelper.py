@@ -1,3 +1,4 @@
+import logging
 import sqlite3
 from sqlite3 import Error
 
@@ -5,18 +6,20 @@ class SQLiteHelper():
     def __init__(self, connection_path: str):
         self.__connection_path = connection_path
         self.__connection = None
+        self.logger = logging.getLogger('SQLiteHelper')
+        self.logger.info("Creating SQLiteHelper")
 
     def create_connection(self):
         try:
             if(self.__connection == None):
                 self.__connection = sqlite3.connect(self.__connection_path)
-            print("Connection to SQLite DB successful")
+            self.logger.info("Connection to SQLite DB successful", self.logger)
         except Error as e:
-            print(f"The error '{e}' occurred")
+            self.logger.debug(f"The error '{e}' occurred", self.logger)
 
     def if_table_exists(self, table_name):
         if(self.__connection == None):
-            print("Connection has not been created")
+            self.logger.debug("Connection has not been created", self.logger)
             return False
 
         cursor = self.__connection.cursor()
@@ -28,17 +31,17 @@ class SQLiteHelper():
 
     def execute_query(self, query):
         if(self.__connection == None):
-            print("Connection has not been created")
+            self.logger.debug("Connection has not been created", self.logger)
             return False
         
         cursor = self.__connection.cursor()
         try:
             cursor.execute(query)
             self.__connection.commit()
-            print("Query executed successfully")
+            self.logger.info("Query executed successfully", self.logger)
             return True
         except Error as e:
-            print(f"The error '{e.with_traceback}' occurred")
+            self.logger.debug(f"The error '{e.with_traceback}' occurred", self.logger)
             return False
 
     def create_table(self, table_name: str, table_format: str):
@@ -115,7 +118,7 @@ class SQLiteHelper():
             result = cursor.fetchall()
             return result
         except Error as e:
-            print(f"Problem reading - the error '{e}' occurred")
+            self.logger.debug(f"Problem reading - the error '{e}' occurred", self.logger)
 
     def execute_delete_query(self, table_name: str, conditions: str):
         delete_query = f"DELETE FROM {table_name} WHERE {conditions}"

@@ -1,5 +1,9 @@
+from logging import Logger
+from traceback import TracebackException
+
 ALREADY_JOINED = "ERROR: You have already joined."
 COUNTDOWN_NAME_TAKEN = "ERROR: That countdown name is already in use."
+DM_ERROR = "ERROR: This command cannot be used in private messages."
 DM_FAILED = "ERROR: DM with information failed to send. Please turn on server DMs to receive important Secret Santa-related messages."
 EXCHANGE_IN_PROGRESS = "ERROR: The gift exchange is already in progress."
 EXCHANGE_STARTED_UNJOINED = "ERROR: The exchange is already in progress. Please contact an admin about pausing the exchange before using s!join."
@@ -29,3 +33,16 @@ def CANNOT_CHANGE_COUNTDOWN(author_name):
     return f"ERROR: you do not have permission to change that countdown timer. Please contact {author_name}"
 def NO_PERMISSION(role):
     return f"ERROR: you do not have permissions to do this.\nYou need the {role} role for that."
+
+def output_error(message: str, logger: Logger):
+    print(message)
+    logger.debug(message)
+
+def output_info(message: str, logger: Logger):
+    print(message)
+    logger.info(message)
+
+def output_exception(error, logger: Logger):
+    tb = TracebackException.from_exception(error)
+    exception_message = ''.join(tb.stack.format())
+    output_error(exception_message, logger)

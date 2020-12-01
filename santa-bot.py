@@ -1,8 +1,10 @@
 import logging
 import os
+import pathlib
 
 from configobj import ConfigObj
 from discord.ext import commands
+from discord import Intents
 
 import CONFIG
 from cogs.SecretSanta import SecretSanta
@@ -33,14 +35,24 @@ def start_santa_bot():
     sqlitehelper.create_connection()
 
     #set up discord connection debug logging
-    client_log = logging.getLogger('discord')
-    client_log.setLevel(logging.DEBUG)
-    client_handler = logging.FileHandler(filename=CONFIG.dbg_path, encoding='utf-8', mode='w')
-    client_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-    client_log.addHandler(client_handler)
+    discord_api_logger = logging.getLogger('discord')
+    discord_api_logger.setLevel(logging.DEBUG)
+    discord_api_handler = logging.FileHandler(filename=os.path.join(str(pathlib.Path(__file__).parent), CONFIG.bot_folder, "discord_api.log"), encoding='utf-8', mode='w')
+    discord_api_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    discord_api_logger.addHandler(discord_api_handler)
+
+    # set up SantaBot debug logging
+    santabot_logger = logging.getLogger('SantaBot')
+    santabot_logger.setLevel(logging.DEBUG)
+    santabot_log_handler = logging.FileHandler(filename=CONFIG.dbg_path, encoding='utf-8', mode='w')
+    santabot_log_handler.setLevel(logging.DEBUG)
+    santabot_log_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    santabot_logger.addHandler(santabot_log_handler)
 
     # add the cogs
-    bot = commands.Bot(command_prefix = CONFIG.prefix)
+    intents = Intents.default()
+    intents.members = True
+    bot = commands.Bot(command_prefix = CONFIG.prefix, intents=intents)
     bot.add_cog(SantaAdministrative(bot))
     bot.add_cog(SantaMiscellaneous(bot))
     bot.add_cog(SantaUtilities(bot, sqlitehelper))

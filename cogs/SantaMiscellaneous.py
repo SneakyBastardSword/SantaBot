@@ -1,9 +1,15 @@
+import logging
+
 from discord.ext import commands
+
 import CONFIG
+import helpers.BOT_ERROR as BOT_ERROR
 
 class SantaMiscellaneous(commands.Cog, name='Miscellaneous'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.logger = logging.getLogger(name="SantaBot.SantaMiscellaneous")
+        self.logger.info("Creating cog")
 
     # @commands.command() ### normally commented out because this bot is not meant to be sharded
     async def invite(self, ctx: commands.Context):
@@ -18,6 +24,7 @@ class SantaMiscellaneous(commands.Cog, name='Miscellaneous'):
         '''
         [content] = echos back the [content]
         '''
+        BOT_ERROR.output_info(content, self.logger)
         await ctx.send(content)
 
     @commands.command()
