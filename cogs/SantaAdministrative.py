@@ -32,7 +32,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
                 self.role_channel = ctx.channel # use current channel
         
         if(self.role_channel != None):
-            await ctx.send(content=f"Reaction role channel assigned to {reaction_role_channel.name}")
+            await ctx.send(content=f"Reaction role channel assigned to {self.role_channel.mention}")
 
     @commands.command()
     @has_permissions(manage_roles=True, ban_members=True)
@@ -121,7 +121,7 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
 
         message_id = payload.message_id
         channel_id = payload.channel_id
-        emoji = payload.emoji
+        emoji = str(payload.emoji)
         guild = self.bot.get_guild(payload.guild_id)
         user = guild.get_member(payload.user_id)
     
@@ -134,12 +134,20 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             if message != None:
                 content = message.content.split("\n")
                 for line in content:
-                    line_tokens = line.split(" ")
-                    line_tokens = [i for i in line_tokens if i] # remove empty strings for quality of life (doesn't break with extra spaces)
-                    for (idx, token) in enumerate(line_tokens):
-                        if token == "for" and idx > 0 and line_tokens[idx-1] == str(emoji):
-                            role_id = line_tokens[idx+1][3:-1]
-                            role = guild.get_role(int(role_id))
+                    line_tokens = [i for i in line.split(" ") if i] # remove empty strings for quality of life (doesn't break with extra spaces)
+                    test_emote_idx = for_idx = test_role_id_idx = -1
+                    try:
+                        for_idx = line_tokens.index("for")
+                        test_emote_idx, test_role_id_idx = for_idx - 1, for_idx + 1
+                    except:
+                        for_idx = -1
+                    if (for_idx != -1): # no 'for' or 'for' is in the wrong place
+                        test_emote = line_tokens[test_emote_idx]
+                        test_role_id = int(line_tokens[test_role_id_idx][3:-1])
+                        BOT_ERROR.output_info(f"Test emote={test_emote.encode('raw_unicode_escape')}, Input emote={emoji.encode('raw_unicode_escape')}", self.logger)
+                        if test_emote == emoji:
+                            role = guild.get_role(test_role_id)
+                            BOT_ERROR.output_info(f"Role added/removed=@{role.name}, user={user.name}", self.logger)
                             if payload.event_type == "REACTION_ADD":
                                 await user.add_roles(role)
                             else:
