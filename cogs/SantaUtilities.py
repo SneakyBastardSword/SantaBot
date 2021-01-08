@@ -1,7 +1,7 @@
-import urllib3
 import logging
 
 from discord.ext import commands
+import discord
 
 import CONFIG
 import helpers.BOT_ERROR as BOT_ERROR
@@ -41,25 +41,15 @@ class SantaUtilities(commands.Cog, name='Utilities'):
         return
 
     @commands.command()
-    async def emote(self, ctx: commands.Context, *emotes: str):
+    async def emote(self, ctx: commands.Context, *emotes: discord.PartialEmoji):
         '''
-        Get the URL to emotes without needing to open the link.
+        Get the URL to emotes without needing to open the link. Custom emotes only.
         '''
-        http = urllib3.PoolManager()
         for passed_emote in emotes:
-            # Create the base URL of the emote
-            emote_parts = passed_emote.split(sep=":")
-            (emote_name, emote_id) = (emote_parts[1], (emote_parts[2])[:-1])
-            base_url = f"https://cdn.discordapp.com/emojis/{str(emote_id)}"
-
-            # http request to find the appropriate extension
-            response = http.urlopen('GET', url=base_url)
-            img_type = response.info()['Content-Type']
-            img_ext = img_type.split(sep="/")[1]
-            http.clear()
-
-            # output
-            emote_url = f"{base_url}.{img_ext}"
+            emote_url = str(passed_emote.url)
+            emote_name = passed_emote.name
+            emote_id = passed_emote.id
+            img_type = "gif" if passed_emote.animated else "png"
             BOT_ERROR.output_info(f"Name={emote_name}, ID={emote_id}, IMG_TYPE={img_type}, url={emote_url}", self.logger)
             await ctx.send(content=emote_url)
         return
