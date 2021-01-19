@@ -121,7 +121,8 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
 
         message_id = payload.message_id
         channel_id = payload.channel_id
-        emoji = str(payload.emoji)
+        emoji = payload.emoji
+        emoji_str = str(payload.emoji)
         guild = self.bot.get_guild(payload.guild_id)
         user = guild.get_member(payload.user_id)
     
@@ -134,6 +135,8 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
             if message != None:
                 content = message.content.split("\n")
                 for line in content:
+                    if((line[0:2] == "~~") and (line[-1] == "~")): # don't pay attention to lines that are crossed out
+                        continue
                     line_tokens = [i for i in line.split(" ") if i] # remove empty strings for quality of life (doesn't break with extra spaces)
                     test_emote_idx = for_idx = test_role_id_idx = -1
                     try:
@@ -144,8 +147,13 @@ class SantaAdministrative(commands.Cog, name='Administrative'):
                     if (for_idx != -1): # no 'for' or 'for' is in the wrong place
                         test_emote = line_tokens[test_emote_idx]
                         test_role_id = int(line_tokens[test_role_id_idx][3:-1])
-                        BOT_ERROR.output_info(f"Test emote={test_emote.encode('raw_unicode_escape')}, Input emote={emoji.encode('raw_unicode_escape')}", self.logger)
-                        if test_emote == emoji:
+                        BOT_ERROR.output_info(f"Test emote={test_emote.encode('raw_unicode_escape')}, Input emote={emoji_str.encode('raw_unicode_escape')}", self.logger)
+                        found_emoji = False
+                        if emoji.is_unicode_emoji():
+                            found_emoji = (emoji_str == test_emote)
+                        else:
+                            found_emoji = (emoji_str[1:-1] in test_emote)
+                        if found_emoji:
                             role = guild.get_role(test_role_id)
                             BOT_ERROR.output_info(f"Role added/removed=@{role.name}, user={user.name}", self.logger)
                             if payload.event_type == "REACTION_ADD":
