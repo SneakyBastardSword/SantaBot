@@ -1,0 +1,15 @@
+[Unit]
+Description=Santa Discord Bot
+
+[Service]
+#Add user and group they belong to. Find default group with "id -gn username"
+User=usernamehere
+Group=defaultgrouphere
+Restart=on-abort
+#Add full directory for where santabot lives. If santabot is in /home/pi/Santabot then place that there. 
+WorkingDirectory= /home/pi/Santabot
+#Copy run_santa.sh from Santabot directory into /usr/local/bin/
+ExecStart= /usr/local/bin/run_santa.sh
+
+[Install]
+WantedBy=multi-user.target

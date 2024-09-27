@@ -1,0 +1,10 @@
+[commit title]
+
+#<issueNum>: [commit title]
+
+Closes #<issueNum>: [commit title]
+
+<ChangeDetails>
+    <ChangeDescription>description</ChangeDescription>
+    <ChangeReasoning>reasoning</ChangeReasoning>
+</ChangeDetails>
